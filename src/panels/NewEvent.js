@@ -23,8 +23,19 @@ const NewEvent = props => {
 			description: eventDescription,
 			author: props.userId,
 			category: "ART"
-		})
-		console.log(res)
+		});
+		if (eventImage) {
+			const newAdvertId = res.id;
+		
+			const formData = new FormData();
+			formData.append("photo", eventImage);
+			const imageRes = await fetch(`https://vkevents.tk/image/upload?uid=${newAdvertId}`, {
+				method: 'POST',
+				body: formData
+			});
+			console.log(imageRes)
+		}
+
 	}
 
 	const changeImage = (e) => {

@@ -9,13 +9,24 @@ import ApiSevice from '../modules/ApiSevice';
 const Event = props => {
 
     const [eventData, setEventData] = useState({});
+    const [eventAuthor, setEventAuthor] = useState({});
+    const [eventImage, setEventImage] = useState(undefined);
 
     useEffect(async () => {
 		try {
             console.log(props.eventId)
 			const res = await ApiSevice.get('event', props.eventId);
             setEventData(res);
-			console.log(res)
+            console.log(res, 'lel')
+            const imageSrc = res.is_public ? res.images[0] : `https://vkevents.tk/static/${res.images[1]}`;
+            console.log(imageSrc, 'aaaa')
+            setEventImage(imageSrc);
+            console.log(res)
+
+            const userResponse = await props.getUserInfo(res.author);
+            const user = userResponse.response[0];
+            setEventAuthor(user);
+			
 		} catch(err) {
 			console.log(err)
 		}
@@ -32,9 +43,10 @@ const Event = props => {
 
             <p> Описание </p>
             <p> {eventData.description} </p>
+            <img src={eventImage}></img>
             <br></br>
             <p> Автор </p>
-            <p> {eventData.author} </p>
+            <p> {eventAuthor.first_name} {eventAuthor.last_name}</p>
 
 
 			<Button sizeY={'regular'} onClick={() => props.makeRepost(eventData.title)}> Поделиться </Button>

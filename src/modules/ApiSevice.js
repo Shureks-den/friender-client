@@ -52,6 +52,14 @@ class ApiService {
         });
         return await response.json();
     }
+
+    async postImage(url, id, formData) {
+        const response = await fetch(`${this.#hostUrl}/${url}/${id}`, {
+            method: 'POST',
+            body: formData
+        });
+        return await response.json();
+    }
 }
 
 export default new ApiService();

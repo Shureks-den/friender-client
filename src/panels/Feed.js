@@ -12,7 +12,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser }) => {
 			const res = await ApiSevice.getAll('events');
 			console.log(res)
 			const listItems = res.map((elem) =>
-			<ContentCard src={elem.src} subtitle={elem.title} caption={Date(elem.data)} onClick={() => go(elem.id)} key={elem.id}/>
+			<ContentCard src={elem.is_public ? elem.images[0] : `https://vkevents.tk/static/${elem.images[1]}`} subtitle={elem.title} caption={Date(elem.data)} onClick={() => go(elem.id)} key={elem.id}/>
 		  );
 		  setEventsData(listItems);
 		} catch(err) {
@@ -24,7 +24,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser }) => {
 	return (
 		<Panel id={id}>
 		<PanelHeader>Лента событий</PanelHeader>
-		<Group header={<Header mode="secondary">Navigation Example</Header>}>
+		<Group header={<Header mode="secondary">Новые события</Header>}>
 			<CardGrid size="l">
 				{eventsData}
 			</CardGrid>

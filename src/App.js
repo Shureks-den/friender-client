@@ -46,8 +46,6 @@ const App = ({ router }) => {
 
 		}
 
-
-
 		fetchData();
 		getToken();
 	}, []);
@@ -62,6 +60,11 @@ const App = ({ router }) => {
 		router.toView(ViewTypes.EVENT);
 	}
 
+	const getUserInfo = async vkId => {
+		const userInfo = await bridge.send('VKWebAppCallAPIMethod', {"method": "users.get", "params": {"user_ids": `${vkId}`, 'field': 'screen_name, city', "v":"5.131", "access_token": `vk1.a.Qi72aoB0A_f8XZ8aZY2SbspUhdS0x7xDIezw-7Lm_kRG_iaXnZkUSv0E1qOVIUVbW3j9ezSV1wzcWmhgE1WWyxy59YHOX6yrF2-BcKiRifRWLoTzrLi7kQydxcvabuaPkzO78da8NeQj21XTygq-DEtqmUn3PKxB2ZI2PQfoYCDuEE5YtizF30g5v4BAvB_b`}});
+		return userInfo;
+	}
+
 	const makeRepost = async (eventId) => {
 		const repost = await bridge.send("VKWebAppShowWallPostBox", { "message": "Тест мини аппа " + eventId, attachments: 'https://vk.com/app51441556_133937404#/event'  });
 		console.log(repost);
@@ -71,7 +74,7 @@ const App = ({ router }) => {
 		const response = await bridge.send("VKWebAppGetFriends", {multi: true});
 		console.log(response)
 		response.users.forEach(async u => {
-			const request = await bridge.send('VKWebAppCallAPIMethod', {"method": "messages.send", "request_id": "32test", "params": {"user_id": `${u.id}`, "message": `Тест с id event ${eventId}`, "v":"5.131", "random_id": "0", "access_token": `vk1.a.Qi72aoB0A_f8XZ8aZY2SbspUhdS0x7xDIezw-7Lm_kRG_iaXnZkUSv0E1qOVIUVbW3j9ezSV1wzcWmhgE1WWyxy59YHOX6yrF2-BcKiRifRWLoTzrLi7kQydxcvabuaPkzO78da8NeQj21XTygq-DEtqmUn3PKxB2ZI2PQfoYCDuEE5YtizF30g5v4BAvB_b`}})
+			const request = await bridge.send('VKWebAppCallAPIMethod', {"method": "messages.send", "request_id": "32test", "params": {"user_id": `${u.id}`, "message": `Тест с id event ${eventId}`, "v":"5.131", "random_id": "0", "access_token": ``}})
 		})	
 	}
 
@@ -122,7 +125,7 @@ const App = ({ router }) => {
 						</View>
 
 						<View id={ViewTypes.EVENT} activePanel={router.activePanel}>
-							<Event id={PanelTypes.EVENT} eventId={eventId} go={() => router.toView(ViewTypes.MAIN)} makeRepost={makeRepost} makeShare={makeShare} />
+							<Event id={PanelTypes.EVENT} eventId={eventId} go={() => router.toView(ViewTypes.MAIN)} makeRepost={makeRepost} makeShare={makeShare} getUserInfo={getUserInfo}/>
 						</View>
 					</Epic>
 				</AppRoot>
