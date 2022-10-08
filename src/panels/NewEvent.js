@@ -5,6 +5,8 @@ import { useState, useRef } from 'react';
 import { Panel, PanelHeader, PanelHeaderBack, Input, FormItem, Textarea, Button, File } from '@vkontakte/vkui';
 import { Icon24Camera } from '@vkontakte/icons'
 
+import ApiSevice from '../modules/ApiSevice';
+
 
 const NewEvent = props => {
 	const [formItemStatus, setFormItemStatus] = useState("default");
@@ -16,12 +18,13 @@ const NewEvent = props => {
 	const [eventImage, setEventImage] = useState(null);
 
 	const sendEvent = async () => {
-		console.log({
+		const res = await ApiSevice.post('event/create', {
 			title: eventTitle,
 			description: eventDescription,
 			author: props.userId,
-			image: eventImage,
+			category: "ART"
 		})
+		console.log(res)
 	}
 
 	const changeImage = (e) => {

@@ -17,7 +17,7 @@ export const PanelTypes = {
 export const structure = [
     {
         id: ViewTypes.MAIN,
-        hash: 'main',
+        hash: '',
         panels: [
             {
                 id: PanelTypes.MAIN_HOME,
@@ -27,7 +27,7 @@ export const structure = [
     },
     {
         id: ViewTypes.ADDNEW,
-        hash: 'main',
+        hash: '',
         panels: [
             {
                 id: PanelTypes.ADDNEW,
@@ -37,7 +37,7 @@ export const structure = [
     },
     {
         id: ViewTypes.PROFILE,
-        hash: 'main',
+        hash: '',
         panels: [
             {
                 id: PanelTypes.PROFILE,
@@ -47,11 +47,11 @@ export const structure = [
     },
     {
         id: ViewTypes.EVENT,
-        hash: 'event/:slug',
+        hash: '',
         panels: [
             {
                 id: PanelTypes.EVENT,
-                hash: '/eventId/:id'
+                hash: '/event'
             }
         ]
     },

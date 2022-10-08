@@ -1,7 +1,9 @@
 class ApiService {
-    constructor();
+    constructor() {
 
-    #hostUrl = '37.139.33.76';
+    };
+
+    #hostUrl = 'https://vkevents.tk';
 
     async getAll(url, params) {
         let generatedUrl = url + '?';
@@ -9,10 +11,12 @@ class ApiService {
             generatedUrl += `${key}=${params[key]}&`;
         }
         const finalUrl = generatedUrl.slice(0, -1);
-        const response = await fetch(`${this.#hostUrl}/${finalUrl}}`, {
+        const response = await fetch(`${this.#hostUrl}/${finalUrl}`, {
             method: 'GET',
         });
-        return await response.json();
+
+        const data = await response.json();
+        return data;
     }
 
     async get(url, id) {
@@ -25,7 +29,9 @@ class ApiService {
     async post(url, data) {
         const response = await fetch(`${this.#hostUrl}/${url}`, {
             method: 'POST',
-            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify(data),
         });
         return await response.json();
@@ -41,9 +47,11 @@ class ApiService {
     async put(url, data) {
         const response = await fetch(`${this.#hostUrl}/${url}`, {
             method: 'PUT',
-            mode: 'cors',
+
             body: JSON.stringify(data),
         });
         return await response.json();
     }
 }
+
+export default new ApiService();
