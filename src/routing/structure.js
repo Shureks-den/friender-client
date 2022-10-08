@@ -3,13 +3,15 @@ import { IStructure } from "react-router-vkminiapps";
 export const ViewTypes = {
     MAIN: "MAIN",
     ADDNEW: "ADDNEW",
-    PROFILE: "PROFILE"
+    PROFILE: "PROFILE",
+    EVENT: 'EVENT'
 }
    
 export const PanelTypes = {
     MAIN_HOME: "MAIN_HOME",
     ADDNEW: "ADDNEW",
-    PROFILE: "PROFILE"
+    PROFILE: "PROFILE",
+    EVENT: 'EVENT'
 }
 
 export const structure = [
@@ -40,6 +42,16 @@ export const structure = [
             {
                 id: PanelTypes.PROFILE,
                 hash: '/profile'
+            }
+        ]
+    },
+    {
+        id: ViewTypes.EVENT,
+        hash: 'event/:slug',
+        panels: [
+            {
+                id: PanelTypes.EVENT,
+                hash: '/eventId/:id'
             }
         ]
     },

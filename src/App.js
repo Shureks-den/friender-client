@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import bridge from '@vkontakte/vk-bridge';
 import { View, ScreenSpinner, AdaptivityProvider, AppRoot, ConfigProvider, SplitLayout, SplitCol, Epic, Tabbar, TabbarItem, Panel, PanelHeader } from '@vkontakte/vkui';
-import { Icon28NewsfeedOutline, Icon28AddCircleOutline, Icon28Profile } from '@vkontakte/icons'
+import { Icon28NewsfeedOutline, Icon28AddCircleOutline, Icon28Profile } from '@vkontakte/icons';
 import '@vkontakte/vkui/dist/vkui.css';
 
 import { withRouter, useRouterSelector, useRouterActions } from 'react-router-vkminiapps';
 import { ViewTypes, PanelTypes } from './routing/structure.js';
 
-import Home from './panels/Home';
-import Persik from './panels/Persik';
+import Feed from './panels/Feed';
+import NewEvent from './panels/NewEvent';
 
 const App = ({ router }) => {
 	const [scheme, setScheme] = useState('bright_light')
@@ -75,16 +75,22 @@ const App = ({ router }) => {
 					}>
 
 						<View id={ViewTypes.MAIN} activePanel={router.activePanel}>
-							<Home id={PanelTypes.MAIN_HOME} fetchedUser={fetchedUser} go={() => router.toView(ViewTypes.ADDNEW)} makeRepost={makeRepost} />
+							<Feed id={PanelTypes.MAIN_HOME} fetchedUser={fetchedUser} go={(id) => router.toView(ViewTypes.EVENT)} makeRepost={makeRepost} />
 						</View>
 
 						<View id={ViewTypes.ADDNEW} activePanel={router.activePanel}>
-							<Persik id={PanelTypes.ADDNEW} go={() => router.toView(ViewTypes.MAIN)} />
+							<NewEvent id={PanelTypes.ADDNEW} userId={fetchedUser?.id} go={() => router.toView(ViewTypes.MAIN)} />
 						</View>
 
 						<View id={ViewTypes.PROFILE} activePanel={router.activePanel}>
 							<Panel id={PanelTypes.PROFILE}>
 								<PanelHeader>Профиль</PanelHeader>
+							</Panel>
+						</View>
+
+						<View id={ViewTypes.EVENT} activePanel={router.activePanel}>
+							<Panel id={PanelTypes.EVENT}>
+								<PanelHeader>Событие</PanelHeader>
 							</Panel>
 						</View>
 					</Epic>
