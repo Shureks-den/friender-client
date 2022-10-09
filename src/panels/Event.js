@@ -14,14 +14,12 @@ const Event = props => {
 
     useEffect(async () => {
 		try {
-            console.log(props.eventId)
-			const res = await ApiSevice.get('event', props.eventId);
+            console.log(window.location.hash?.slice(1).split('=').slice(1,2).join(''), 'aaa')
+            const eventId = props.eventId.length !== 0 ? props.eventId : window.location.hash?.slice(1).split('=').slice(1,2).join('');
+			const res = await ApiSevice.get('event', eventId);
             setEventData(res);
-            console.log(res, 'lel')
             const imageSrc = res.is_public ? res.images[0] : `https://vkevents.tk/static/${res.images[1]}`;
-            console.log(imageSrc, 'aaaa')
             setEventImage(imageSrc);
-            console.log(res)
 
             const userResponse = await props.getUserInfo(res.author);
             const user = userResponse.response[0];

@@ -4,7 +4,7 @@ import { View, ScreenSpinner, AdaptivityProvider, AppRoot, ConfigProvider, Split
 import { Icon28NewsfeedOutline, Icon28AddCircleOutline, Icon28Profile } from '@vkontakte/icons';
 import '@vkontakte/vkui/dist/vkui.css';
 
-import { withRouter, useRouterSelector, useRouterActions } from 'react-router-vkminiapps';
+import { withRouter, useRouterSelector, useRouterActions } from 'react-router-vkminiapps-updated';
 import { ViewTypes, PanelTypes } from './routing/structure.js';
 
 import Feed from './panels/Feed';
@@ -50,14 +50,10 @@ const App = ({ router }) => {
 		getToken();
 	}, []);
 
-	const go = e => {
-		setActivePanel(e.currentTarget.dataset.to);
-	};
-
 	const goTo = id => {
 		setEventId(id);
-		bridge.send("VKWebAppSetLocation", {"location": 'events/' + id});
 		router.toView(ViewTypes.EVENT);
+		bridge.send("VKWebAppSetLocation", {"location": 'event?id=' + id});
 	}
 
 	const getUserInfo = async vkId => {

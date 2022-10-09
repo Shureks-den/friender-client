@@ -1,4 +1,4 @@
-import { IStructure } from "react-router-vkminiapps";
+import { IStructure } from "react-router-vkminiapps-updated";
 
 export const ViewTypes = {
     MAIN: "MAIN",
@@ -21,7 +21,7 @@ export const structure = [
         panels: [
             {
                 id: PanelTypes.MAIN_HOME,
-                hash: '/events'
+                hash: 'events'
             }
         ]
     },
@@ -31,7 +31,7 @@ export const structure = [
         panels: [
             {
                 id: PanelTypes.ADDNEW,
-                hash: '/newEvent'
+                hash: 'newEvent'
             }
         ]
     },
@@ -41,7 +41,7 @@ export const structure = [
         panels: [
             {
                 id: PanelTypes.PROFILE,
-                hash: '/profile'
+                hash: 'profile'
             }
         ]
     },
@@ -51,7 +51,7 @@ export const structure = [
         panels: [
             {
                 id: PanelTypes.EVENT,
-                hash: '/event'
+                hash: 'event'
             }
         ]
     },
