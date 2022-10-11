@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "start": "cross-env PORT=10888 HTTPS=true react-scripts start",
+    "test": "semistandard && node my-tests.js",
     "build": "react-scripts build",
     "predeploy": "npm run build",
     "deploy": "vk-miniapps-deploy",
@@ -27,7 +28,8 @@
     "prop-types": "^15.7.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-router-vkminiapps-updated": "^1.2.3"
+    "react-router-vkminiapps-updated": "^1.2.3",
+    "semistandard": "^16.0.1"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
