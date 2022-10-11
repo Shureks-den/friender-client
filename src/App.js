@@ -74,6 +74,10 @@ const App = ({ router }) => {
 		})	
 	}
 
+	const share = async (eventId) => {
+		const response = await bridge.send("VKWebAppShare");
+	}
+
 	console.log(router)
 
 	return (
@@ -121,7 +125,7 @@ const App = ({ router }) => {
 						</View>
 
 						<View id={ViewTypes.EVENT} activePanel={router.activePanel}>
-							<Event id={PanelTypes.EVENT} eventId={eventId} go={() => router.toView(ViewTypes.MAIN)} makeRepost={makeRepost} makeShare={makeShare} getUserInfo={getUserInfo}/>
+							<Event id={PanelTypes.EVENT} eventId={eventId} go={() => router.toView(ViewTypes.MAIN)} makeRepost={makeRepost} makeShare={share} getUserInfo={getUserInfo}/>
 						</View>
 					</Epic>
 				</AppRoot>
