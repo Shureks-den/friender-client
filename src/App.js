@@ -9,15 +9,17 @@ import { ViewTypes, PanelTypes } from './routing/structure.js';
 
 import VkApiService from './modules/VkApiService.js';
 
+import { useSelector, useDispatch } from 'react-redux'
+import { remove, set } from './store/user/userSlice'
+
 import Feed from './panels/Feed';
 import NewEvent from './panels/NewEvent';
 import Event from './panels/Event.js';
 
 const App = ({ router }) => {
+  const dispatch = useDispatch();
   const [scheme, setScheme] = useState('bright_light');
-  const [activePanel, setActivePanel] = useState('home');
-  const [fetchedUser, setUser] = useState(null);
-  const [popout, setPopout] = useState(<ScreenSpinner size='large' />);
+  const user = useSelector((state => state.user.value));
 
   const [eventId, setEventId] = useState('');
 
@@ -26,7 +28,8 @@ const App = ({ router }) => {
 
     async function fetchData () {
       const user = await VkApiService.fetchUserData();
-      setUser(user);
+      dispatch(set(user));
+      console.log(user);
     }
 
     fetchData();
@@ -81,11 +84,11 @@ const App = ({ router }) => {
           >
 
             <View id={ViewTypes.MAIN} activePanel={router.activePanel}>
-              <Feed id={PanelTypes.MAIN_HOME} fetchedUser={fetchedUser} go={(id) => goTo(id)} />
+              <Feed id={PanelTypes.MAIN_HOME} fetchedUser={user} go={(id) => goTo(id)} />
             </View>
 
             <View id={ViewTypes.ADDNEW} activePanel={router.activePanel}>
-              <NewEvent id={PanelTypes.ADDNEW} userId={fetchedUser?.id} go={() => router.toView(ViewTypes.MAIN)} />
+              <NewEvent id={PanelTypes.ADDNEW} userId={user?.id} go={() => router.toBack()} onSuccess={goTo} />
             </View>
 
             <View id={ViewTypes.PROFILE} activePanel={router.activePanel}>

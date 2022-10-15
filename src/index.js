@@ -6,10 +6,22 @@ import App from './App';
 import { RouterProvider } from 'react-router-vkminiapps-updated';
 import { structure } from './routing/structure.js';
 
+import store from './store/store.js'
+import { Provider } from 'react-redux'
+
 // Init VK  Mini App
 bridge.send('VKWebAppInit');
 
-ReactDOM.render(<RouterProvider structure={structure}> <App /> </RouterProvider>, document.getElementById('root'));
+const root = document.getElementById('root');
+
+ReactDOM.render(
+  <RouterProvider structure={structure}> 
+    <Provider store={store}> 
+      <App /> 
+    </Provider>
+  </RouterProvider>, 
+  root);
+
 if (process.env.NODE_ENV === 'development') {
   import('./eruda').then(({ default: eruda }) => {}); // runtime download
 }

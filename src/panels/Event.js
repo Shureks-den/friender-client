@@ -40,16 +40,13 @@ const Event = props => {
       <p> {eventData.description} </p>
       <img src={eventImage} />
       <br />
-      {eventAuthor &&
+      {eventAuthor ?
         <div>
           <p> Автор </p>
           <p> {eventAuthor.first_name} {eventAuthor.last_name}</p>
         </div>
+      : <p> Публичное событие </p>
       }
-      {!eventAuthor &&
-        <p> Публичное событие </p>
-      }
-
 
       <Button sizeY='regular' onClick={() => props.makeRepost(eventData.id, eventData.title, eventImage)}> Поделиться </Button>
       <Button sizeY='regular' onClick={() => props.makeShare(eventData.id)}> Пригласить друзей </Button>
