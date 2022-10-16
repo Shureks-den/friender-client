@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-import { Panel, PanelHeader, PanelHeaderBack, Input, FormItem, Textarea, Button, File, HorizontalCell, HorizontalScroll, Avatar, Calendar, Group, Header } from '@vkontakte/vkui';
+import { Panel, PanelHeader, PanelHeaderBack, Input, FormItem, Textarea, Button, File, HorizontalCell, HorizontalScroll, Avatar, Calendar, Group, Header, Checkbox, FormLayoutGroup, Select } from '@vkontakte/vkui';
 import { Icon24Camera } from '@vkontakte/icons';
 
 import ApiSevice from '../modules/ApiSevice';
@@ -9,35 +9,53 @@ import ApiSevice from '../modules/ApiSevice';
 import Map from '../components/Map.js';
 
 const NewEvent = props => {
-  const [formItemStatus, setFormItemStatus] = useState('default');
   const [eventTitle, setEventTitle] = useState('');
   const [eventDescription, setEventDescription] = useState('');
   const [eventDate, setEventDate] = useState(new Date());
+  const [coords, setCoords] = useState([]);
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [members, setMembers] = useState(1);
+  const [category, setCategory] = useState('Туса');
 
   const [imagesSrc, setImagesSrc] = useState([]);
   const [eventImages, setEventImages] = useState([]);
 
+  const [formItemStatus, setFormItemStatus] = useState('default');
+
   const sendEvent = async () => {
-    const res = await ApiSevice.post('event/create', {
+    console.log({
       title: eventTitle,
       description: eventDescription,
       author: props.userId,
-      category: 'ART'
-    });
-    if (eventImage) {
-      const newAdvertId = res.id;
+      category: category,
+      geo: {
+        latitude: coords[0],
+        longitude: coords[1],
+      },
+      startDate: eventDate.getTime(),
+      members: Number(members),
+      is_private: isPrivate,
+    })
+    // const res = await ApiSevice.post('event/create', {
+    //   title: eventTitle,
+    //   description: eventDescription,
+    //   author: props.userId,
+    //   category: 'ART'
+    // });
+    if (eventImages.length) {
+      // const newAdvertId = res.id;
 
       const formData = new FormData();
-      formData.append('photo', eventImage);
-      const imageRes = await fetch(`https://vkevents.tk/image/upload?uid=${newAdvertId}`, {
-        method: 'POST',
-        body: formData
-      });
+      formData.append('photo', eventImages);
+      // const imageRes = await fetch(`https://vkevents.tk/image/upload?uid=${newAdvertId}`, {
+      //   method: 'POST',
+      //   body: formData
+      // });
       console.log(imageRes);
     }
-    if (res.id) {
-      props.onSuccess(res.id);
-    }
+    // if (res.id) {
+    //   props.onSuccess(res.id);
+    // }
   };
 
   const changeImage = (e) => {
@@ -92,12 +110,38 @@ const NewEvent = props => {
         <Textarea placeholder='Самая лучшая тусовка!!!' value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} />
       </FormItem>
 
+      <FormLayoutGroup mode="horizontal" style={{ alignItems: 'center' }}>
+        <Checkbox value={isPrivate} onChange={((e) => setIsPrivate(e.target.value))}>Приватное событие</Checkbox>
+        <FormItem top='Количество участников'>
+          <Input type={'number'} min={1} value={members} onChange={(e) => setMembers(e.target.value)} />
+        </FormItem>
+      </FormLayoutGroup>
+
+      <FormItem top='Категория' status={formItemStatus}>
+        <Select
+          options={[
+            "Туса",
+            "Пыво",
+            "Кино",
+            "Театр",
+            "Еще что-то",
+          ].map((i) => ({
+            label: i,
+            value: i,
+          }))}
+          defaultValue={"Туса"}
+          onChange={(e) => setCategory(e.target.value)}
+        />
+      </FormItem>
+
+
+
       <Group header={
         <Header>
           Время события
         </Header>
       }>
-        <div style={{ display: 'flex', marginBottom: '30px', justifyContent: 'space-around'}}>
+        <div style={{ display: 'flex', marginBottom: '30px', justifyContent: 'space-around' }}>
           <Calendar
             value={eventDate}
             onChange={setEventDate}
@@ -109,7 +153,7 @@ const NewEvent = props => {
         </div>
       </Group>
 
-      <Map isClickable={true} latitude={50} longitude={50}/>
+      <Map isClickable={true} setCoords={setCoords} />
 
       <Button sizeY='regular' onClick={sendEvent}> Опубликовать </Button>
     </Panel>
