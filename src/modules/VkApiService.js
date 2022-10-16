@@ -14,16 +14,16 @@ class VkApiService {
   }
 
   async repost (eventId, eventTitle, eventAvatar) {
-    const response = await bridge.send('VKWebAppShowWallPostBox', { 
-      message: `Ищу компанию для ${eventTitle}, присоединяйтесь!`, 
-      attachments: 
+    const response = await bridge.send('VKWebAppShowWallPostBox', {
+      message: `Ищу компанию для ${eventTitle}, присоединяйтесь!`,
+      attachments:
         `photo133937404_456239731,
-        https://vk.com/app51441556#event?id=${eventId}`,
+        https://vk.com/app51441556#event?id=${eventId}`
     });
     return response;
   }
 
-  async share(eventId) {
+  async share (eventId) {
     const response = await bridge.send('VKWebAppShare', {
       link: `https://vk.com/app51441556#event?id=${eventId}`
     });

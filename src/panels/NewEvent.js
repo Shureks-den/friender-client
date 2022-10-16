@@ -6,21 +6,37 @@ import { Icon24Camera } from '@vkontakte/icons';
 
 import ApiSevice from '../modules/ApiSevice';
 
+import { useSelector, useDispatch } from 'react-redux';
+import { remove, set } from '../store/categories/categoriesSlice.js';
+
 import Map from '../components/Map.js';
 
 const NewEvent = props => {
+  const dispatch = useDispatch();
+
   const [eventTitle, setEventTitle] = useState('');
   const [eventDescription, setEventDescription] = useState('');
   const [eventDate, setEventDate] = useState(new Date());
   const [coords, setCoords] = useState([]);
   const [isPrivate, setIsPrivate] = useState(false);
   const [members, setMembers] = useState(1);
+
+  const categories = useSelector(state => state.categories.value);
   const [category, setCategory] = useState('Туса');
 
   const [imagesSrc, setImagesSrc] = useState([]);
   const [eventImages, setEventImages] = useState([]);
 
   const [formItemStatus, setFormItemStatus] = useState('default');
+
+  useEffect(async () => {
+    if (!categories.length) {
+      const categories = await ApiSevice.getAll('categories');
+      console.log(categories);
+      dispatch(set(categories));
+    }
+    setCategory(categories[0]);
+  }, []);
 
   const sendEvent = async () => {
     console.log({
@@ -30,12 +46,12 @@ const NewEvent = props => {
       category: category,
       geo: {
         latitude: coords[0],
-        longitude: coords[1],
+        longitude: coords[1]
       },
       startDate: eventDate.getTime(),
       members: Number(members),
-      is_private: isPrivate,
-    })
+      is_private: isPrivate
+    });
     // const res = await ApiSevice.post('event/create', {
     //   title: eventTitle,
     //   description: eventDescription,
@@ -59,7 +75,7 @@ const NewEvent = props => {
   };
 
   const changeImage = (e) => {
-    console.log(e.target.files)
+    console.log(e.target.files);
     const files = Array.from(e.target.files);
     setEventImages(files.map(f => new Object(f)));
     const src = files.map(f => URL.createObjectURL(f));
@@ -77,7 +93,7 @@ const NewEvent = props => {
         <Input type='text' title='Название События' label='Название события' value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} />
       </FormItem>
       <FormItem top='Загрузите фото'>
-        <File before={<Icon24Camera role='presentation' />} size='m' accept='image/png, image/gif, image/jpeg' multiple={true} onInput={changeImage}>
+        <File before={<Icon24Camera role='presentation' />} size='m' accept='image/png, image/gif, image/jpeg' multiple onInput={changeImage}>
           Открыть галерею
         </File>
       </FormItem>
@@ -86,69 +102,66 @@ const NewEvent = props => {
           <Header>
             Изображения
           </Header>
-        }>
-          <HorizontalScroll top="Изображения"
+        }
+        >
+          <HorizontalScroll
+            top='Изображения'
             showArrows
             getScrollToLeft={(i) => i - 120}
-            getScrollToRight={(i) => i + 120}>
-            <div style={{ display: "flex", userSelect: 'none' }}>
+            getScrollToRight={(i) => i + 120}
+          >
+            <div style={{ display: 'flex', userSelect: 'none' }}>
               {imagesSrc.map((url, idx) =>
-                <HorizontalCell size="m" key={idx}>
+                <HorizontalCell size='m' key={idx}>
                   <Avatar
                     size={88}
-                    mode="app"
+                    mode='app'
                     src={url}
                   />
                 </HorizontalCell>
               )}
             </div>
           </HorizontalScroll>
-        </Group>
-      }
+        </Group>}
 
       <FormItem top='Описание события' status={formItemStatus}>
         <Textarea placeholder='Самая лучшая тусовка!!!' value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} />
       </FormItem>
 
-      <FormLayoutGroup mode="horizontal" style={{ alignItems: 'center' }}>
+      <FormLayoutGroup mode='horizontal' style={{ alignItems: 'center' }}>
         <Checkbox value={isPrivate} onChange={((e) => setIsPrivate(e.target.value))}>Приватное событие</Checkbox>
         <FormItem top='Количество участников'>
-          <Input type={'number'} min={1} value={members} onChange={(e) => setMembers(e.target.value)} />
+          <Input type='number' min={1} value={members} onChange={(e) => setMembers(e.target.value)} />
         </FormItem>
       </FormLayoutGroup>
 
       <FormItem top='Категория' status={formItemStatus}>
         <Select
           options={[
-            "Туса",
-            "Пыво",
-            "Кино",
-            "Театр",
-            "Еще что-то",
+            ...categories
           ].map((i) => ({
             label: i,
-            value: i,
+            value: i
           }))}
-          defaultValue={"Туса"}
+          defaultValue='Туса'
           onChange={(e) => setCategory(e.target.value)}
         />
       </FormItem>
-
-
 
       <Group header={
         <Header>
           Время события
         </Header>
-      }>
+      }
+      >
         <div style={{ display: 'flex', marginBottom: '30px', justifyContent: 'space-around' }}>
           <Calendar
             value={eventDate}
             onChange={setEventDate}
-            enableTime={true}
-            disablePast={true}
-            disablePickers={true}
-            size={'m'}
+            enableTime
+            disablePast
+            disablePickers
+            size='m'
           />
         </div>
       </Group>

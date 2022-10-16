@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import bridge from '@vkontakte/vk-bridge';
-import { View, ScreenSpinner, AdaptivityProvider, AppRoot, ConfigProvider, SplitLayout, SplitCol, Epic, Tabbar, TabbarItem, Panel, PanelHeader } from '@vkontakte/vkui';
+import { View, AdaptivityProvider, AppRoot, ConfigProvider, Epic, Tabbar, TabbarItem, Panel, PanelHeader } from '@vkontakte/vkui';
 import { Icon28NewsfeedOutline, Icon28AddCircleOutline, Icon28Profile } from '@vkontakte/icons';
 import '@vkontakte/vkui/dist/vkui.css';
 
@@ -8,18 +7,20 @@ import { withRouter, useRouterSelector, useRouterActions } from 'react-router-vk
 import { ViewTypes, PanelTypes } from './routing/structure.js';
 
 import VkApiService from './modules/VkApiService.js';
+import ApiSevice from './modules/ApiSevice.js';
 
-import { useSelector, useDispatch } from 'react-redux'
-import { remove, set } from './store/user/userSlice'
+import { useSelector, useDispatch } from 'react-redux';
+import { remove, set } from './store/user/userSlice';
 
 import Feed from './panels/Feed';
 import NewEvent from './panels/NewEvent';
 import Event from './panels/Event.js';
+import Profile from './panels/Profile.js';
 
 const App = ({ router }) => {
   const dispatch = useDispatch();
   const [scheme, setScheme] = useState('bright_light');
-  const user = useSelector((state => state.user.value));
+  const user = useSelector(state => state.user.value);
 
   const [eventId, setEventId] = useState('');
 
@@ -29,7 +30,7 @@ const App = ({ router }) => {
     async function fetchData () {
       const user = await VkApiService.fetchUserData();
       dispatch(set(user));
-      console.log(user);
+      ApiSevice.setHeaderId(user.id);
     }
 
     fetchData();
@@ -40,6 +41,11 @@ const App = ({ router }) => {
     router.toView(ViewTypes.EVENT);
     await VkApiService.setNewLocation(`event?id=${id}`);
   };
+
+  const goToProfile = async id => {
+    router.toView(ViewTypes.PROFILE);
+    await VkApiService.setNewLocation(`profile?id=${id}`);
+  }
 
   const makeRepost = async (eventId, eventName, eventAvatar) => {
     const response = VkApiService.repost(eventId, eventName, eventAvatar);
@@ -92,13 +98,18 @@ const App = ({ router }) => {
             </View>
 
             <View id={ViewTypes.PROFILE} activePanel={router.activePanel}>
-              <Panel id={PanelTypes.PROFILE}>
-                <PanelHeader>Профиль</PanelHeader>
-              </Panel>
+              <Profile id={PanelTypes.PROFILE} go={() => router.toBack()}/>
             </View>
 
             <View id={ViewTypes.EVENT} activePanel={router.activePanel}>
-              <Event id={PanelTypes.EVENT} eventId={eventId} go={() => router.toView(ViewTypes.MAIN)} makeRepost={makeRepost} makeShare={makeShare} getUserInfo={VkApiService.fetchUserData} />
+              <Event 
+                id={PanelTypes.EVENT} 
+                eventId={eventId} go={() => router.toView(ViewTypes.MAIN)} 
+                makeRepost={makeRepost} 
+                makeShare={makeShare} 
+                getUserInfo={VkApiService.fetchUserData}
+                goToProfile={goToProfile}
+              />
             </View>
           </Epic>
         </AppRoot>
