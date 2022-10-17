@@ -23,13 +23,12 @@ const Event = props => {
       const eId = props.eventId.length !== 0 ? props.eventId : window.location.hash?.slice(1).split('=').slice(1, 2).join('');
       setEventId(eId);
       const res = await ApiSevice.get('event/get', eId);
-      console.log(res)
+      if (!res) return;
       setEventData(res);
       const imageSrc = res.is_public ? res.images[0] : `https://vkevents.tk/static/${res.images[1]}`;
       setEventImage(imageSrc);
 
-      console.log(res.time_start);
-      const date = new Date(res.time_start).toLocaleDateString();
+      const date = new Date(res.time_start).toLocaleString();
       setEventDate(date);
 
       if (res.author) {
@@ -99,7 +98,7 @@ const Event = props => {
       </FormItem>
 
       <Map isClickable={false} latitude={eventData.geo?.latitude} longitude={eventData.geo?.longitude} />
-      
+
 
       <ButtonGroup
         mode="horizontal"
@@ -110,19 +109,22 @@ const Event = props => {
         <Button sizeY='regular' onClick={() => props.makeShare(eventId)}> Пригласить друзей </Button>
       </ButtonGroup>
 
+      {user?.id === eventData.author ?
 
-      {user?.id === eventData.author &&
-         <Button sizeY='regular' onClick={() => props.makeShare(eventId)}> Удалить событие </Button>
+        <ButtonGroup
+          mode="vertical"
+          stretched
+          style={{ justifyContent: 'center', marginBottom: '30px', alignItems: 'center' }}
+        >
+          <Button sizeY='regular' onClick={() => props.makeShare(eventId)}> Редактировать </Button>
+          <Button sizeY='regular' onClick={() => props.makeShare(eventId)}> Удалить событие </Button>
+        </ButtonGroup>
+
+        : Boolean(eventData.members?.find(m => m === user?.id))
+
+          ? <Button sizeY='regular' onClick={() => props.makeShare(eventId)}> Отписаться </Button>
+          : <Button sizeY='regular' onClick={() => props.makeShare(eventId)}> Подписаться на событие </Button>
       }
-
-      {eventData.members?.find(m => m === user?.id) 
-      
-        ? <Button sizeY='regular' onClick={() => props.makeShare(eventId)}> Отписаться </Button>
-        : <Button sizeY='regular' onClick={() => props.makeShare(eventId)}> Подписаться на событие </Button>
-      }
-
-
-
     </Panel>
   );
 };

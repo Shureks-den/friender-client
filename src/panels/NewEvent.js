@@ -13,6 +13,7 @@ import Map from '../components/Map.js';
 
 const NewEvent = props => {
   const dispatch = useDispatch();
+  const user = useSelector(state => state.user.value);
 
   const [eventTitle, setEventTitle] = useState('');
   const [eventDescription, setEventDescription] = useState('');
@@ -32,14 +33,14 @@ const NewEvent = props => {
   useEffect(async () => {
     if (!categories.length) {
       const categories = await ApiSevice.getAll('categories');
-      console.log(categories);
+      if (!categories) return;
       dispatch(set(categories));
     }
     setCategory(categories[0]);
-  }, []);
+  }, [user]);
 
   const sendEvent = async () => {
-    console.log({
+    const res = await ApiSevice.post('event/create', {
       title: eventTitle,
       description: eventDescription,
       author: props.userId,
@@ -48,30 +49,24 @@ const NewEvent = props => {
         latitude: coords[0],
         longitude: coords[1]
       },
-      startDate: eventDate.getTime(),
-      members: Number(members),
+      time_start: eventDate.getTime(),
+      count_members: Number(members),
       is_private: isPrivate
     });
-    // const res = await ApiSevice.post('event/create', {
-    //   title: eventTitle,
-    //   description: eventDescription,
-    //   author: props.userId,
-    //   category: 'ART'
-    // });
     if (eventImages.length) {
-      // const newAdvertId = res.id;
+      const newAdvertId = res.id;
 
       const formData = new FormData();
       formData.append('photo', eventImages);
-      // const imageRes = await fetch(`https://vkevents.tk/image/upload?uid=${newAdvertId}`, {
-      //   method: 'POST',
-      //   body: formData
-      // });
+      const imageRes = await fetch(`https://vkevents.tk/image/upload?uid=${newAdvertId}`, {
+        method: 'POST',
+        body: formData
+      });
       console.log(imageRes);
     }
-    // if (res.id) {
-    //   props.onSuccess(res.id);
-    // }
+    if (res.id) {
+      props.onSuccess(res.id);
+    }
   };
 
   const changeImage = (e) => {

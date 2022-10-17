@@ -43,7 +43,7 @@ const Map = props => {
       });
       setIsClicked(true);
       props.setCoords(coords);
-      map.geoObjects.removeAll();
+      // map.geoObjects.removeAll();
       map.geoObjects.add(myGeoObject);
       await transformCoords(coords);
     });
@@ -69,21 +69,25 @@ const Map = props => {
         setAdress(originalEvent.item.value);
       });
 
-      console.log(props)
       if (props.isClickable) {
         handleClick(myMap);
-      } else {
-        const myGeoObject = new ymaps.GeoObject({
-          geometry: {
-            type: 'Point', // тип геометрии - точка
-            coordinates: [props.latitude ?? 55.796931, props.longitude ?? 37.537847], // координаты точки
-          }
-        });
-        myMap.geoObjects.add(myGeoObject);
-        transformCoords([props.latitude ?? 55.796931, props.longitude ?? 37.537847]);
       }
     });
   }, []);
+
+  useEffect(async () => {
+    if (!yMap || !props.latitude || !props.longitude) return;
+    console.log(yMap, props.latitude, props.longitude)
+    const myGeoObject = new ymaps.GeoObject({
+      geometry: {
+        type: 'Point', // тип геометрии - точка
+        coordinates: [props.latitude ?? 55.796931, props.longitude ?? 37.537847], // координаты точки
+      }
+    });
+    console.log(myGeoObject)
+    yMap.geoObjects.add(myGeoObject);
+    await transformCoords([props.latitude ?? 55.796931, props.longitude ?? 37.537847]);
+  }, [props.latitude, props.longitude, yMap])
 
   useEffect(() => {
     if (!isClicked) {
@@ -92,7 +96,7 @@ const Map = props => {
           results: 1
         }).then(res => {
         // Выбираем первый результат геокодирования.
-          yMap?.geoObjects.removeAll();
+          // yMap?.geoObjects.removeAll();
           const firstGeoObject = res.geoObjects.get(0);
           // Координаты геообъекта.
           const coords = firstGeoObject.geometry.getCoordinates();

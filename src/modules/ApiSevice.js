@@ -6,6 +6,7 @@ class ApiService {
   #userId = '';
 
   async getAll(url, params) {
+    if (!Boolean(this.#userId)) return;
     let generatedUrl = url + '?';
     for (const key in params) {
       generatedUrl += `${key}=${params[key]}&`;
@@ -23,6 +24,7 @@ class ApiService {
   }
 
   async get(url, id) {
+    if (!Boolean(this.#userId)) return;
     const response = await fetch(`${this.#hostUrl}/${url}/${id}`, {
       method: 'GET',
       headers: {
@@ -33,6 +35,7 @@ class ApiService {
   }
 
   async post(url, data) {
+    if (!Boolean(this.#userId)) return;
     const response = await fetch(`${this.#hostUrl}/${url}`, {
       method: 'POST',
       headers: {
@@ -45,6 +48,7 @@ class ApiService {
   }
 
   async delete(url, id) {
+    if (!Boolean(this.#userId)) return;
     const response = await fetch(`${this.#hostUrl}/${url}/${id}`, {
       method: 'DELETE',
       headers: {
@@ -55,6 +59,7 @@ class ApiService {
   }
 
   async put(url, data) {
+    if (!Boolean(this.#userId)) return;
     const response = await fetch(`${this.#hostUrl}/${url}`, {
       method: 'PUT',
       headers: {
@@ -66,6 +71,7 @@ class ApiService {
   }
 
   async postImage(url, id, formData) {
+    if (!Boolean(this.#userId)) return;
     const response = await fetch(`${this.#hostUrl}/${url}/${id}`, {
       method: 'POST',
       headers: {
