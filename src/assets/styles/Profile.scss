@@ -1,0 +1,35 @@
+.profile-active-card {
+
+  &__caption {
+    display: flex;
+    height: 20%;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  &__avatar {
+    width: 220px;
+    height: 124px;
+    border-radius: 8px;
+    border: "1px solid var(--vkui--color_image_placeholder_alpha)";
+    object-fit: "cover";
+
+    &-author {
+      width: 220px;
+      height: 124px;
+      border-radius: 8px;
+      border: "1px solid var(--vkui--color_image_placeholder_alpha)";
+      object-fit: "cover";
+      outline: 1px ridge red;
+    }
+  }
+
+  &__title {
+    font-size: 16px;
+  }
+
+  &__date {
+    font-size: 14px;
+  }
+
+}

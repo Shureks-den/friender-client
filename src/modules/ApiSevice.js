@@ -58,9 +58,9 @@ class ApiService {
     return await response.json();
   }
 
-  async put(url, data) {
+  async put(url, id, postUrl, data) {
     if (!Boolean(this.#userId)) return;
-    const response = await fetch(`${this.#hostUrl}/${url}`, {
+    const response = await fetch(`${this.#hostUrl}/${url}/${id}/${postUrl}`, {
       method: 'PUT',
       headers: {
         'X-User-ID': this.#userId,

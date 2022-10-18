@@ -3,7 +3,7 @@ import bridge from '@vkontakte/vk-bridge';
 class VkApiService {
   constructor () { }
 
-  async fetchUserData (id = 0) {
+  async fetchUserData(id = 0) {
     const user = await bridge.send('VKWebAppGetUserInfo', id ? { user_id: id } : {});
     return user;
   }
@@ -14,10 +14,11 @@ class VkApiService {
   }
 
   async repost (eventId, eventTitle, eventAvatar) {
+    console.log(eventAvatar)
     const response = await bridge.send('VKWebAppShowWallPostBox', {
       message: `Ищу компанию для ${eventTitle}, присоединяйтесь!`,
       attachments:
-        `photo133937404_456239731,
+        `photo${eventAvatar},
         https://vk.com/app51441556#event?id=${eventId}`
     });
     return response;
@@ -28,6 +29,10 @@ class VkApiService {
       link: `https://vk.com/app51441556#event?id=${eventId}`
     });
     return response;
+  }
+
+  async getPlatform() {
+    return (await bridge.send("VKWebAppGetClientVersion")).platform;
   }
 
   updateConfigWatcher (callback) {

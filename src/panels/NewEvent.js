@@ -9,7 +9,7 @@ import ApiSevice from '../modules/ApiSevice';
 import { useSelector, useDispatch } from 'react-redux';
 import { remove, set } from '../store/categories/categoriesSlice.js';
 
-import Map from '../components/Map.js';
+import Map from '../components/Map/Map.js';
 
 const NewEvent = props => {
   const dispatch = useDispatch();
@@ -49,17 +49,24 @@ const NewEvent = props => {
         latitude: coords[0],
         longitude: coords[1]
       },
-      time_start: eventDate.getTime(),
-      count_members: Number(members),
+      time_start: Math.round(eventDate.getTime() / 1000),
+      members_limit: Number(members),
       is_private: isPrivate
     });
+
     if (eventImages.length) {
       const newAdvertId = res.id;
 
       const formData = new FormData();
-      formData.append('photo', eventImages);
+      eventImages.forEach((img, idx) => {
+        formData.append(`photo${idx}`, img);
+      })
+      
       const imageRes = await fetch(`https://vkevents.tk/image/upload?uid=${newAdvertId}`, {
         method: 'POST',
+        headers: {
+          'X-User-ID': user.id,
+        },
         body: formData
       });
       console.log(imageRes);
@@ -70,9 +77,8 @@ const NewEvent = props => {
   };
 
   const changeImage = (e) => {
-    console.log(e.target.files);
     const files = Array.from(e.target.files);
-    setEventImages(files.map(f => new Object(f)));
+    setEventImages(files);
     const src = files.map(f => URL.createObjectURL(f));
     setImagesSrc(src);
   };

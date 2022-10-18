@@ -7,16 +7,39 @@ import '../assets/styles/Event.scss';
 
 import ApiSevice from '../modules/ApiSevice';
 
-import Map from '../components/Map.js';
+import Map from '../components/Map/Map.js';
 
 const Event = props => {
   const [eventData, setEventData] = useState({});
   const [members, setMembers] = useState([]);
   const [eventAuthor, setEventAuthor] = useState(null);
   const [eventImage, setEventImage] = useState(undefined);
+  const [eventImageId, setEventImageId] = useState(null);
   const [eventDate, setEventDate] = useState(new Date().toLocaleString());
   const [eventId, setEventId] = useState('');
+  const [isMember, setIsMember] = useState(false);
+
   const user = useSelector(state => state.user.value);
+
+  const subscribe = async (id) => {
+    const response = await ApiSevice.put('event', id, 'subscribe');
+    setIsMember(true);
+    console.log(response);
+  }
+
+  const unsubscribe = async (id) => {
+    const response = await ApiSevice.put('event', id, 'unsubscribe');
+    setIsMember(false);
+    console.log(response);
+    if (!eventData.is_active) {
+      props.go();
+    }
+  }
+
+  const deleteEvent = async (id) => {
+    const response = await ApiSevice.put('event', id, 'delete');
+    props.go();
+  }
 
   useEffect(async () => {
     try {
@@ -25,10 +48,11 @@ const Event = props => {
       const res = await ApiSevice.get('event/get', eId);
       if (!res) return;
       setEventData(res);
-      const imageSrc = res.is_public ? res.images[0] : `https://vkevents.tk/static/${res.images[1]}`;
+      const imageSrc = res.avatar.avatar_url;
+      setEventImageId(res.avatar.avatar_vk_id);
       setEventImage(imageSrc);
 
-      const date = new Date(res.time_start).toLocaleString();
+      const date = new Date(res.time_start * 1000).toLocaleString();
       setEventDate(date);
 
       if (res.author) {
@@ -37,13 +61,14 @@ const Event = props => {
       }
 
       const transformedMembers = [];
+      setIsMember(Boolean(res.members?.find(m => m === user?.id)));
       const memb = res.members;
       for (let i = 0; i < memb.length; i++) {
         if (memb[i] === res.author) continue;
         const member = await props.getUserInfo(memb[i]);
 
         transformedMembers.push(
-          <HorizontalCell size="s" header={member.first_name} onClick={() => props.goToProfile(member.id)}>
+          <HorizontalCell size="s" header={member.first_name} onClick={() => props.goToProfile(member.id)} key={member.id}>
             <Avatar size={64} src={member.photo_100} />
           </HorizontalCell>
         );
@@ -52,7 +77,7 @@ const Event = props => {
     } catch (err) {
       console.log(err);
     }
-  }, [user]);
+  }, [user, isMember]);
 
   return (
     <Panel id={props.id}>
@@ -69,9 +94,43 @@ const Event = props => {
         </div>
       </Card>
 
+      {eventData?.images?.filter(i => i !== '').length > 0 &&
+        <Group header={
+          <Header>
+            Изображения
+          </Header>
+        }
+        >
+          <HorizontalScroll
+            top='Изображения'
+            showArrows
+            getScrollToLeft={(i) => i - 120}
+            getScrollToRight={(i) => i + 120}
+          >
+            <div style={{ display: 'flex', userSelect: 'none' }}>
+              {eventData?.images?.filter(i => i !== '').map((url, idx) =>
+                <HorizontalCell size='m' key={idx}>
+                  <Avatar
+                    size={88}
+                    mode='app'
+                    src={url}
+                  />
+                </HorizontalCell>
+              )}
+            </div>
+          </HorizontalScroll>
+        </Group>
+      }
+
+
       <FormItem top='Описание события'>
         <Text weight="semibold" style={{ outline: 'ridge', borderRadius: '8px', padding: '15px 10px' }}>{eventData.description}</Text>
       </FormItem>
+
+      <FormItem top='Категория'>
+        <Text weight="bold" >{eventData.category}</Text>
+      </FormItem>
+
 
       {
         eventAuthor
@@ -100,16 +159,19 @@ const Event = props => {
       <Map isClickable={false} latitude={eventData.geo?.latitude} longitude={eventData.geo?.longitude} />
 
 
-      <ButtonGroup
-        mode="horizontal"
-        stretched
-        style={{ justifyContent: 'center', marginBottom: '30px' }}
-      >
-        <Button sizeY='regular' onClick={() => props.makeRepost(eventId, eventData?.title, eventImage)}> Поделиться </Button>
-        <Button sizeY='regular' onClick={() => props.makeShare(eventId)}> Пригласить друзей </Button>
-      </ButtonGroup>
+      {eventData.is_active &&
+        <ButtonGroup
+          mode="horizontal"
+          stretched
+          style={{ justifyContent: 'center', marginBottom: '30px' }}
+        >
+          <Button sizeY='regular' onClick={() => props.makeRepost(eventId, eventData?.title, eventImageId)}> Поделиться </Button>
+          <Button sizeY='regular' onClick={() => props.makeShare(eventId)}> Пригласить друзей </Button>
+        </ButtonGroup>
+      }
 
-      {user?.id === eventData.author ?
+
+      {user?.id === eventData.author && eventData.is_active ?
 
         <ButtonGroup
           mode="vertical"
@@ -117,13 +179,12 @@ const Event = props => {
           style={{ justifyContent: 'center', marginBottom: '30px', alignItems: 'center' }}
         >
           <Button sizeY='regular' onClick={() => props.makeShare(eventId)}> Редактировать </Button>
-          <Button sizeY='regular' onClick={() => props.makeShare(eventId)}> Удалить событие </Button>
+          <Button sizeY='regular' onClick={() => deleteEvent(eventId)}> Удалить событие </Button>
         </ButtonGroup>
 
-        : Boolean(eventData.members?.find(m => m === user?.id))
-
-          ? <Button sizeY='regular' onClick={() => props.makeShare(eventId)}> Отписаться </Button>
-          : <Button sizeY='regular' onClick={() => props.makeShare(eventId)}> Подписаться на событие </Button>
+        : isMember || !eventData.is_active
+          ? <Button sizeY='regular' onClick={() => unsubscribe(eventId)}> Отписаться </Button>
+          : <Button sizeY='regular' onClick={() => subscribe(eventId)}> Подписаться на событие </Button>
       }
     </Panel>
   );

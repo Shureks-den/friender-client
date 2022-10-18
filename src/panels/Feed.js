@@ -15,7 +15,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser }) => {
       if (!res) return;
       console.log(res);
       const listItems = res.map((elem) =>
-        <ContentCard src={elem.is_public ? elem.images[0] : `https://vkevents.tk/static/${elem.images[1]}`} subtitle={elem.title} caption={Date(elem.data)} onClick={() => go(elem.id)} key={elem.id} />
+        <ContentCard src={elem.avatar.avatar_url} subtitle={elem.title} caption={'Начало события ' + new Date(elem.time_start * 1000).toLocaleString()} onClick={() => go(elem.id)} key={elem.id} />
       );
       setEventsData(listItems);
     } catch (err) {

@@ -23,6 +23,7 @@ const App = ({ router }) => {
   const user = useSelector(state => state.user.value);
 
   const [eventId, setEventId] = useState('');
+  const [profileId, setProfileId] = useState(null);
 
   useEffect(() => {
     VkApiService.updateConfigWatcher(setScheme);
@@ -43,6 +44,7 @@ const App = ({ router }) => {
   };
 
   const goToProfile = async id => {
+    setProfileId(id);
     router.toView(ViewTypes.PROFILE);
     await VkApiService.setNewLocation(`profile?id=${id}`);
   }
@@ -79,7 +81,7 @@ const App = ({ router }) => {
                   <Icon28AddCircleOutline />
                 </TabbarItem>
                 <TabbarItem
-                  onClick={() => router.toView(ViewTypes.PROFILE)}
+                  onClick={() => goToProfile(user.id)}
                   selected={router.activeView === ViewTypes.PROFILE}
                   text='Профиль'
                 >
@@ -98,7 +100,7 @@ const App = ({ router }) => {
             </View>
 
             <View id={ViewTypes.PROFILE} activePanel={router.activePanel}>
-              <Profile id={PanelTypes.PROFILE} go={() => router.toBack()}/>
+              <Profile id={PanelTypes.PROFILE} go={() => router.toBack()} profileId={profileId} goTo={goTo}/>
             </View>
 
             <View id={ViewTypes.EVENT} activePanel={router.activePanel}>
