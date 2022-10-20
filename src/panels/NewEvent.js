@@ -22,13 +22,31 @@ const NewEvent = props => {
   const [isPrivate, setIsPrivate] = useState(false);
   const [members, setMembers] = useState(1);
 
+  // для редактирования
+  const [editAvatar, setAvatar] = useState({});
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+  const [eventId, setEventId] = useState(null);
+
   const categories = useSelector(state => state.categories.value);
   const [category, setCategory] = useState('Туса');
 
   const [imagesSrc, setImagesSrc] = useState([]);
   const [eventImages, setEventImages] = useState([]);
 
-  const [formItemStatus, setFormItemStatus] = useState('default');
+  const [formTitleItemStatus, setFormTitleItemStatus] = useState('default');
+  const [formTextAreaItemStatus, setFormAreaItemStatus] = useState('default');
+
+  const onChangeInput = (value, where) => {
+    if (where === 'title') {
+      setEventTitle(value);
+      setFormTitleItemStatus('default');
+    }
+    if (where === 'description') {
+      setEventDescription(value);
+      setFormAreaItemStatus('default');
+    }
+  }
 
   useEffect(async () => {
     if (!categories.length) {
@@ -39,8 +57,33 @@ const NewEvent = props => {
     setCategory(categories[0]);
   }, [user]);
 
+  useEffect(async () => {
+    if (!props.isEditing) return;
+
+    const eId = props.eventId.length !== 0 ? props.eventId : window.location.hash?.slice(1).split('=').slice(1, 2).join('');
+    setEventId(eId);
+    const res = await ApiSevice.get('event/get', eId);
+    if (res.author !== user.id) props.go();
+    if (!res) return;
+    const { time_start, title, description, category, members_limit, is_private, images, avatar, geo } = res;
+    setEventDate(new Date(time_start * 1000), new Date());
+    setEventTitle(title ?? '');
+    setEventDescription(description ?? '');
+    setIsPrivate(is_private ?? false);
+    setMembers(members_limit ?? 1);
+    setCategory(category);
+    setAvatar(avatar);
+
+    const img = images.unshift(avatar?.avatar_url);
+    setImagesSrc(img);
+
+    setLatitude(geo?.latitude);
+    setLongitude(geo?.longitude);
+    setCoords([geo?.latitude, geo?.longitude]);
+  }, [props.isEditing])
+
   const sendEvent = async () => {
-    const res = await ApiSevice.post('event/create', {
+    const body = {
       title: eventTitle,
       description: eventDescription,
       author: props.userId,
@@ -52,17 +95,34 @@ const NewEvent = props => {
       time_start: Math.round(eventDate.getTime() / 1000),
       members_limit: Number(members),
       is_private: isPrivate
-    });
+    };
+    if (props.isEditing) {
+      body.id = eventId;
+      body.avatar = editAvatar;
+    }
+    const {code, response} = props.isEditing ? await ApiSevice.put('event', '', 'change', body) : await ApiSevice.post('event/create', body);
+    console.log(code, response, 'aaa', eventImages.length)
+
+
+    if (code === 400) {
+      if (response.includes('title')) {
+        setFormTitleItemStatus('error');
+      } else {
+        setFormAreaItemStatus('error');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return
+    }
 
     if (eventImages.length) {
-      const newAdvertId = res.id;
+      const newAdvertId = response.id;
 
       const formData = new FormData();
       eventImages.forEach((img, idx) => {
         formData.append(`photo${idx}`, img);
       })
-      
-      const imageRes = await fetch(`https://vkevents.tk/image/upload?uid=${newAdvertId}`, {
+
+      const {code, response: imageRes} = await fetch(`https://vkevents.tk/image/upload?uid=${newAdvertId}`, {
         method: 'POST',
         headers: {
           'X-User-ID': user.id,
@@ -71,8 +131,8 @@ const NewEvent = props => {
       });
       console.log(imageRes);
     }
-    if (res.id) {
-      props.onSuccess(res.id);
+    if (response.id) {
+      props.onSuccess(response.id);
     }
   };
 
@@ -90,8 +150,8 @@ const NewEvent = props => {
       >
         Новое событие
       </PanelHeader>
-      <FormItem top='Название события' status={formItemStatus}>
-        <Input type='text' title='Название События' label='Название события' value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} />
+      <FormItem top='Название события' status={formTitleItemStatus} bottom={formTitleItemStatus === 'error' && 'Форма содержит недопустимые слова'}>
+        <Input type='text' title='Название События' label='Название события' value={eventTitle} onChange={(e) => onChangeInput(e.target.value, 'title')} />
       </FormItem>
       <FormItem top='Загрузите фото'>
         <File before={<Icon24Camera role='presentation' />} size='m' accept='image/png, image/gif, image/jpeg' multiple onInput={changeImage}>
@@ -125,8 +185,8 @@ const NewEvent = props => {
           </HorizontalScroll>
         </Group>}
 
-      <FormItem top='Описание события' status={formItemStatus}>
-        <Textarea placeholder='Самая лучшая тусовка!!!' value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} />
+      <FormItem top='Описание события' status={formTextAreaItemStatus} bottom={formTextAreaItemStatus === 'error' && 'Форма содержит недопустимые слова'}>
+        <Textarea placeholder='Самая лучшая тусовка!!!' value={eventDescription} onChange={(e) => onChangeInput(e.target.value, 'description')} />
       </FormItem>
 
       <FormLayoutGroup mode='horizontal' style={{ alignItems: 'center' }}>
@@ -136,7 +196,7 @@ const NewEvent = props => {
         </FormItem>
       </FormLayoutGroup>
 
-      <FormItem top='Категория' status={formItemStatus}>
+      <FormItem>
         <Select
           options={[
             ...categories
@@ -167,9 +227,9 @@ const NewEvent = props => {
         </div>
       </Group>
 
-      <Map isClickable={true} setCoords={setCoords} />
+      <Map isClickable={true} setCoords={setCoords} latitude={latitude} longitude={longitude} />
 
-      <Button sizeY='regular' onClick={sendEvent}> Опубликовать </Button>
+      <Button sizeY='regular' onClick={sendEvent}> {props.isEditing ? 'Редактировать' : 'Опубликовать'} </Button>
     </Panel>
   );
 };

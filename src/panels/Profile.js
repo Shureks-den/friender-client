@@ -9,14 +9,10 @@ import '../assets/styles/Profile.scss';
 import ImageGrid from '../components/ImageGrid/ImageGrid';
 
 const Profile = props => {
-  const [pageUser, setPageUser] = useState(null);
+  const [pageUser, setPageUser] = useState({});
   const [activeEvents, setActiveEvents] = useState([]);
   const [finishedEvents, setFinishedEvents] = useState([]);
   const user = useSelector(state => state.user.value);
-
-  const openProfile = (id) => {
-    window.open(`https://vk.com/id${id}`, '_blank').focus();
-  }
 
   useEffect(async () => {
     try {
@@ -29,7 +25,7 @@ const Profile = props => {
       const domEvents = events.map((e, idx) =>
         <HorizontalCell key={idx} header={e.title} size="l" subtitle={new Date(e.time_start * 1000).toLocaleString()} onClick={() => props.goTo(e.id)}>
           <img
-            className={e.author === user?.id ? 'profile-active-card__avatar-author': 'profile-active-card__avatar'}
+            className={e.author === user?.id ? 'profile-active-card__avatar-author' : 'profile-active-card__avatar'}
             src={e.avatar.avatar_url}
           />
         </HorizontalCell>
@@ -56,15 +52,17 @@ const Profile = props => {
       </PanelHeader>
       {
         pageUser
-        && <Group header={<Header mode="secondary"></Header>} onClick={() => openProfile(pageUser.id)}>
-          <Cell
-            before={pageUser.photo_200 ? <Avatar src={pageUser.photo_200} /> : null}
-          >
-            {`${pageUser.first_name} ${pageUser.last_name}`}
-          </Cell>
+        && <Group header={<Header mode="secondary"></Header>}>
+          <a className='profile__link' target="_blank" href={`https://vk.com/id${pageUser.id}`}>
+            <Cell
+              before={pageUser.photo_200 ? <Avatar src={pageUser.photo_200} /> : null}
+            >
+              {`${pageUser.first_name} ${pageUser.last_name}`}
+            </Cell>
+          </a>
         </Group>
       }
-      <Group description="Ваши и те, на которые вы подписаны, события">
+      <Group description={pageUser?.id === user?.id && "Ваши и те, на которые вы подписаны, события"}>
         <Header>Активные события</Header>
         <HorizontalScroll
           showArrows
@@ -76,30 +74,30 @@ const Profile = props => {
       </Group>
 
       <Group header={
-          <Header>
-            История
-          </Header>
-        }
+        <Header>
+          История
+        </Header>
+      }
+      >
+        <HorizontalScroll
+          top='Изображения'
+          showArrows
+          getScrollToLeft={(i) => i - 120}
+          getScrollToRight={(i) => i + 120}
         >
-          <HorizontalScroll
-            top='Изображения'
-            showArrows
-            getScrollToLeft={(i) => i - 120}
-            getScrollToRight={(i) => i + 120}
-          >
-            <div style={{ display: 'flex', userSelect: 'none' }}>
-              {finishedEvents.map((ev, idx) =>
-                <HorizontalCell size='m' key={idx} onClick={() => props.goTo(ev.id)}>
-                  <Avatar
-                    size={88}
-                    mode='app'
-                    src={ev.avatar.avatar_url}
-                  />
-                </HorizontalCell>
-              )}
-            </div>
-          </HorizontalScroll>
-        </Group>
+          <div style={{ display: 'flex', userSelect: 'none' }}>
+            {finishedEvents.map((ev, idx) =>
+              <HorizontalCell size='m' key={idx} onClick={() => props.goTo(ev.id)}>
+                <Avatar
+                  size={88}
+                  mode='app'
+                  src={ev.avatar.avatar_url}
+                />
+              </HorizontalCell>
+            )}
+          </div>
+        </HorizontalScroll>
+      </Group>
 
       {/* <Header>События</Header>
       <ImageGrid /> */}

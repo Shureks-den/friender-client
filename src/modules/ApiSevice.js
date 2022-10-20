@@ -44,7 +44,8 @@ class ApiService {
       },
       body: JSON.stringify(data)
     });
-    return await response.json();
+    const body = await response.json();
+    return {code: response.status, response: body};
   }
 
   async delete(url, id) {
@@ -58,16 +59,19 @@ class ApiService {
     return await response.json();
   }
 
-  async put(url, id, postUrl, data) {
+  async put(url, id = '', postUrl, data) {
     if (!Boolean(this.#userId)) return;
-    const response = await fetch(`${this.#hostUrl}/${url}/${id}/${postUrl}`, {
+    const fetchurl = id === '' ? `${this.#hostUrl}/${url}/${postUrl}` : `${this.#hostUrl}/${url}/${id}/${postUrl}`;
+    const response = await fetch(fetchurl, {
       method: 'PUT',
       headers: {
+        'Content-Type': 'application/json',
         'X-User-ID': this.#userId,
       },
       body: JSON.stringify(data),
     });
-    return await response.json();
+    const body = await response.json();
+    return {code: response.status, response: body};
   }
 
   async postImage(url, id, formData) {

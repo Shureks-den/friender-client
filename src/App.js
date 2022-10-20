@@ -24,23 +24,34 @@ const App = ({ router }) => {
 
   const [eventId, setEventId] = useState('');
   const [profileId, setProfileId] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     VkApiService.updateConfigWatcher(setScheme);
-
     async function fetchData () {
       const user = await VkApiService.fetchUserData();
       dispatch(set(user));
       ApiSevice.setHeaderId(user.id);
     }
-
     fetchData();
   }, []);
+
+  const goToEditing = async id => {
+    setIsEditing(true);
+    setEventId(id);
+    router.toView(ViewTypes.ADDNEW);
+    await VkApiService.setNewLocation(`newEvent?id=${id}&isEditing=true`);
+  }
 
   const goTo = async id => {
     setEventId(id);
     router.toView(ViewTypes.EVENT);
     await VkApiService.setNewLocation(`event?id=${id}`);
+  };
+
+  const goToNewAdd = () => {
+    setIsEditing(false);
+    router.toView(ViewTypes.ADDNEW)
   };
 
   const goToProfile = async id => {
@@ -74,7 +85,7 @@ const App = ({ router }) => {
                   <Icon28NewsfeedOutline />
                 </TabbarItem>
                 <TabbarItem
-                  onClick={() => router.toView(ViewTypes.ADDNEW)}
+                  onClick={() => goToNewAdd()}
                   selected={router.activeView === ViewTypes.ADDNEW}
                   text='Добавить событие'
                 >
@@ -96,7 +107,7 @@ const App = ({ router }) => {
             </View>
 
             <View id={ViewTypes.ADDNEW} activePanel={router.activePanel}>
-              <NewEvent id={PanelTypes.ADDNEW} userId={user?.id} go={() => router.toBack()} onSuccess={goTo} />
+              <NewEvent id={PanelTypes.ADDNEW} userId={user?.id} go={() => router.toBack()} onSuccess={goTo} isEditing={isEditing} eventId={eventId}/>
             </View>
 
             <View id={ViewTypes.PROFILE} activePanel={router.activePanel}>
@@ -106,11 +117,13 @@ const App = ({ router }) => {
             <View id={ViewTypes.EVENT} activePanel={router.activePanel}>
               <Event 
                 id={PanelTypes.EVENT} 
-                eventId={eventId} go={() => router.toView(ViewTypes.MAIN)} 
+                eventId={eventId} 
+                go={() => router.toBack()} 
                 makeRepost={makeRepost} 
                 makeShare={makeShare} 
                 getUserInfo={VkApiService.fetchUserData}
                 goToProfile={goToProfile}
+                goToEditing={goToEditing}
               />
             </View>
           </Epic>

@@ -8,6 +8,7 @@ import '../assets/styles/Event.scss';
 import ApiSevice from '../modules/ApiSevice';
 
 import Map from '../components/Map/Map.js';
+import VkApiService from '../modules/VkApiService';
 
 const Event = props => {
   const [eventData, setEventData] = useState({});
@@ -77,7 +78,7 @@ const Event = props => {
     } catch (err) {
       console.log(err);
     }
-  }, [user, isMember]);
+  }, [user, isMember, eventId]);
 
   return (
     <Panel id={props.id}>
@@ -167,6 +168,7 @@ const Event = props => {
         >
           <Button sizeY='regular' onClick={() => props.makeRepost(eventId, eventData?.title, eventImageId)}> Поделиться </Button>
           <Button sizeY='regular' onClick={() => props.makeShare(eventId)}> Пригласить друзей </Button>
+          <Button sizeY='regular' onClick={() => VkApiService.postStory(eventId, eventData?.title, eventData?.avatar.avatar_url)}> Запостить сторис </Button>
         </ButtonGroup>
       }
 
@@ -178,7 +180,7 @@ const Event = props => {
           stretched
           style={{ justifyContent: 'center', marginBottom: '30px', alignItems: 'center' }}
         >
-          <Button sizeY='regular' onClick={() => props.makeShare(eventId)}> Редактировать </Button>
+          <Button sizeY='regular' onClick={() => props.goToEditing(eventId)}> Редактировать </Button>
           <Button sizeY='regular' onClick={() => deleteEvent(eventId)}> Удалить событие </Button>
         </ButtonGroup>
 

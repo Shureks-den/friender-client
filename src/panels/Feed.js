@@ -11,7 +11,10 @@ const Feed = ({ id, go, makeRepost, fetchedUser }) => {
 
   useEffect(async () => {
     try {
-      const res = await ApiSevice.getAll('events');
+      const res = await ApiSevice.getAll('events', {
+        is_active: true,
+      });
+
       if (!res) return;
       console.log(res);
       const listItems = res.map((elem) =>
