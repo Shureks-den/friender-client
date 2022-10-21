@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Panel, PanelHeader, PanelHeaderBack, Avatar, Cell, Group, Header, HorizontalCell, HorizontalScroll } from '@vkontakte/vkui';
+import { Panel, PanelHeader, PanelHeaderBack, Avatar, Cell, Group, Header, HorizontalCell, HorizontalScroll, Button } from '@vkontakte/vkui';
 import VkApiService from '../modules/VkApiService';
 import ApiSevice from '../modules/ApiSevice';
 
@@ -62,6 +62,7 @@ const Profile = props => {
           </a>
         </Group>
       }
+      <Button onClick={() => VkApiService.addToGroup()}>Добавить в группу</Button>
       <Group description={pageUser?.id === user?.id && "Ваши и те, на которые вы подписаны, события"}>
         <Header>Активные события</Header>
         <HorizontalScroll

@@ -4,14 +4,16 @@ export const ViewTypes = {
   MAIN: 'MAIN',
   ADDNEW: 'ADDNEW',
   PROFILE: 'PROFILE',
-  EVENT: 'EVENT'
+  EVENT: 'EVENT',
+  GROUP: 'GROUP',
 };
 
 export const PanelTypes = {
   MAIN_HOME: 'MAIN_HOME',
   ADDNEW: 'ADDNEW',
   PROFILE: 'PROFILE',
-  EVENT: 'EVENT'
+  EVENT: 'EVENT',
+  GROUP: 'GROUP',
 };
 
 export const structure = [
@@ -52,6 +54,16 @@ export const structure = [
       {
         id: PanelTypes.EVENT,
         hash: 'event'
+      }
+    ]
+  },
+  {
+    id: ViewTypes.GROUP,
+    hash: '',
+    panels: [
+      {
+        id: PanelTypes.GROUP,
+        hash: 'group'
       }
     ]
   }

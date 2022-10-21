@@ -16,6 +16,7 @@ import Feed from './panels/Feed';
 import NewEvent from './panels/NewEvent';
 import Event from './panels/Event.js';
 import Profile from './panels/Profile.js';
+import GroupView from './panels/Group.js';
 
 const App = ({ router }) => {
   const dispatch = useDispatch();
@@ -25,6 +26,7 @@ const App = ({ router }) => {
   const [eventId, setEventId] = useState('');
   const [profileId, setProfileId] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [groupId, setGroupId] = useState(null);
 
   useEffect(() => {
     VkApiService.updateConfigWatcher(setScheme);
@@ -33,7 +35,21 @@ const App = ({ router }) => {
       dispatch(set(user));
       ApiSevice.setHeaderId(user.id);
     }
+    function checkGroupRedirect() {
+      const params = new Proxy(new URLSearchParams(window.location.search), {
+        get: (searchParams, prop) => searchParams.get(prop),
+      });
+      const grId = params.vk_group_id;
+      if (grId) {
+        setTimeout(async () => {
+          setGroupId(grId);
+          router.toView(ViewTypes.GROUP);
+          await VkApiService.setNewLocation(`group?id=${grId}`);
+        }, 0);
+      }
+    }
     fetchData();
+    checkGroupRedirect();
   }, []);
 
   const goToEditing = async id => {
@@ -58,7 +74,7 @@ const App = ({ router }) => {
     setProfileId(id);
     router.toView(ViewTypes.PROFILE);
     await VkApiService.setNewLocation(`profile?id=${id}`);
-  }
+  };
 
   const makeRepost = async (eventId, eventName, eventAvatar) => {
     const response = VkApiService.repost(eventId, eventName, eventAvatar);
@@ -101,7 +117,6 @@ const App = ({ router }) => {
               </Tabbar>
           }
           >
-
             <View id={ViewTypes.MAIN} activePanel={router.activePanel}>
               <Feed id={PanelTypes.MAIN_HOME} fetchedUser={user} go={(id) => goTo(id)} />
             </View>
@@ -112,6 +127,10 @@ const App = ({ router }) => {
 
             <View id={ViewTypes.PROFILE} activePanel={router.activePanel}>
               <Profile id={PanelTypes.PROFILE} go={() => router.toBack()} profileId={profileId} goTo={goTo}/>
+            </View>
+
+            <View id={ViewTypes.GROUP} activePanel={router.activePanel}>
+              <GroupView id={PanelTypes.GROUP} go={() => router.toBack()} groupId={groupId} goTo={goTo} goToNewEventPage={goToNewAdd}/>
             </View>
 
             <View id={ViewTypes.EVENT} activePanel={router.activePanel}>

@@ -2,7 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 
-import { Panel, PanelHeader, PanelHeaderBack, Input, FormItem, Button, Card, Group, Text, Header, Cell, Avatar, HorizontalScroll, HorizontalCell, ButtonGroup } from '@vkontakte/vkui';
+import { Panel, PanelHeader, PanelHeaderBack, Input, FormItem, Button, Card, Group, Text, Header, Cell, Avatar, HorizontalScroll, HorizontalCell, ButtonGroup, IconButton } from '@vkontakte/vkui';
+import { Icon24Share, Icon24Camera, Icon24Message } from '@vkontakte/icons';
 import '../assets/styles/Event.scss';
 
 import ApiSevice from '../modules/ApiSevice';
@@ -19,6 +20,8 @@ const Event = props => {
   const [eventDate, setEventDate] = useState(new Date().toLocaleString());
   const [eventId, setEventId] = useState('');
   const [isMember, setIsMember] = useState(false);
+
+  const [groupInfo, setGroupInfo] = useState({});
 
   const user = useSelector(state => state.user.value);
 
@@ -166,21 +169,28 @@ const Event = props => {
           stretched
           style={{ justifyContent: 'center', marginBottom: '30px' }}
         >
-          <Button sizeY='regular' onClick={() => props.makeRepost(eventId, eventData?.title, eventImageId)}> Поделиться </Button>
-          <Button sizeY='regular' onClick={() => props.makeShare(eventId)}> Пригласить друзей </Button>
-          <Button sizeY='regular' onClick={() => VkApiService.postStory(eventId, eventData?.title, eventData?.avatar.avatar_url)}> Запостить сторис </Button>
+          <IconButton onClick={() => props.makeRepost(eventId, eventData?.title, eventImageId)}>
+            <Icon24Share />
+          </IconButton>
+          <IconButton onClick={() => VkApiService.postStory(eventId, eventData?.title, eventData?.avatar.avatar_url)}>
+            <Icon24Camera />
+          </IconButton>
+          <IconButton onClick={() => props.makeShare(eventId)}>
+            <Icon24Message />
+          </IconButton>
         </ButtonGroup>
       }
 
 
-      {user?.id === eventData.author && eventData.is_active ?
+      {(user?.id === eventData.author || user?.id === groupInfo.admin) && eventData.is_active ?
 
         <ButtonGroup
           mode="vertical"
           stretched
           style={{ justifyContent: 'center', marginBottom: '30px', alignItems: 'center' }}
         >
-          <Button sizeY='regular' onClick={() => props.goToEditing(eventId)}> Редактировать </Button>
+          {user?.id === eventData.author && <Button sizeY='regular' onClick={() => props.goToEditing(eventId)}> Редактировать </Button>}
+
           <Button sizeY='regular' onClick={() => deleteEvent(eventId)}> Удалить событие </Button>
         </ButtonGroup>
 
