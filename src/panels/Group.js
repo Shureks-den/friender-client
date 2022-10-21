@@ -5,13 +5,13 @@ import { Panel, PanelHeader, PanelHeaderBack, Avatar, Cell, Group, Header, Horiz
 import VkApiService from '../modules/VkApiService';
 import ApiSevice from '../modules/ApiSevice';
 
-import { setIsAdmin, setGroupId } from '../store/group/group';
+import { setIsAdmin, setGroupId } from '../store/group/groupSlice.js';
 
 const GroupView = props => {
   const dispatch = useDispatch();
 
   const [pageGroup, setPageGroup] = useState({});
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdminOnPage] = useState(false);
 
   const [adminEvents, setAdminEvents] = useState([]);
   const [usersEvents, setUsersEvents] = useState([]);
@@ -19,16 +19,29 @@ const GroupView = props => {
 
   const user = useSelector(state => state.user.value);
 
-  const handleAddEvent = async () => {
-    dispatch(setIsAdmin(isAdmin));
-    dispatch(setGroupId(pageGroup.id));
+  const handleAddEvent = async (admin) => {
+    dispatch(setIsAdmin({ isAdmin: admin }));
+    dispatch(setGroupId({ groupId: pageGroup.id }));
     props.goToNewEventPage();
-  }
+  };
 
   useEffect(async () => {
     try {
       const groupId = props.groupId ?? window.location.hash?.slice(1).split('=').slice(1, 2).join('');
+
       const gr = await VkApiService.fetchGroupData(Number(groupId));
+      const adminEvents = await ApiSevice.getAll('events', {
+        group_id: Number(groupId),
+      });
+      const domEvents = adminEvents.map((e, idx) =>
+      <HorizontalCell key={idx} header={e.title} size="l" subtitle={new Date(e.time_start * 1000).toLocaleString()} onClick={() => props.goTo(e.id)}>
+        <img
+          className={'profile-active-card__avatar'}
+          src={e.avatar.avatar_url}
+        />
+      </HorizontalCell>
+    );
+      setAdminEvents(domEvents);
       // получить все события
       setPageGroup(gr);
     } catch (err) {
@@ -38,6 +51,7 @@ const GroupView = props => {
 
   useEffect(async () => {
     // Проверка на админа, добавляем кнопку добавить событие
+    setIsAdminOnPage(true);
 
   }, [user]);
 
@@ -62,7 +76,11 @@ const GroupView = props => {
       }
 
       <Group>
-        <Header>События сообщества</Header>
+        <Header aside={
+          <Button onClick={() => handleAddEvent(true)}>
+            Добавить событие
+          </Button>
+        }>События сообщества</Header>
         <HorizontalScroll
           showArrows
           getScrollToLeft={(i) => i - 120}
@@ -72,12 +90,10 @@ const GroupView = props => {
         </HorizontalScroll>
       </Group>
 
-
-
       <Group>
         <Header
           aside={
-            <Button onClick={() => handleAddEvent()}>
+            <Button onClick={() => handleAddEvent(false)}>
               Добавить событие
             </Button>
           }>Найти компанию</Header>

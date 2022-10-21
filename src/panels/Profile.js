@@ -19,6 +19,11 @@ const Profile = props => {
     console.log('show groups in modal');
   };
 
+  const connectGroup = async () => {
+    const groupId = await VkApiService.addToGroup(user.id);
+    await props.goToGroup(groupId);
+  };
+
   useEffect(async () => {
     try {
       const userId = props.profileId ?? window.location.hash?.slice(1).split('=').slice(1, 2).join('')
@@ -41,6 +46,15 @@ const Profile = props => {
         is_active: false,
       });
       setFinishedEvents(eevents);
+
+      const adminedGroups = await ApiSevice.getAll('group');
+      const fullInfoGroups = [];
+      for (let i = 0; i < adminedGroups.length; i++) {
+        const gr = await VkApiService.fetchGroupData(adminedGroups[i].group_id);
+        fullInfoGroups.push(gr);
+      }
+      console.log(fullInfoGroups)
+      setAdminedGroups(fullInfoGroups);
 
       setPageUser(u);
     } catch (err) {
@@ -67,33 +81,36 @@ const Profile = props => {
           </a>
         </Group>
       }
-      <Button onClick={() => VkApiService.addToGroup()}>Добавить группу</Button>
+      <Button onClick={() => connectGroup()}>Добавить группу</Button>
 
-      <Group header={
-        <Header>
-          Мои группы
-        </Header>
-      }
-      >
-        <HorizontalScroll
-          top='Изображения'
-          showArrows
-          getScrollToLeft={(i) => i - 120}
-          getScrollToRight={(i) => i + 120}
+      {
+        adminedGroups.length && <Group header={
+          <Header>
+            Мои группы
+          </Header>
+        }
         >
-          <div style={{ display: 'flex', userSelect: 'none' }}>
-            {adminedGroups.map((gr, idx) =>
-              <HorizontalCell size='m' key={idx} onClick={() => props.goToGroup(gr.id)}>
-                <Avatar
-                  size={88}
-                  mode='app'
-                  src={gr.avatar.avatar_url}
-                />
-              </HorizontalCell>
-            )}
-          </div>
-        </HorizontalScroll>
-      </Group>
+          <HorizontalScroll
+            top='Изображения'
+            showArrows
+            getScrollToLeft={(i) => i - 120}
+            getScrollToRight={(i) => i + 120}
+          >
+            <div style={{ display: 'flex', userSelect: 'none' }}>
+              {adminedGroups.map((gr, idx) =>
+                <HorizontalCell size='m' key={idx} onClick={() => props.goToGroup(gr.id)}>
+                  <Avatar
+                    size={88}
+                    mode='app'
+                    src={gr.photo_100}
+                  />
+                </HorizontalCell>
+              )}
+            </div>
+          </HorizontalScroll>
+        </Group>
+      }
+
 
       <Group description={pageUser?.id === user?.id && "Ваши и те, на которые вы подписаны, события"}>
         <Header>Активные события</Header>

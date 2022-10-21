@@ -55,7 +55,7 @@ const App = ({ router }) => {
     setEventId(id);
     router.toView(ViewTypes.ADDNEW);
     await VkApiService.setNewLocation(`newEvent?id=${id}&isEditing=true`);
-  }
+  };
 
   const goTo = async id => {
     setEventId(id);
@@ -67,11 +67,11 @@ const App = ({ router }) => {
     setGroupId(id);
     router.toView(ViewTypes.GROUP);
     await VkApiService.setNewLocation(`group?id=${id}`);
-  }
+  };
 
   const goToNewAdd = () => {
     setIsEditing(false);
-    router.toView(ViewTypes.ADDNEW)
+    router.toView(ViewTypes.ADDNEW);
   };
 
   const goToProfile = async id => {

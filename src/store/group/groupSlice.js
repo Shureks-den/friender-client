@@ -8,10 +8,12 @@ export const groupLogicSlice = createSlice({
   },
   reducers: {
     setGroupId: (state, action) => {
-      state.groupId = action.payload;
+      const { groupId } = action.payload;
+      state.groupId = groupId;
     },
     setIsAdmin: (state, action) => {
-      state.isAdmin = action.payload;
+      const { isAdmin } = action.payload;
+      state.isAdmin = isAdmin;
     },
     removeGroupId: (state, action) => {
       state.groupId = null;

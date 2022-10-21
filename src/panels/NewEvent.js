@@ -15,6 +15,9 @@ const NewEvent = props => {
   const dispatch = useDispatch();
   const user = useSelector(state => state.user.value);
 
+  const isAdmin = useSelector(state => state.groupInfo.isAdmin);
+  const groupId = useSelector(state => state.groupInfo.groupId);
+
   const [eventTitle, setEventTitle] = useState('');
   const [eventDescription, setEventDescription] = useState('');
   const [eventDate, setEventDate] = useState(new Date());
@@ -83,6 +86,7 @@ const NewEvent = props => {
   }, [props.isEditing])
 
   const sendEvent = async () => {
+    console.log(isAdmin, groupId);
     const body = {
       title: eventTitle,
       description: eventDescription,
@@ -92,6 +96,10 @@ const NewEvent = props => {
         latitude: coords[0],
         longitude: coords[1]
       },
+      group_info: groupId ? {
+        group_id: groupId,
+        is_admin: isAdmin,
+      } : null,
       time_start: Math.round(eventDate.getTime() / 1000),
       members_limit: Number(members),
       is_private: isPrivate

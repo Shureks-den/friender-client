@@ -1,4 +1,5 @@
 import bridge from '@vkontakte/vk-bridge';
+import ApiSevice from './ApiSevice';
 
 class VkApiService {
   constructor() { }
@@ -49,10 +50,13 @@ class VkApiService {
     });
   }
 
-  async addToGroup() {
-    const response = await bridge.send("VKWebAppAddToCommunity");
-    console.log(response);
-    return response;
+  async addToGroup(userId) {
+    const { group_id } = await bridge.send("VKWebAppAddToCommunity");
+    await ApiSevice.post('group/create', {
+      group_id: Number(group_id),
+      user_id: userId,
+    });
+    return group_id;
   }
 
 
