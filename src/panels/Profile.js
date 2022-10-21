@@ -6,13 +6,18 @@ import VkApiService from '../modules/VkApiService';
 import ApiSevice from '../modules/ApiSevice';
 
 import '../assets/styles/Profile.scss';
-import ImageGrid from '../components/ImageGrid/ImageGrid';
 
 const Profile = props => {
   const [pageUser, setPageUser] = useState({});
   const [activeEvents, setActiveEvents] = useState([]);
   const [finishedEvents, setFinishedEvents] = useState([]);
+  const [adminedGroups, setAdminedGroups] = useState([]);
+
   const user = useSelector(state => state.user.value);
+
+  const showAdminedGroups = async => {
+    console.log('show groups in modal');
+  };
 
   useEffect(async () => {
     try {
@@ -62,7 +67,34 @@ const Profile = props => {
           </a>
         </Group>
       }
-      <Button onClick={() => VkApiService.addToGroup()}>Добавить в группу</Button>
+      <Button onClick={() => VkApiService.addToGroup()}>Добавить группу</Button>
+
+      <Group header={
+        <Header>
+          Мои группы
+        </Header>
+      }
+      >
+        <HorizontalScroll
+          top='Изображения'
+          showArrows
+          getScrollToLeft={(i) => i - 120}
+          getScrollToRight={(i) => i + 120}
+        >
+          <div style={{ display: 'flex', userSelect: 'none' }}>
+            {adminedGroups.map((gr, idx) =>
+              <HorizontalCell size='m' key={idx} onClick={() => props.goToGroup(gr.id)}>
+                <Avatar
+                  size={88}
+                  mode='app'
+                  src={gr.avatar.avatar_url}
+                />
+              </HorizontalCell>
+            )}
+          </div>
+        </HorizontalScroll>
+      </Group>
+
       <Group description={pageUser?.id === user?.id && "Ваши и те, на которые вы подписаны, события"}>
         <Header>Активные события</Header>
         <HorizontalScroll

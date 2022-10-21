@@ -30,7 +30,7 @@ const App = ({ router }) => {
 
   useEffect(() => {
     VkApiService.updateConfigWatcher(setScheme);
-    async function fetchData () {
+    async function fetchData() {
       const user = await VkApiService.fetchUserData();
       dispatch(set(user));
       ApiSevice.setHeaderId(user.id);
@@ -42,9 +42,7 @@ const App = ({ router }) => {
       const grId = params.vk_group_id;
       if (grId) {
         setTimeout(async () => {
-          setGroupId(grId);
-          router.toView(ViewTypes.GROUP);
-          await VkApiService.setNewLocation(`group?id=${grId}`);
+          goToGroup(grId);
         }, 0);
       }
     }
@@ -64,6 +62,12 @@ const App = ({ router }) => {
     router.toView(ViewTypes.EVENT);
     await VkApiService.setNewLocation(`event?id=${id}`);
   };
+
+  const goToGroup = async id => {
+    setGroupId(id);
+    router.toView(ViewTypes.GROUP);
+    await VkApiService.setNewLocation(`group?id=${id}`);
+  }
 
   const goToNewAdd = () => {
     setIsEditing(false);
@@ -115,31 +119,36 @@ const App = ({ router }) => {
                   <Icon28Profile />
                 </TabbarItem>
               </Tabbar>
-          }
+            }
           >
             <View id={ViewTypes.MAIN} activePanel={router.activePanel}>
               <Feed id={PanelTypes.MAIN_HOME} fetchedUser={user} go={(id) => goTo(id)} />
             </View>
 
             <View id={ViewTypes.ADDNEW} activePanel={router.activePanel}>
-              <NewEvent id={PanelTypes.ADDNEW} userId={user?.id} go={() => router.toBack()} onSuccess={goTo} isEditing={isEditing} eventId={eventId}/>
+              <NewEvent id={PanelTypes.ADDNEW} userId={user?.id} go={() => router.toBack()} onSuccess={goTo} isEditing={isEditing} eventId={eventId} />
             </View>
 
             <View id={ViewTypes.PROFILE} activePanel={router.activePanel}>
-              <Profile id={PanelTypes.PROFILE} go={() => router.toBack()} profileId={profileId} goTo={goTo}/>
+              <Profile
+                id={PanelTypes.PROFILE}
+                go={() => router.toBack()}
+                goToGroup={goToGroup}
+                profileId={profileId}
+                goTo={goTo} />
             </View>
 
             <View id={ViewTypes.GROUP} activePanel={router.activePanel}>
-              <GroupView id={PanelTypes.GROUP} go={() => router.toBack()} groupId={groupId} goTo={goTo} goToNewEventPage={goToNewAdd}/>
+              <GroupView id={PanelTypes.GROUP} go={() => router.toBack()} groupId={groupId} goTo={goTo} goToNewEventPage={goToNewAdd} />
             </View>
 
             <View id={ViewTypes.EVENT} activePanel={router.activePanel}>
-              <Event 
-                id={PanelTypes.EVENT} 
-                eventId={eventId} 
-                go={() => router.toBack()} 
-                makeRepost={makeRepost} 
-                makeShare={makeShare} 
+              <Event
+                id={PanelTypes.EVENT}
+                eventId={eventId}
+                go={() => router.toBack()}
+                makeRepost={makeRepost}
+                makeShare={makeShare}
                 getUserInfo={VkApiService.fetchUserData}
                 goToProfile={goToProfile}
                 goToEditing={goToEditing}

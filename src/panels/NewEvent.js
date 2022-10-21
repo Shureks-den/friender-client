@@ -100,7 +100,7 @@ const NewEvent = props => {
       body.id = eventId;
       body.avatar = editAvatar;
     }
-    const {code, response} = props.isEditing ? await ApiSevice.put('event', '', 'change', body) : await ApiSevice.post('event/create', body);
+    const { code, response } = props.isEditing ? await ApiSevice.put('event', '', 'change', body) : await ApiSevice.post('event/create', body);
     console.log(code, response, 'aaa', eventImages.length)
 
 
@@ -122,7 +122,7 @@ const NewEvent = props => {
         formData.append(`photo${idx}`, img);
       })
 
-      const {code, response: imageRes} = await fetch(`https://vkevents.tk/image/upload?uid=${newAdvertId}`, {
+      const { code, response: imageRes } = await fetch(`https://vkevents.tk/image/upload?uid=${newAdvertId}`, {
         method: 'POST',
         headers: {
           'X-User-ID': user.id,
@@ -237,7 +237,8 @@ const NewEvent = props => {
 NewEvent.propTypes = {
   id: PropTypes.string.isRequired,
   go: PropTypes.func.isRequired,
-  userId: PropTypes.number
+  userId: PropTypes.number,
+  isEditing: PropTypes.bool
 };
 
 export default NewEvent;

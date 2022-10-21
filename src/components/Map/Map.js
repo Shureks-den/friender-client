@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 
-import { Input, FormItem } from '@vkontakte/vkui';
+import { Input, FormItem, Group } from '@vkontakte/vkui';
 
 import './Map.scss';
 
@@ -106,7 +106,7 @@ const Map = props => {
           yMap.geoObjects.add(firstGeoObject);
           // Масштабируем карту на область видимости геообъекта.
           yMap.setBounds(bounds, {
-          // Проверяем наличие тайлов на данном масштабе.
+            // Проверяем наличие тайлов на данном масштабе.
             checkZoomRange: true
           });
         });
@@ -115,13 +115,14 @@ const Map = props => {
   }, [address, isClicked]);
 
   return (
-    <div className='ymaps__container'>
-      <FormItem top='Адрес' width={500}>
-        <Input type='text' title='Адрес' label='Название события' id='address' value={address} onInput={(e) => handleType(e)} onBlur={(e) => handlePlaceMark(e)} style={{ width: '500px' }} disabled={!props.isClickable}/>
-      </FormItem>
-      <div id='ymaps' />
-    </div>
-
+    <Group>
+      <div className='ymaps__container'>
+        <FormItem top='Адрес' className='ymaps__input'>
+          <Input type='text' title='Адрес' label='Название события' id='address' value={address} onInput={(e) => handleType(e)} onBlur={(e) => handlePlaceMark(e)} disabled={!props.isClickable} />
+        </FormItem>
+        <div id='ymaps' />
+      </div>
+    </Group>
   );
 };
 

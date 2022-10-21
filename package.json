@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
+    "eslint": "^8.25.0",
     "eslint-plugin-react": "^7.31.10",
     "react-hot-loader": "^4.13.0",
     "react-scripts": "^4.0.3",

@@ -9,7 +9,7 @@ import { setIsAdmin, setGroupId } from '../store/group/group';
 
 const GroupView = props => {
   const dispatch = useDispatch();
-  
+
   const [pageGroup, setPageGroup] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -27,7 +27,7 @@ const GroupView = props => {
 
   useEffect(async () => {
     try {
-      const groupId = props.groupId ?? window.location.hash?.slice(1).split('=').slice(1, 2).join('')
+      const groupId = props.groupId ?? window.location.hash?.slice(1).split('=').slice(1, 2).join('');
       const gr = await VkApiService.fetchGroupData(Number(groupId));
       // получить все события
       setPageGroup(gr);
