@@ -8,6 +8,7 @@ import ApiSevice from '../modules/ApiSevice';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { remove, set } from '../store/categories/categoriesSlice.js';
+import { removeGroupId } from '../store/group/groupSlice';
 
 import Map from '../components/Map/Map.js';
 
@@ -49,9 +50,10 @@ const NewEvent = props => {
       setEventDescription(value);
       setFormAreaItemStatus('default');
     }
-  }
+  };
 
   useEffect(async () => {
+    console.log(groupId)
     if (!categories.length) {
       const categories = await ApiSevice.getAll('categories');
       if (!categories) return;
@@ -83,10 +85,10 @@ const NewEvent = props => {
     setLatitude(geo?.latitude);
     setLongitude(geo?.longitude);
     setCoords([geo?.latitude, geo?.longitude]);
-  }, [props.isEditing])
+  }, [props.isEditing]);
 
   const sendEvent = async () => {
-    console.log(isAdmin, groupId);
+    
     const body = {
       title: eventTitle,
       description: eventDescription,
@@ -119,7 +121,7 @@ const NewEvent = props => {
         setFormAreaItemStatus('error');
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      return
+      return;
     }
 
     if (eventImages.length) {
@@ -128,7 +130,7 @@ const NewEvent = props => {
       const formData = new FormData();
       eventImages.forEach((img, idx) => {
         formData.append(`photo${idx}`, img);
-      })
+      });
 
       const { code, response: imageRes } = await fetch(`https://vkevents.tk/image/upload?uid=${newAdvertId}`, {
         method: 'POST',
@@ -140,9 +142,19 @@ const NewEvent = props => {
       console.log(imageRes);
     }
     if (response.id) {
-      props.onSuccess(response.id);
+      if (groupId) {
+        props.onSuccessGroup(groupId);
+        dispatch(removeGroupId());
+      } else {
+        props.onSuccess(response.id);
+      }
     }
   };
+
+  const goBack = () => {
+    dispatch(removeGroupId());
+    props.go();
+  }
 
   const changeImage = (e) => {
     const files = Array.from(e.target.files);
@@ -154,7 +166,7 @@ const NewEvent = props => {
   return (
     <Panel id={props.id}>
       <PanelHeader
-        left={<PanelHeaderBack onClick={props.go} data-to='home' />}
+        left={<PanelHeaderBack onClick={goBack} data-to='home' />}
       >
         Новое событие
       </PanelHeader>

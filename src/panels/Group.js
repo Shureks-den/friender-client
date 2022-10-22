@@ -20,9 +20,10 @@ const GroupView = props => {
   const user = useSelector(state => state.user.value);
 
   const handleAddEvent = async (admin) => {
+    console.log(pageGroup)
     dispatch(setIsAdmin({ isAdmin: admin }));
     dispatch(setGroupId({ groupId: pageGroup.id }));
-    props.goToNewEventPage();
+    props.goToNewEventPage(false);
   };
 
   useEffect(async () => {
@@ -32,17 +33,40 @@ const GroupView = props => {
       const gr = await VkApiService.fetchGroupData(Number(groupId));
       const adminEvents = await ApiSevice.getAll('events', {
         group_id: Number(groupId),
+        is_admin: true,
+        is_active: true,
       });
-      const domEvents = adminEvents.map((e, idx) =>
-      <HorizontalCell key={idx} header={e.title} size="l" subtitle={new Date(e.time_start * 1000).toLocaleString()} onClick={() => props.goTo(e.id)}>
-        <img
-          className={'profile-active-card__avatar'}
-          src={e.avatar.avatar_url}
-        />
-      </HorizontalCell>
-    );
+      const domEvents = adminEvents?.map((e, idx) =>
+        <HorizontalCell key={idx} header={e.title} size="l" subtitle={new Date(e.time_start * 1000).toLocaleString()} onClick={() => props.goTo(e.id)}>
+          <img
+            className={'profile-active-card__avatar'}
+            src={e.avatar.avatar_url}
+          />
+        </HorizontalCell>
+      );
       setAdminEvents(domEvents);
-      // получить все события
+
+      const usersEvents = await ApiSevice.getAll('events', {
+        group_id: Number(groupId),
+        is_admin: false,
+        is_active: true,
+      });
+      const domUserEvents = usersEvents?.map((e, idx) =>
+        <HorizontalCell key={idx} header={e.title} size="l" subtitle={new Date(e.time_start * 1000).toLocaleString()} onClick={() => props.goTo(e.id)}>
+          <img
+            className={'profile-active-card__avatar'}
+            src={e.avatar.avatar_url}
+          />
+        </HorizontalCell>
+      );
+      setUsersEvents(domUserEvents);
+
+      const historyEvents = await ApiSevice.getAll('events', {
+        group_id: Number(groupId),
+        is_active: false,
+      });
+      setFinishedEvents(historyEvents);
+
       setPageGroup(gr);
     } catch (err) {
       console.log(err);
@@ -50,10 +74,15 @@ const GroupView = props => {
   }, [props.groupId]);
 
   useEffect(async () => {
-    // Проверка на админа, добавляем кнопку добавить событие
-    setIsAdminOnPage(true);
-
-  }, [user]);
+    if (pageGroup.id) {
+      const isAdmin = await ApiSevice.getAll('group/admin/check', {
+        group_id: pageGroup.id
+      });
+      setIsAdminOnPage(isAdmin);
+    } else {
+      setIsAdminOnPage(false);
+    }
+  }, [user, pageGroup]);
 
   return (
     <Panel id={props.id}>
@@ -77,6 +106,7 @@ const GroupView = props => {
 
       <Group>
         <Header aside={
+          isAdmin &&
           <Button onClick={() => handleAddEvent(true)}>
             Добавить событие
           </Button>

@@ -16,6 +16,7 @@
   "keywords": [],
   "license": "MIT",
   "dependencies": {
+    "@babel/eslint-parser": "^7.5.4",
     "@dnd-kit/core": "^6.0.5",
     "@dnd-kit/sortable": "^7.0.1",
     "@reduxjs/toolkit": "^1.8.6",
@@ -25,7 +26,6 @@
     "@vkontakte/vk-tunnel": "^0.1.2",
     "@vkontakte/vkjs": "0.20.0",
     "@vkontakte/vkui": "4.28.1",
-    "babel-eslint": "^10.1.0",
     "eruda": "^2.4.1",
     "eruda-code": "^2.0.0",
     "eruda-dom": "^2.0.0",
@@ -37,6 +37,7 @@
     "semistandard": "^16.0.1"
   },
   "devDependencies": {
+    "@babel/preset-react": "^7.18.6",
     "cross-env": "^7.0.3",
     "eslint": "^8.25.0",
     "eslint-plugin-react": "^7.31.10",

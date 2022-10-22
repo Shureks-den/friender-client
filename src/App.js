@@ -11,6 +11,7 @@ import ApiSevice from './modules/ApiSevice.js';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { remove, set } from './store/user/userSlice';
+import { removeGroupId } from './store/group/groupSlice';
 
 import Feed from './panels/Feed';
 import NewEvent from './panels/NewEvent';
@@ -21,6 +22,7 @@ import GroupView from './panels/Group.js';
 const App = ({ router }) => {
   const dispatch = useDispatch();
   const [scheme, setScheme] = useState('bright_light');
+  
   const user = useSelector(state => state.user.value);
 
   const [eventId, setEventId] = useState('');
@@ -69,7 +71,10 @@ const App = ({ router }) => {
     await VkApiService.setNewLocation(`group?id=${id}`);
   };
 
-  const goToNewAdd = () => {
+  const goToNewAdd = (deleteGroupInfo = true) => {
+    if (deleteGroupInfo) {
+      dispatch(removeGroupId());
+    }
     setIsEditing(false);
     router.toView(ViewTypes.ADDNEW);
   };
@@ -90,6 +95,10 @@ const App = ({ router }) => {
     console.log(response);
   };
 
+  const toView = (view) => {
+    router.toView(view);
+  };
+
   return (
     <ConfigProvider scheme={scheme}>
       <AdaptivityProvider>
@@ -98,7 +107,7 @@ const App = ({ router }) => {
             activeStory={router.activeView} tabbar={
               <Tabbar>
                 <TabbarItem
-                  onClick={() => router.toView(ViewTypes.MAIN)}
+                  onClick={() => toView(ViewTypes.MAIN)}
                   selected={router.activeView === ViewTypes.MAIN}
                   text='Лента'
                 >
@@ -126,7 +135,14 @@ const App = ({ router }) => {
             </View>
 
             <View id={ViewTypes.ADDNEW} activePanel={router.activePanel}>
-              <NewEvent id={PanelTypes.ADDNEW} userId={user?.id} go={() => router.toBack()} onSuccess={goTo} isEditing={isEditing} eventId={eventId} />
+              <NewEvent 
+                id={PanelTypes.ADDNEW} 
+                userId={user?.id} 
+                go={() => router.toBack()} 
+                onSuccess={goTo} 
+                onSuccessGroup={goToGroup}
+                isEditing={isEditing} 
+                eventId={eventId} />
             </View>
 
             <View id={ViewTypes.PROFILE} activePanel={router.activePanel}>
@@ -139,7 +155,11 @@ const App = ({ router }) => {
             </View>
 
             <View id={ViewTypes.GROUP} activePanel={router.activePanel}>
-              <GroupView id={PanelTypes.GROUP} go={() => router.toBack()} groupId={groupId} goTo={goTo} goToNewEventPage={goToNewAdd} />
+              <GroupView 
+                id={PanelTypes.GROUP} 
+                go={() => router.toBack()} 
+                groupId={groupId} goTo={goTo} 
+                goToNewEventPage={goToNewAdd} />
             </View>
 
             <View id={ViewTypes.EVENT} activePanel={router.activePanel}>

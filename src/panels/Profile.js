@@ -15,10 +15,6 @@ const Profile = props => {
 
   const user = useSelector(state => state.user.value);
 
-  const showAdminedGroups = async => {
-    console.log('show groups in modal');
-  };
-
   const connectGroup = async () => {
     const groupId = await VkApiService.addToGroup(user.id);
     await props.goToGroup(groupId);
@@ -47,13 +43,14 @@ const Profile = props => {
       });
       setFinishedEvents(eevents);
 
-      const adminedGroups = await ApiSevice.getAll('group');
+      const adminedGroups = await ApiSevice.getAll('group', {
+        user_id: userId
+      });
       const fullInfoGroups = [];
       for (let i = 0; i < adminedGroups.length; i++) {
-        const gr = await VkApiService.fetchGroupData(adminedGroups[i].group_id);
+        const gr = await VkApiService.fetchGroupData(Number(adminedGroups[i].group_id));
         fullInfoGroups.push(gr);
       }
-      console.log(fullInfoGroups)
       setAdminedGroups(fullInfoGroups);
 
       setPageUser(u);
@@ -84,9 +81,9 @@ const Profile = props => {
       <Button onClick={() => connectGroup()}>Добавить группу</Button>
 
       {
-        adminedGroups.length && <Group header={
+        adminedGroups.length !== 0 && <Group header={
           <Header>
-            Мои группы
+            {pageUser?.id === user?.id ? 'Ваши группы' : `Группы ${pageUser.first_name}`}
           </Header>
         }
         >
