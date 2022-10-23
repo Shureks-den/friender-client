@@ -166,7 +166,7 @@ const NewEvent = props => {
   return (
     <Panel id={props.id}>
       <PanelHeader
-        left={<PanelHeaderBack onClick={goBack} data-to='home' />}
+        style={{ textAlign: 'center' }}
       >
         Новое событие
       </PanelHeader>

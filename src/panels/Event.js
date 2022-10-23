@@ -21,9 +21,8 @@ const Event = props => {
   const [eventId, setEventId] = useState('');
   const [isMember, setIsMember] = useState(false);
 
-  const [groupInfo, setGroupInfo] = useState({});
-
   const user = useSelector(state => state.user.value);
+  const adminedGroups = useSelector(state => state.groupInfo.adminedGroups);
 
   const subscribe = async (id) => {
     const response = await ApiSevice.put('event', id, 'subscribe');
@@ -181,8 +180,7 @@ const Event = props => {
         </ButtonGroup>
       }
 
-
-      {(user?.id === eventData.author || user?.id === groupInfo.admin) && eventData.is_active ?
+      {(user?.id === eventData.author || adminedGroups.find(g => g.group_id === eventData?.group_info?.group_id)) && eventData.is_active ?
 
         <ButtonGroup
           mode="vertical"

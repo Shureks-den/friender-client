@@ -11,7 +11,7 @@ import ApiSevice from './modules/ApiSevice.js';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { remove, set } from './store/user/userSlice';
-import { removeGroupId } from './store/group/groupSlice';
+import { removeGroupId, setAdminedGroups } from './store/group/groupSlice';
 
 import Feed from './panels/Feed';
 import NewEvent from './panels/NewEvent';
@@ -51,6 +51,16 @@ const App = ({ router }) => {
     fetchData();
     checkGroupRedirect();
   }, []);
+
+  useEffect(async () => {
+    console.log(user.id)
+    const adminedGroups = await ApiSevice.getAll('group', {
+      user_id: user.id
+    });
+    if (adminedGroups) {
+      dispatch(setAdminedGroups({adminedGroups: adminedGroups}));
+    }
+  }, [user])
 
   const goToEditing = async id => {
     setIsEditing(true);

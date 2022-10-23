@@ -5,6 +5,7 @@ export const groupLogicSlice = createSlice({
   initialState: {
     groupId: null,
     isAdmin: false,
+    adminedGroups: [],
   },
   reducers: {
     setGroupId: (state, action) => {
@@ -18,9 +19,17 @@ export const groupLogicSlice = createSlice({
     removeGroupId: (state, action) => {
       state.groupId = null;
     },
+    setAdminedGroups: (state, action) => {
+      const { adminedGroups } = action.payload;
+      state.adminedGroups = adminedGroups;
+    },
+    addAdminedGroup: (state, action) => {
+      const { adminedGroup } = action.payload;
+      state.adminedGroups = state.adminedGroups.push(adminedGroup);
+    }
   }
 });
 
 // Action creators are generated for each case reducer function
-export const { setGroupId, setIsAdmin, removeGroupId } = groupLogicSlice.actions;
+export const { setGroupId, setIsAdmin, removeGroupId, setAdminedGroups, addAdminedGroup } = groupLogicSlice.actions;
 export default groupLogicSlice.reducer;

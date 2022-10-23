@@ -89,7 +89,7 @@ const GroupView = props => {
       <PanelHeader
         left={<PanelHeaderBack onClick={props.go} data-to='home' />}
       >
-        Я на самом деле группа!
+        Группа
       </PanelHeader>
       {
         pageGroup

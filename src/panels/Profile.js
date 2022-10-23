@@ -62,7 +62,7 @@ const Profile = props => {
   return (
     <Panel id={props.id}>
       <PanelHeader
-        left={<PanelHeaderBack onClick={props.go} data-to='home' />}
+        style={{ textAlign: 'center' }}
       >
         Пользователь
       </PanelHeader>
