@@ -40,7 +40,14 @@ const Event = props => {
   }
 
   const deleteEvent = async (id) => {
-    const response = await ApiSevice.put('event', id, 'delete');
+
+
+    const response = await ApiSevice.put('event', id, 'delete', {
+      group_id: eventData.group_info.group_id,
+      is_admin: Boolean(adminedGroups.find(g => g.group_id === eventData?.group_info?.group_id))
+    });
+
+
     props.go();
   }
 
@@ -192,10 +199,11 @@ const Event = props => {
           <Button sizeY='regular' onClick={() => deleteEvent(eventId)}> Удалить событие </Button>
         </ButtonGroup>
 
-        : isMember || !eventData.is_active
-          ? <Button sizeY='regular' onClick={() => unsubscribe(eventId)}> Отписаться </Button>
-          : <Button sizeY='regular' onClick={() => subscribe(eventId)}> Подписаться на событие </Button>
+        : (isMember || !eventData.is_active)
+        && <Button sizeY='regular' onClick={() => unsubscribe(eventId)}> Отписаться </Button>
       }
+
+      {(!isMember && user?.id !== eventData.author && eventData.is_active) && <Button sizeY='regular' onClick={() => subscribe(eventId)}> Подписаться на событие </Button>}
     </Panel>
   );
 };

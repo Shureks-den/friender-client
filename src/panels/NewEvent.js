@@ -94,6 +94,7 @@ const NewEvent = props => {
       description: eventDescription,
       author: props.userId,
       category: category,
+      source: groupId ? 'group' : 'user',
       geo: {
         latitude: coords[0],
         longitude: coords[1]

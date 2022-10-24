@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, AdaptivityProvider, AppRoot, ConfigProvider, Epic, Tabbar, TabbarItem, Panel, PanelHeader } from '@vkontakte/vkui';
-import { Icon28NewsfeedOutline, Icon28AddCircleOutline, Icon28Profile } from '@vkontakte/icons';
+import { Icon28NewsfeedOutline, Icon28AddCircleOutline, Icon28Profile, Icon28Message, Icon28Users } from '@vkontakte/icons';
 import '@vkontakte/vkui/dist/vkui.css';
 
 import { withRouter, useRouterSelector, useRouterActions } from 'react-router-vkminiapps-updated';
@@ -18,11 +18,12 @@ import NewEvent from './panels/NewEvent';
 import Event from './panels/Event.js';
 import Profile from './panels/Profile.js';
 import GroupView from './panels/Group.js';
+import Chats from './panels/Chats.js';
 
 const App = ({ router }) => {
   const dispatch = useDispatch();
   const [scheme, setScheme] = useState('bright_light');
-  
+
   const user = useSelector(state => state.user.value);
 
   const [eventId, setEventId] = useState('');
@@ -58,7 +59,7 @@ const App = ({ router }) => {
       user_id: user.id
     });
     if (adminedGroups) {
-      dispatch(setAdminedGroups({adminedGroups: adminedGroups}));
+      dispatch(setAdminedGroups({ adminedGroups: adminedGroups }));
     }
   }, [user])
 
@@ -123,13 +124,32 @@ const App = ({ router }) => {
                 >
                   <Icon28NewsfeedOutline />
                 </TabbarItem>
+
+                <TabbarItem
+                  onClick={() => toView(ViewTypes.CHATS)}
+                  selected={router.activeView === ViewTypes.CHATS}
+                  text='Чаты'
+                >
+                  <Icon28Message />
+                </TabbarItem>
+
                 <TabbarItem
                   onClick={() => goToNewAdd()}
                   selected={router.activeView === ViewTypes.ADDNEW}
-                  text='Добавить событие'
+                  text='Новое событие'
                 >
                   <Icon28AddCircleOutline />
                 </TabbarItem>
+
+                <TabbarItem
+                  onClick={() => toView(ViewTypes.CHATS)}
+                  selected={false}
+                  text='Группы'
+                >
+                  <Icon28Users />
+                </TabbarItem>
+
+
                 <TabbarItem
                   onClick={() => goToProfile(user.id)}
                   selected={router.activeView === ViewTypes.PROFILE}
@@ -137,21 +157,28 @@ const App = ({ router }) => {
                 >
                   <Icon28Profile />
                 </TabbarItem>
+
+
               </Tabbar>
             }
           >
             <View id={ViewTypes.MAIN} activePanel={router.activePanel}>
-              <Feed id={PanelTypes.MAIN_HOME} fetchedUser={user} go={(id) => goTo(id)} />
+              <Feed
+                id={PanelTypes.MAIN_HOME}
+                fetchedUser={user}
+                go={(id) => goTo(id)}
+                onSuccess={goTo}
+              />
             </View>
 
             <View id={ViewTypes.ADDNEW} activePanel={router.activePanel}>
-              <NewEvent 
-                id={PanelTypes.ADDNEW} 
-                userId={user?.id} 
-                go={() => router.toBack()} 
-                onSuccess={goTo} 
+              <NewEvent
+                id={PanelTypes.ADDNEW}
+                userId={user?.id}
+                go={() => router.toBack()}
+                onSuccess={goTo}
                 onSuccessGroup={goToGroup}
-                isEditing={isEditing} 
+                isEditing={isEditing}
                 eventId={eventId} />
             </View>
 
@@ -165,10 +192,10 @@ const App = ({ router }) => {
             </View>
 
             <View id={ViewTypes.GROUP} activePanel={router.activePanel}>
-              <GroupView 
-                id={PanelTypes.GROUP} 
-                go={() => router.toBack()} 
-                groupId={groupId} goTo={goTo} 
+              <GroupView
+                id={PanelTypes.GROUP}
+                go={() => router.toBack()}
+                groupId={groupId} goTo={goTo}
                 goToNewEventPage={goToNewAdd} />
             </View>
 
@@ -183,6 +210,9 @@ const App = ({ router }) => {
                 goToProfile={goToProfile}
                 goToEditing={goToEditing}
               />
+            </View>
+            <View id={ViewTypes.CHATS} activePanel={router.activePanel}>
+              <Chats id={PanelTypes.CHATS} />
             </View>
           </Epic>
         </AppRoot>
