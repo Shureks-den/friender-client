@@ -40,14 +40,10 @@ const Event = props => {
   }
 
   const deleteEvent = async (id) => {
-
-
     const response = await ApiSevice.put('event', id, 'delete', {
       group_id: eventData.group_info.group_id,
       is_admin: Boolean(adminedGroups.find(g => g.group_id === eventData?.group_info?.group_id))
     });
-
-
     props.go();
   }
 

@@ -1,62 +1,113 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Panel, PanelHeader, Header, Group, CardGrid, SimpleCell, Tabs, TabsItem, HorizontalScroll, Badge, Separator, Div, Avatar, IconButton } from '@vkontakte/vkui';
+import { Panel, PanelHeader, Header, Group, Cell, SimpleCell, Avatar, TabsItem, HorizontalScroll, Badge, Separator, Div, IconButton, WriteBar, WriteBarIcon, FixedLayout, PanelHeaderBack } from '@vkontakte/vkui';
 import { Icon28MessageOutline } from '@vkontakte/icons';
 import ApiSevice from '../modules/ApiSevice';
-import { io } from "socket.io-client";
 
 
 import '../assets/styles/Chats.scss';
 
 const Chats = (props) => {
   const user = useSelector(state => state.user.value);
+  const messagesEndRef = useRef(null);
+
   const [chats, setChats] = useState([]);
   const [isChatsListOpen, setIsChatsListOpen] = useState(true);
-  let socket;
+  const [members, setMembers] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [socket, setSocket] = useState(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  useEffect(() => {
+    if (!isChatsListOpen) {
+      setTimeout(scrollToBottom, 0);
+    }
+  }, [messages, isChatsListOpen]);
 
   const getAllChats = async () => {
     const chats = await ApiSevice.getAll('chats');
-    console.log(chats);
     if (chats) {
       setChats(chats);
     }
   }
 
-  const openChat = async (id) => {
-    // getHistory
+  const getHistory = async (id) => {
+    const messages = await ApiSevice.getAll('messages', {
+      event: id,
+      page: 0,
+      limit: 100
+    });
+    console.log(messages);
+    const { members } = await ApiSevice.get('event/get', id);
+    const fetchedUsers = [];
+    for (let i = 0; i < members.length; i++) {
+      const member = await props.getUserInfo(members[i]);
+      fetchedUsers.push(member);
+    }
+    setMembers(fetchedUsers);
+    setMessages(messages.reverse());
+  }
+
+  const openChat = async (id, userId) => {
+    await getHistory(id);
     setIsChatsListOpen(false);
-    socket = new WebSocket(`wss://vkevents.tk/ws/chat/${id}`);
-    socket.onopen = () => {
-      console.log('kek1')
-      socket.send('kek');
+    const s = new WebSocket(`wss://vkevents.tk/ws/messenger/${id}?user_id=${userId}`);
+    s.onopen = () => {
+      setSocket(s);
     };
+  }
+
+  useEffect(() => {
+    if (!socket) return;
+    socket.onmessage = (event) => {
+      console.log([...messages, JSON.parse(event.data)], 'aaa')
+      setMessages([...messages, JSON.parse(event.data)]);
+    }
     socket.onerror = function (error) {
       console.log('error', error)
     };
     socket.onclose = function (event) {
       console.log('closed', event);
     }
+  }, [socket, messages]);
+
+  const sendMessage = (text) => {
+    console.log(socket, "СООБЩЕНИЕ ВОТ ВОТ ОТПРАВИТСЯ")
+    socket.send(text);
+    console.log(socket, "СООБЩЕНИЕ ОТПРАВИЛОСЬ")
+  };
+
+  const closeChat = () => {
+    setMessages([]);
+    socket?.close();
   }
 
   useEffect(async () => {
     if (isChatsListOpen) {
+      closeChat();
       await getAllChats();
-      socket?.close();
     }
   }, [user, isChatsListOpen]);
 
   return (
     <Panel id={props.id}>
-      <PanelHeader style={{ textAlign: 'center' }} separator={false}>Чаты</PanelHeader>
-      {isChatsListOpen && <ChatsLists chats={chats} openChat={openChat} />}
+      <PanelHeader left={!isChatsListOpen && <PanelHeaderBack onClick={() => setIsChatsListOpen(true)} />} style={{ textAlign: 'center' }} separator={false}>Чаты</PanelHeader>
+      {isChatsListOpen && <ChatsLists chats={chats} openChat={openChat} userId={user.id} />}
+      {messages && <Messages messages={messages} users={members} user={user} goToProfile={props.goToProfile} closeChat={closeChat} />}
+      {!isChatsListOpen && <ChatView sendMessage={sendMessage} />}
+      <div ref={messagesEndRef} />
     </Panel>
   );
 };
 
 
 const ChatsLists = (props) => {
+  console.log(props)
   const chats = props.chats.map(c => {
     return (
       <SimpleCell
@@ -64,7 +115,7 @@ const ChatsLists = (props) => {
         before={
           <Avatar size={40} src={c.event_avatar} />
         }
-        onClick={() => props.openChat(c.event_uid)}
+        onClick={() => props.openChat(c.event_uid, props.userId, props.socket)}
         after={
           <IconButton>
             <Icon28MessageOutline />
@@ -85,14 +136,49 @@ const ChatsLists = (props) => {
   )
 }
 
-const messages = ({ messages }) => {
-  const domMessages = messages.map(m => {
-    return (
-      <Div className={m.user_id === user.id ? 'message-user' : 'message-author'}>{m.text}</Div>
-    )
-  })
+const Messages = ({ messages, users, user, goToProfile, closeChat }) => {
+  const [domMessages, setDomMessages] = useState([]);
+
+  const clickAvatar = (userId) => {
+    closeChat();
+    goToProfile(userId);
+  }
+
+  useEffect(() => {
+    console.log('wtf', messages)
+    setDomMessages(messages.map((m, idx) => {
+      const time = new Date(m.time_created * 1000);
+      const timeFormatted = `${time.getHours()}:${time.getMinutes() < 10 ? '0' : ''}${time.getMinutes()}`;
+      const profile = users.find(u => u.id === m.user_id);
+      const isUser = m.user_id === user.id;
+      return (
+        <Div key={idx} className={(m.user_id === user.id ? 'message-author' : 'message-user') + ' message'}>
+          {!isUser &&
+            <Cell
+              before={profile.photo_200 ? <Avatar src={profile.photo_200} /> : null}
+              onClick={() => clickAvatar(m.user_id)}
+            />
+          }
+
+          <Div className={(m.user_id === user.id ? 'message-wrapper-author' : 'message-wrapper-user') + ' message-wrapper'}>
+            <div className='message-text'>{m.text}</div>
+            <div className='message-time'>{timeFormatted}</div>
+          </Div>
+
+          {isUser &&
+            <Cell
+              before={profile.photo_200 ? <Avatar src={profile.photo_200} /> : null}
+              onClick={() => clickAvatar(m.user_id)}
+            />
+          }
+
+        </Div>
+      )
+    }));
+  }, [messages]);
+
   return (
-    <Group>
+    <Group className={'chat__messages'}>
       {domMessages}
     </Group>
   )
@@ -100,19 +186,30 @@ const messages = ({ messages }) => {
 
 const ChatView = (props) => {
   const [message, setMessage] = useState('');
+  const send = () => {
+    props.sendMessage(message);
+    setMessage('');
+  };
+  const handleEnterClick = (e) => {
+    if (e.keyCode === 13) {
+      e.preventDefault();
+      send();
+    }
+  };
   return (
-    <Group>
+    <FixedLayout vertical='bottom' className='chat__input'>
       <WriteBar
         value={message}
         onChange={(e) => setMessage(e.target.value)}
+        onKeyDown={handleEnterClick}
         after={
           <Fragment>
-            <WriteBarIcon onClick={() => props.sendMessage(message)} mode="send" disabled={message.length === 0} />
+            <WriteBarIcon onClick={send} mode="send" disabled={message.length === 0} />
           </Fragment>
         }
         placeholder="Сообщение"
       />
-    </Group>
+    </FixedLayout>
   )
 }
 

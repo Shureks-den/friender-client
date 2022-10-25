@@ -1,9 +1,46 @@
-.chat {
-  &-user {
-    color: bisque;
+.message {
+  display: flex;
+  flex-direction: row;
+  &:last-of-type {
+    margin-bottom: 52px;
   }
 
-  &-other {
-    color: teal;
+  &-wrapper {
+    border-radius: 10px;
+    background-color: var(--vkui--color_background_content);
+    width: fit-content;
+
+    &-user {
+      margin-right: auto;
+    }
+
+    &-author {
+      margin-left: auto;
+      background-color: var(--vkui--color_background_accent);
+    }
+  }
+
+  &-user {
+    color: var(--vkui--color_text_primary);
+    & .vkuiSimpleCell {
+      padding-left: 0px;
+      padding-right: 0px;
+    }
+  }
+
+  &-author {
+    color: var(--vkui--color_text_primary);
+    & .vkuiSimpleCell {
+      padding-right: 0px;
+    }
+  }
+}
+
+.chat {
+  &__input {
+    border-top: solid 1px var(--separator_common);
+  }
+  &__messages {
+
   }
 }

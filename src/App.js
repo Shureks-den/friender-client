@@ -124,7 +124,6 @@ const App = ({ router }) => {
                 >
                   <Icon28NewsfeedOutline />
                 </TabbarItem>
-
                 <TabbarItem
                   onClick={() => toView(ViewTypes.CHATS)}
                   selected={router.activeView === ViewTypes.CHATS}
@@ -132,7 +131,6 @@ const App = ({ router }) => {
                 >
                   <Icon28Message />
                 </TabbarItem>
-
                 <TabbarItem
                   onClick={() => goToNewAdd()}
                   selected={router.activeView === ViewTypes.ADDNEW}
@@ -140,7 +138,6 @@ const App = ({ router }) => {
                 >
                   <Icon28AddCircleOutline />
                 </TabbarItem>
-
                 <TabbarItem
                   onClick={() => toView(ViewTypes.CHATS)}
                   selected={false}
@@ -148,8 +145,6 @@ const App = ({ router }) => {
                 >
                   <Icon28Users />
                 </TabbarItem>
-
-
                 <TabbarItem
                   onClick={() => goToProfile(user.id)}
                   selected={router.activeView === ViewTypes.PROFILE}
@@ -157,8 +152,6 @@ const App = ({ router }) => {
                 >
                   <Icon28Profile />
                 </TabbarItem>
-
-
               </Tabbar>
             }
           >
@@ -212,7 +205,11 @@ const App = ({ router }) => {
               />
             </View>
             <View id={ViewTypes.CHATS} activePanel={router.activePanel}>
-              <Chats id={PanelTypes.CHATS} />
+              <Chats
+                id={PanelTypes.CHATS}
+                getUserInfo={VkApiService.fetchUserData}
+                goToProfile={goToProfile}
+              />
             </View>
           </Epic>
         </AppRoot>
