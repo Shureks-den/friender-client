@@ -1,7 +1,7 @@
 class ApiService {
   constructor() { };
 
-  #hostUrl = 'https://vkevents.tk'
+  #hostUrl = 'https://vk-events.ru'
   
   #userId = '';
 

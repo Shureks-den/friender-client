@@ -57,7 +57,7 @@ const Chats = (props) => {
   const openChat = async (id, userId) => {
     await getHistory(id);
     setIsChatsListOpen(false);
-    const s = new WebSocket(`wss://vkevents.tk/ws/messenger/${id}?user_id=${userId}`);
+    const s = new WebSocket(`wss://vk-events.ru/ws/messenger/${id}?user_id=${userId}`);
     s.onopen = () => {
       setSocket(s);
     };
@@ -148,13 +148,14 @@ const Messages = ({ messages, users, user, goToProfile, closeChat }) => {
   useEffect(() => {
     console.log('wtf', messages)
     const messagesCopy = messages;
-    messagesCopy.forEach((m, idx) => {
-      if (new Date(m.time_created * 1000).getDate() < new Date(messagesCopy[idx + 1]?.time_created * 1000).getDate()) {
-        messagesCopy.splice(idx, 0, { separator: true, time_created: m.time_created });
+    for (let idx = 0; idx < messagesCopy.length; idx++) {
+      if (new Date(messagesCopy[idx].time_created * 1000).getDate() < new Date(messagesCopy[idx + 1]?.time_created * 1000).getDate()) {
+        messagesCopy.splice(idx + 1, 0, { isSeparator: true, time_created: messagesCopy[idx + 1].time_created });
+        idx++;
       }
-    });
+    }
     if (messagesCopy[0]) {
-      messagesCopy.splice(0, 0, { isSeparator: true, time_created: messagesCopy[0].time_created});
+      messagesCopy.unshift({ isSeparator: true, time_created: messagesCopy[0].time_created });
     }
     console.log(messagesCopy);
     setDomMessages(messages.map((m, idx) => {
@@ -165,7 +166,7 @@ const Messages = ({ messages, users, user, goToProfile, closeChat }) => {
       const isUser = m?.user_id === user.id;
       if (isSeparator) {
         const now = new Date();
-        const messageDay = (now.getDate() === time.getDate() && now.getMonth() === time.getMonth()) ? 'Сегодня' : `${eventDate.getDate()} ${monthNames[eventDate.getMonth()]}`;
+        const messageDay = (now.getDate() === time.getDate() && now.getMonth() === time.getMonth()) ? 'Сегодня' : `${time.getDate()} ${monthNames[time.getMonth()]}`;
         return (
           <Div key={idx} className='message__separator'>
             {messageDay}
