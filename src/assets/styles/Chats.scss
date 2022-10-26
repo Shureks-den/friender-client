@@ -1,22 +1,32 @@
 .message {
   display: flex;
   flex-direction: row;
+  align-items: center;
   &:last-of-type {
     margin-bottom: 52px;
+  }
+
+  &__separator {
+    text-align: center;
+    color: var(--vkui--color_text_primary);
+    font-weight: var(--vkui--font_weight_accent2);
+    font-size: var(--vkui--font_text--font_size--compact);
   }
 
   &-wrapper {
     border-radius: 10px;
     background-color: var(--vkui--color_background_content);
     width: fit-content;
+    max-width: 40%;
 
     &-user {
       margin-right: auto;
+      background-color: var(--vkui--color_background);
     }
 
     &-author {
       margin-left: auto;
-      background-color: var(--vkui--color_background_accent);
+      background-color: var(--accent);
     }
   }
 
@@ -33,14 +43,39 @@
     & .vkuiSimpleCell {
       padding-right: 0px;
     }
+    & .message__user {
+      color: var(--vkui--color_text_primary);
+    }
+  }
+
+  &__user {
+    cursor: pointer;
+    color: var(--vkui--color_text_accent);
+    font-weight: var(--vkui--font_weight_accent2);
+    font-size: var(--vkui--font_text--font_size--compact);
+  }
+
+  &__text {
+    color: var(--vkui--color_text_primary);
+    font-weight: var(--vkui--font_weight_base3);
+    font-size: var(--vkui--font_text--font_size--compact);
+    padding-top: 3px;
+  }
+
+  &__time {
+    text-align: right;
+    color: var(--text_muted);
+    font-size: var(--vkui--font_caption1--font_size--regular);
+    line-height: var(--vkui--font_caption1--line_height--regular);
+    letter-spacing: var(--vkui--font_caption1--letter_spacing--regular);
+    font-family: var(--vkui--font_caption1--font_family--regular);
+    font-weight: var(--vkui--font_caption1--font_weight--regular);
+    padding-top: 3px;
   }
 }
 
 .chat {
   &__input {
     border-top: solid 1px var(--separator_common);
-  }
-  &__messages {
-
   }
 }

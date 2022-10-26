@@ -8,6 +8,7 @@ import ApiSevice from '../modules/ApiSevice';
 
 
 import '../assets/styles/Chats.scss';
+import { monthNames } from '../variables/constants';
 
 const Chats = (props) => {
   const user = useSelector(state => state.user.value);
@@ -146,34 +147,54 @@ const Messages = ({ messages, users, user, goToProfile, closeChat }) => {
 
   useEffect(() => {
     console.log('wtf', messages)
+    const messagesCopy = messages;
+    messagesCopy.forEach((m, idx) => {
+      if (new Date(m.time_created * 1000).getDate() < new Date(messagesCopy[idx + 1]?.time_created * 1000).getDate()) {
+        messagesCopy.splice(idx, 0, { separator: true, time_created: m.time_created });
+      }
+    });
+    if (messagesCopy[0]) {
+      messagesCopy.splice(0, 0, { isSeparator: true, time_created: messagesCopy[0].time_created});
+    }
+    console.log(messagesCopy);
     setDomMessages(messages.map((m, idx) => {
+      const isSeparator = m.isSeparator;
       const time = new Date(m.time_created * 1000);
       const timeFormatted = `${time.getHours()}:${time.getMinutes() < 10 ? '0' : ''}${time.getMinutes()}`;
-      const profile = users.find(u => u.id === m.user_id);
-      const isUser = m.user_id === user.id;
-      return (
-        <Div key={idx} className={(m.user_id === user.id ? 'message-author' : 'message-user') + ' message'}>
-          {!isUser &&
-            <Cell
-              before={profile.photo_200 ? <Avatar src={profile.photo_200} /> : null}
-              onClick={() => clickAvatar(m.user_id)}
-            />
-          }
+      const profile = users.find(u => u.id === m?.user_id);
+      const isUser = m?.user_id === user.id;
+      if (isSeparator) {
+        const now = new Date();
+        const messageDay = (now.getDate() === time.getDate() && now.getMonth() === time.getMonth()) ? 'Сегодня' : `${eventDate.getDate()} ${monthNames[eventDate.getMonth()]}`;
+        return (
+          <Div key={idx} className='message__separator'>
+            {messageDay}
+          </Div>);
+      } else {
+        return (
+          <Div key={idx} className={(m.user_id === user.id ? 'message-author' : 'message-user') + ' message'}>
+            {!isUser &&
+              <Cell
+                before={profile.photo_200 ? <Avatar src={profile.photo_200} /> : null}
+                onClick={() => clickAvatar(m.user_id)}
+              />
+            }
 
-          <Div className={(m.user_id === user.id ? 'message-wrapper-author' : 'message-wrapper-user') + ' message-wrapper'}>
-            <div className='message-text'>{m.text}</div>
-            <div className='message-time'>{timeFormatted}</div>
+            <Div className={(m.user_id === user.id ? 'message-wrapper-author' : 'message-wrapper-user') + ' message-wrapper'}>
+              <div className='message__user' onClick={() => clickAvatar(m.user_id)}>{profile.first_name} {profile.last_name}</div>
+              <div className='message__text'>{m.text}</div>
+              <div className='message__time'>{timeFormatted}</div>
+            </Div>
+
+            {isUser &&
+              <Cell
+                before={profile.photo_200 ? <Avatar src={profile.photo_200} /> : null}
+                onClick={() => clickAvatar(m.user_id)}
+              />
+            }
           </Div>
-
-          {isUser &&
-            <Cell
-              before={profile.photo_200 ? <Avatar src={profile.photo_200} /> : null}
-              onClick={() => clickAvatar(m.user_id)}
-            />
-          }
-
-        </Div>
-      )
+        )
+      }
     }));
   }, [messages]);
 
