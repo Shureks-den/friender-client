@@ -2,19 +2,38 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Panel, PanelHeader, Header, Group, CardGrid, ContentCard, Tabs, TabsItem, HorizontalScroll, Badge, Button, ButtonGroup, Spinner, Link } from '@vkontakte/vkui';
-import { Icon24NewsfeedOutline, Icon24LogoVk, Icon24Users } from '@vkontakte/icons';
+import { Panel, PanelHeader, Header, Group, CardGrid, ContentCard, Tabs, TabsItem, HorizontalScroll, Badge, Button, ButtonGroup, Spinner, IconButton } from '@vkontakte/vkui';
+import { Icon24NewsfeedOutline, Icon24LogoVk, Icon24Users, Icon24ShareOutline, Icon24LikeOutline, Icon24Like } from '@vkontakte/icons';
 import ApiSevice from '../modules/ApiSevice';
 
 import '../assets/styles/Feed.scss';
 
+import { setActiveEvents } from '../store/user/userSlice';
+
 import { monthNames } from '../variables/constants';
 
-const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess}) => {
+const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
+  const dispatch = useDispatch();
   const [eventsData, setEventsData] = useState([]);
-  const user = useSelector(state => state.user.value);
+  const [activeEventsIds, setActiveEventsIds] = useState([]);
 
-  const [selected, setSelected] = React.useState("newEvents");
+  const user = useSelector(state => state.user.value);
+  const activeEvents = useSelector(state => state.user.activeEvents);
+
+  const [selected, setSelected] = React.useState('newEvents');
+
+  const subscribe = async (elem) => {
+    if (!activeEventsIds.find(i => i === elem.id)) {
+      const response = await ApiSevice.put('event', elem.id, 'subscribe');
+      if (response) {
+        const activeEvents = await ApiSevice.getAll('events', {
+          id: user.id,
+          is_active: true,
+        });
+        dispatch(setActiveEvents(activeEvents));
+      }
+    }
+  }
 
   const createLink = (id, onSuccess) => {
     const link = document.createElement('a');
@@ -32,7 +51,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess}) => {
       category: elem.category,
       source: 'user',
       group_info: null,
-      time_start: elem.time_start,
+      time_start: elem.time_start / 1000, // тут милисекунды
       members_limit: Number(5),
       is_private: false,
     };
@@ -49,7 +68,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess}) => {
     if (!res) return;
     console.log(res);
     const listItems = res.map((elem) => {
-      const eventDate = new Date(elem.time_start * (!isVk ? 1000 : 1));
+      const eventDate = new Date(elem.time_start * 1000);
       const time = `${eventDate.getDate()} ${monthNames[eventDate.getMonth()]}, ${eventDate.getHours()}:${eventDate.getMinutes() < 10 ? '0' : ''}${eventDate.getMinutes()}`;
       const eventStart = (day === eventDate.getDate() && month === eventDate.getMonth()) ? 'Сегодня' : '' + time;
       if (isVk) {
@@ -60,25 +79,46 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess}) => {
             subtitle={elem.title}
             className='vk-event'
             caption={
-              <ButtonGroup mode="horizontal" gap="m">
-                <Button onClick={() => createLink(elem.id)} size="s" stretched>
-                  Подробнее
-                </Button>
-                <Button onClick={() => makeCopy(elem, onSuccess)} size="s" stretched>
-                  Сделать копию
-                </Button>
-              </ButtonGroup>}
-            text={eventStart}
+              <div>
+                <div style={{ paddingBottom: '12px' }}>{eventStart}</div>
+                <ButtonGroup mode="horizontal" gap="m">
+                  <Button onClick={() => createLink(elem.id)} size="s" stretched>
+                    Подробнее
+                  </Button>
+                  <Button onClick={() => makeCopy(elem, onSuccess)} size="s" stretched>
+                    Найти компанию
+                  </Button>
+                </ButtonGroup>
+              </div>
+            }
           />
         )
       } else {
+        const city = elem.geo.address ? elem.geo.address.split(',')[0] : '';
         return (
           <ContentCard
             key={elem.id}
             src={elem.avatar.avatar_url}
             subtitle={elem.title}
-            caption={eventStart}
-            onClick={() => go(elem.id)}
+            caption={<div className="event-caption">
+              <div className='event-caption__info-wrapper'>
+                <div className='event-caption__info-date'>
+                  {eventStart}
+                </div>
+                <div className='event-caption__info-address'>
+                  {city}
+                </div>
+              </div>
+              <ButtonGroup mode="horizontal" gap="m" style={{ alignItems: 'center' }}>
+                <IconButton onClick={() => subscribe(elem)}>
+                  {activeEventsIds.find(i => i === elem.id) ? <Icon24Like /> : <Icon24LikeOutline />}
+                </IconButton>
+                <IconButton onClick={() => makeRepost(elem.id, elem.title, elem.avatar_url)}>
+                  <Icon24ShareOutline />
+                </IconButton>
+                <Button onClick={() => go(elem.id)} style={{ position: 'absolute', right: '16px' }} >Подробнее</Button>
+              </ButtonGroup>
+            </div>}
           />)
       }
 
@@ -109,7 +149,11 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess}) => {
     } else if (selected === 'vkEvents') {
       await getVkEvents();
     }
-  }, [user, selected]);
+  }, [user, selected, activeEventsIds]);
+
+  useEffect(() => {
+    setActiveEventsIds(activeEvents.map(a => a.id));
+  }, [activeEvents]);
 
   return (
     <Panel id={id}>
@@ -134,30 +178,21 @@ const Scrollable = (props) => {
           <TabsItem
             selected={props.selected === "newEvents"}
             onClick={() => props.setSelected("newEvents")}
-            before={
-              <Icon24NewsfeedOutline />
-            }
           >
             Новые события
           </TabsItem>
           <TabsItem
-            before={
-              <Icon24LogoVk />
-            }
             selected={props.selected === "vkEvents"}
             onClick={() => props.setSelected("vkEvents")}
           >
             События Вконтакте
           </TabsItem>
           <TabsItem
-            before={
-              <Icon24Users />
-            }
             status={<Badge mode="prominent" />}
             selected={props.selected === "friendEvents"}
             onClick={() => props.setSelected("friendEvents")}
           >
-            События друзей
+            Подписки
           </TabsItem>
         </HorizontalScroll>
       </Tabs>

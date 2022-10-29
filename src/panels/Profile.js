@@ -20,6 +20,20 @@ const Profile = props => {
     await props.goToGroup(groupId);
   };
 
+  const subscribe = async () => {
+    const response = await ApiSevice.post('profile/subscribe', {
+      user_id: pageUser.id,
+    });
+    console.log(response);
+  };
+
+  const unsubscribe = async () => {
+    const response = await ApiSevice.post('profile/unsubscribe', {
+      user_id: pageUser.id,
+    });
+    console.log(response);
+  }
+
   useEffect(async () => {
     try {
       const userId = props.profileId ?? window.location.hash?.slice(1).split('=').slice(1, 2).join('')
@@ -106,6 +120,10 @@ const Profile = props => {
             </div>
           </HorizontalScroll>
         </Group>
+      }
+
+      {
+        pageUser.id !== user.id && <Button onClick={subscribe}> Подписаться на чела </Button>
       }
 
 

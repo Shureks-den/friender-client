@@ -10,7 +10,7 @@ import VkApiService from './modules/VkApiService.js';
 import ApiSevice from './modules/ApiSevice.js';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { remove, set } from './store/user/userSlice';
+import { remove, set, setActiveEvents } from './store/user/userSlice';
 import { removeGroupId, setAdminedGroups } from './store/group/groupSlice';
 
 import Feed from './panels/Feed';
@@ -37,6 +37,11 @@ const App = ({ router }) => {
       const user = await VkApiService.fetchUserData();
       dispatch(set(user));
       ApiSevice.setHeaderId(user.id);
+      const activeEvents = await ApiSevice.getAll('events', {
+        id: user.id,
+        is_active: true,
+      });
+      dispatch(setActiveEvents(activeEvents));
     }
     function checkGroupRedirect() {
       const params = new Proxy(new URLSearchParams(window.location.search), {
@@ -54,7 +59,6 @@ const App = ({ router }) => {
   }, []);
 
   useEffect(async () => {
-    console.log(user.id)
     const adminedGroups = await ApiSevice.getAll('group', {
       user_id: user.id
     });
@@ -161,6 +165,8 @@ const App = ({ router }) => {
                 fetchedUser={user}
                 go={(id) => goTo(id)}
                 onSuccess={goTo}
+                makeRepost={makeRepost}
+                makeShare={makeShare}
               />
             </View>
 

@@ -4,3 +4,20 @@
   height: 200px;
   object-fit: fill;
 }
+
+.event-caption {
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  justify-content: center;
+
+  &__info {
+    &-date {
+      margin-right: 20px;
+    }
+    &-wrapper {
+      display: flex;
+      flex-direction: row;
+    }
+  }
+}

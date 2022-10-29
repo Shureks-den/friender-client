@@ -8,10 +8,13 @@ import '../assets/styles/Event.scss';
 
 import ApiSevice from '../modules/ApiSevice';
 
+import { setActiveEvents } from '../store/user/userSlice';
+
 import Map from '../components/Map/Map.js';
 import VkApiService from '../modules/VkApiService';
 
 const Event = props => {
+  const dispatch = useDispatch();
   const [eventData, setEventData] = useState({});
   const [members, setMembers] = useState([]);
   const [eventAuthor, setEventAuthor] = useState(null);
@@ -28,7 +31,13 @@ const Event = props => {
   const subscribe = async (id) => {
     const response = await ApiSevice.put('event', id, 'subscribe');
     setIsMember(true);
-    console.log(response);
+    if (response) {
+      const activeEvents = await ApiSevice.getAll('events', {
+        id: user.id,
+        is_active: true,
+      });
+      dispatch(setActiveEvents(activeEvents));
+    }
   }
 
   const unsubscribe = async (id) => {
@@ -38,6 +47,13 @@ const Event = props => {
     if (!eventData.is_active) {
       props.go();
     }
+    if (response) {
+      const activeEvents = await ApiSevice.getAll('events', {
+        id: user.id,
+        is_active: true,
+      });
+      dispatch(setActiveEvents(activeEvents));
+    }
   }
 
   const deleteEvent = async (id) => {
@@ -45,6 +61,13 @@ const Event = props => {
       group_id: eventData.group_info.group_id,
       is_admin: Boolean(adminedGroups.find(g => g.group_id === eventData?.group_info?.group_id))
     });
+    if (response) {
+      const activeEvents = await ApiSevice.getAll('events', {
+        id: user.id,
+        is_active: true,
+      });
+      dispatch(setActiveEvents(activeEvents));
+    }
     props.go();
   }
 
