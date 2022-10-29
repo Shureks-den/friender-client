@@ -20,6 +20,7 @@ const Event = props => {
   const [eventDate, setEventDate] = useState(new Date().toLocaleString());
   const [eventId, setEventId] = useState('');
   const [isMember, setIsMember] = useState(false);
+  const [address, setAddress] = useState('');
 
   const user = useSelector(state => state.user.value);
   const adminedGroups = useSelector(state => state.groupInfo.adminedGroups);
@@ -162,7 +163,7 @@ const Event = props => {
         <Text weight="bold" style={{ padding: '15px 10px' }}>{eventDate}</Text>
       </FormItem>
 
-      <Map isClickable={false} latitude={eventData.geo?.latitude} longitude={eventData.geo?.longitude} />
+      <Map isClickable={false} latitude={eventData.geo?.latitude} longitude={eventData.geo?.longitude} address={address} setAddress={setAddress} />
 
 
       {eventData.is_active &&

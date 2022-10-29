@@ -25,6 +25,7 @@ const NewEvent = props => {
   const [coords, setCoords] = useState([]);
   const [isPrivate, setIsPrivate] = useState(false);
   const [members, setMembers] = useState(1);
+  const [address, setAddress] = useState('');
 
   // для редактирования
   const [editAvatar, setAvatar] = useState({});
@@ -96,6 +97,7 @@ const NewEvent = props => {
       category: category,
       source: groupId ? 'group' : 'user',
       geo: {
+        address: address,
         latitude: coords[0],
         longitude: coords[1]
       },
@@ -133,7 +135,7 @@ const NewEvent = props => {
         formData.append(`photo${idx}`, img);
       });
 
-      const { code, response: imageRes } = await fetch(`https://vkevents.tk/image/upload?uid=${newAdvertId}`, {
+      const { code, response: imageRes } = await fetch(`https://vk-events.ru/image/upload?uid=${newAdvertId}`, {
         method: 'POST',
         headers: {
           'X-User-ID': user.id,
@@ -248,7 +250,7 @@ const NewEvent = props => {
         </div>
       </Group>
 
-      <Map isClickable={true} setCoords={setCoords} latitude={latitude} longitude={longitude} />
+      <Map isClickable={true} setCoords={setCoords} latitude={latitude} longitude={longitude} address={address} setAddress={setAddress} />
 
       <Button sizeY='regular' onClick={sendEvent}> {props.isEditing ? 'Редактировать' : 'Опубликовать'} </Button>
     </Panel>

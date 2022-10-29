@@ -4,19 +4,18 @@ import { Input, FormItem, Group } from '@vkontakte/vkui';
 
 import './Map.scss';
 
-const Map = props => {
+const Map = ({address, setAddress, setCoords, latitude, longitude, isClickable }) => {
   const [yMap, setYMap] = useState(null);
-  const [address, setAdress] = useState('');
   const [isClicked, setIsClicked] = useState(false);
 
   const handleType = (e) => {
     setIsClicked(true);
-    setAdress(e.target.value);
+    setAddress(e.target.value);
   };
 
   const handlePlaceMark = (e) => {
     setIsClicked(false);
-    setAdress(e.target.value);
+    setAddress(e.target.value);
   };
 
   const transformCoords = async (coords) => {
@@ -29,7 +28,7 @@ const Map = props => {
     const dataSliced = data.split(' ');
     const dateSlice = dataSliced.slice(1);
     data = dateSlice.join(' ');
-    setAdress(data);
+    setAddress(data);
   };
 
   const handleClick = map => {
@@ -42,7 +41,7 @@ const Map = props => {
         }
       });
       setIsClicked(true);
-      props.setCoords(coords);
+      setCoords(coords);
       map.geoObjects.removeAll();
       map.geoObjects.add(myGeoObject);
       await transformCoords(coords);
@@ -52,7 +51,7 @@ const Map = props => {
   useEffect(() => {
     ymaps.ready().then(() => {
       const myMap = new ymaps.Map('ymaps', {
-        center: [props.latitude ?? 55.796931, props.longitude ?? 37.537847],
+        center: [latitude ?? 55.796931, longitude ?? 37.537847],
         zoom: 14,
         controls: ['zoomControl', 'fullscreenControl']
       });
@@ -66,29 +65,29 @@ const Map = props => {
 
       suggestView.events.add('select', ({ originalEvent }) => {
         setIsClicked(false);
-        setAdress(originalEvent.item.value);
+        setAddress(originalEvent.item.value);
       });
 
-      if (props.isClickable) {
+      if (isClickable) {
         handleClick(myMap);
       }
     });
   }, []);
 
   useEffect(async () => {
-    if (!yMap || !props.latitude || !props.longitude) return;
+    if (!yMap || !latitude || !longitude) return;
     const myGeoObject = new ymaps.GeoObject({
       geometry: {
         type: 'Point', // тип геометрии - точка
-        coordinates: [props.latitude ?? 55.796931, props.longitude ?? 37.537847], // координаты точки
+        coordinates: [latitude ?? 55.796931, longitude ?? 37.537847], // координаты точки
       }
     });
     yMap.geoObjects.add(myGeoObject);
-    await transformCoords([props.latitude ?? 55.796931, props.longitude ?? 37.537847]);
-  }, [props.latitude, props.longitude, yMap])
+    await transformCoords([latitude ?? 55.796931, longitude ?? 37.537847]);
+  }, [latitude, longitude, yMap])
 
   useEffect(() => {
-    if (!isClicked && props.isClickable) {
+    if (!isClicked && isClickable) {
       ymaps.ready().then(() => {
         ymaps?.geocode(address, {
           results: 1
@@ -101,7 +100,7 @@ const Map = props => {
           // Область видимости геообъекта.
           const bounds = firstGeoObject.properties.get('boundedBy');
 
-          props.setCoords(coords);
+          setCoords(coords);
           // Добавляем первый найденный геообъект на карту.
           yMap.geoObjects.add(firstGeoObject);
           // Масштабируем карту на область видимости геообъекта.
@@ -118,7 +117,7 @@ const Map = props => {
     <Group>
       <div className='ymaps__container'>
         <FormItem top='Адрес' className='ymaps__input'>
-          <Input type='text' title='Адрес' label='Название события' id='address' value={address} onInput={(e) => handleType(e)} onBlur={(e) => handlePlaceMark(e)} disabled={!props.isClickable} />
+          <Input type='text' title='Адрес' label='Название события' id='address' value={address} onInput={(e) => handleType(e)} onBlur={(e) => handlePlaceMark(e)} disabled={!isClickable} />
         </FormItem>
         <div id='ymaps' />
       </div>
