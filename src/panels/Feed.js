@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Panel, PanelHeader, Group, CardGrid, ContentCard, Tabs, TabsItem, HorizontalScroll, Badge, Button, ButtonGroup, Spinner, IconButton, FixedLayout, Search, FormItem, Select, FormLayoutGroup, Div } from '@vkontakte/vkui';
-import { Icon24SortOutline } from '@vkontakte/icons';
 import { Icon24NewsfeedOutline, Icon24LogoVk, Icon24Users, Icon24ShareOutline, Icon24LikeOutline, Icon24Like } from '@vkontakte/icons';
+import { Icon24ArrowDownOutline, Icon24ArrowUpOutline, Icon24SortOutline } from '@vkontakte/icons';
 import ApiSevice from '../modules/ApiSevice';
 
 import '../assets/styles/Feed.scss';
@@ -12,7 +12,7 @@ import '../assets/styles/Feed.scss';
 import { setActiveEvents } from '../store/user/userSlice';
 import { set } from '../store/categories/categoriesSlice';
 
-import { monthNames, cities } from '../variables/constants';
+import { monthNames, cities, sortOptions } from '../variables/constants';
 
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import {
@@ -37,20 +37,32 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
 
   const [searchCategory, setSearchCategory] = useState('');
   const [searchCity, setSearchCity] = useState('');
+  const [sortValue, setSortValue] = useState('');
+
+  const [sortOrder, setSortOrder] = useState('asc');
+
+  const setOrder = () => {
+    if (sortOrder === 'desc') {
+      setSortOrder('asc');
+    } else if (sortOrder === 'asc') {
+      setSortOrder('desc');
+    }
+  }
+
+  const setSort = (value) => {
+    if (value === '') {
+      setSortOrder('');
+    } else {
+      setSortOrder('asc');
+    }
+    setSortValue(value);
+  }
 
   useEffect(async () => {
     const cat = await ApiSevice.getAll('categories');
     if (!cat) return;
     dispatch(set(cat));
   }, [user]);
-
-  const searchByCategory = async (value) => {
-    setSearchCategory(value);
-  }
-
-  const searchByCity = async (value) => {
-    setSearchCity(value);
-  }
 
   const subscribe = async (elem) => {
     if (!activeEventsIds.find(i => i === elem.id)) {
@@ -100,7 +112,8 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
     const listItems = res.map((elem) => {
       const eventDate = new Date(elem.time_start * 1000);
       const time = `${eventDate.getDate()} ${monthNames[eventDate.getMonth()]}, ${eventDate.getHours()}:${eventDate.getMinutes() < 10 ? '0' : ''}${eventDate.getMinutes()}`;
-      const eventStart = (day === eventDate.getDate() && month === eventDate.getMonth()) ? 'Сегодня' : '' + time;
+      const eventStart = ((day === eventDate.getDate() && month === eventDate.getMonth()) ? 'Сегодня ' : '') + time;
+      const city = elem.geo.address ? elem.geo.address.split(',')[0] : '';
       if (isVk) {
         return (
           <ContentCard
@@ -109,8 +122,15 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
             subtitle={elem.title}
             className='vk-event'
             caption={
-              <div>
-                <div style={{ paddingBottom: '12px' }}>{eventStart}</div>
+              <div className="event-caption">
+                <div className='event-caption__info-wrapper'>
+                  <div className='event-caption__info-date'>
+                    {eventStart}
+                  </div>
+                  <div className='event-caption__info-address'>
+                    {city}
+                  </div>
+                </div>
                 <ButtonGroup mode="horizontal" gap="m">
                   <Button onClick={() => createLink(elem.id)} size="s" stretched>
                     Подробнее
@@ -124,31 +144,32 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
           />
         )
       } else {
-        const city = elem.geo.address ? elem.geo.address.split(',')[0] : '';
+
         return (
           <ContentCard
             key={elem.id}
             src={elem.avatar.avatar_url}
             subtitle={elem.title}
-            caption={<div className="event-caption">
-              <div className='event-caption__info-wrapper'>
-                <div className='event-caption__info-date'>
-                  {eventStart}
+            caption={
+              <div className="event-caption">
+                <div className='event-caption__info-wrapper'>
+                  <div className='event-caption__info-date'>
+                    {eventStart}
+                  </div>
+                  <div className='event-caption__info-address'>
+                    {city}
+                  </div>
                 </div>
-                <div className='event-caption__info-address'>
-                  {city}
-                </div>
-              </div>
-              <ButtonGroup mode="horizontal" gap="m" style={{ alignItems: 'center' }}>
-                <IconButton onClick={() => subscribe(elem)}>
-                  {activeEventsIds.find(i => i === elem.id) ? <Icon24Like /> : <Icon24LikeOutline />}
-                </IconButton>
-                <IconButton onClick={() => makeRepost(elem.id, elem.title, elem.avatar_url)}>
-                  <Icon24ShareOutline />
-                </IconButton>
-                <Button onClick={() => go(elem.id)} style={{ position: 'absolute', right: '16px' }} >Подробнее</Button>
-              </ButtonGroup>
-            </div>}
+                <ButtonGroup mode="horizontal" gap="m" style={{ alignItems: 'center' }}>
+                  <IconButton onClick={() => subscribe(elem)}>
+                    {activeEventsIds.find(i => i === elem.id) ? <Icon24Like /> : <Icon24LikeOutline />}
+                  </IconButton>
+                  <IconButton onClick={() => makeRepost(elem.id, elem.title, elem.avatar_url)}>
+                    <Icon24ShareOutline />
+                  </IconButton>
+                  <Button onClick={() => go(elem.id)} style={{ position: 'absolute', right: '16px' }} >Подробнее</Button>
+                </ButtonGroup>
+              </div>}
           />)
       }
 
@@ -157,31 +178,40 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
   }
 
   const getVkEvents = async () => {
+    const sort = {};
+    sort[sortValue === 'Количество участников' ? 'sort_members' : ''] = sortOrder;
     const res = await ApiSevice.getAll('events', {
       is_active: true,
       source: 'vk_event',
       category: searchCategory,
       city: searchCity,
+      ...sort,
     });
     setEvents(res, true);
   }
 
   const getNewEvents = async () => {
+    const sort = {};
+    sort[sortValue === 'Количество участников' ? 'sort_members' : ''] = sortOrder;
     const res = await ApiSevice.getAll('events', {
       is_active: true,
       source: 'not_vk',
       category: searchCategory,
       city: searchCity,
+      ...sort,
     });
     setEvents(res);
   }
 
   const getSubscribedEvents = async () => {
+    const sort = {};
+    sort[sortValue === 'Количество участников' ? 'sort_members' : ''] = sortOrder;
     const res = await ApiSevice.getAll('events', {
       id: user.id,
       source: 'subscribe',
       category: searchCategory,
       city: searchCity,
+      ...sort,
     });
     setEvents(res);
   }
@@ -201,11 +231,17 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
     if (isSearchEmpty) {
       await getEvents();
     }
-  }, [user, selected, activeEventsIds, isSearchEmpty, searchCategory, searchCity]);
+  }, [user, selected, activeEventsIds, isSearchEmpty, searchCategory, searchCity, sortOrder]);
 
   useEffect(() => {
     setActiveEventsIds(activeEvents.map(a => a.id));
   }, [activeEvents]);
+
+  useEffect(() => {
+    setSearchCategory('');
+    setSearchCity('');
+    setSort('');
+  }, [selected])
 
   return (
     <Panel id={id}>
@@ -235,7 +271,8 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
               value: i
             }))}
             placeholder='Выберите категорию'
-            onChange={(e) => searchByCategory(e.target.value)}
+            value={searchCategory}
+            onChange={(e) => setSearchCategory(e.target.value)}
           />
         </FormItem>
         <FormItem bottom="Город">
@@ -247,22 +284,24 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
               value: i
             }))}
             placeholder='Выберите город'
-            onChange={(e) => searchByCity(e.target.value)}
+            value={searchCity}
+            onChange={(e) => setSearchCity(e.target.value)}
           />
         </FormItem>
         <FormItem bottom="Сортировать по">
           <Select
             options={[
-              ...cities
+              ...sortOptions
             ].map((i) => ({
               label: i,
               value: i
             }))}
             placeholder=''
-            onChange={(e) => searchByCity(e.target.value)}
+            value={sortValue}
+            onChange={(e) => setSort(e.target.value)}
           />
         </FormItem>
-        <IconButton> <Icon24SortOutline /> </IconButton>
+        {sortValue !== '' && <IconButton onClick={setOrder}> {sortOrder === 'asc' ? <Icon24ArrowUpOutline /> : <Icon24ArrowDownOutline />} </IconButton>}
       </FormLayoutGroup>
 
       <Group>
