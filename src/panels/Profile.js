@@ -13,6 +13,8 @@ const Profile = props => {
   const [finishedEvents, setFinishedEvents] = useState([]);
   const [adminedGroups, setAdminedGroups] = useState([]);
 
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
   const user = useSelector(state => state.user.value);
 
   const connectGroup = async () => {
@@ -24,6 +26,7 @@ const Profile = props => {
     const response = await ApiSevice.post('profile/subscribe', {
       user_id: pageUser.id,
     });
+    setIsSubscribed(true);
     console.log(response);
   };
 
@@ -31,12 +34,13 @@ const Profile = props => {
     const response = await ApiSevice.post('profile/unsubscribe', {
       user_id: pageUser.id,
     });
+    setIsSubscribed(false);
     console.log(response);
   }
 
   useEffect(async () => {
     try {
-      const userId = props.profileId ?? window.location.hash?.slice(1).split('=').slice(1, 2).join('')
+      const userId = props.profileId ?? window.location.hash?.slice(1).split('=').slice(1, 2).join('');
       const u = await VkApiService.fetchUserData(Number(userId));
       const events = await ApiSevice.getAll('events', {
         id: u.id,
@@ -73,6 +77,15 @@ const Profile = props => {
     }
   }, [props.profileId, user]);
 
+  useEffect(async () => {
+    if (!pageUser.id || pageUser.id === user.id) {
+      return;
+    }
+    const subscribtions = await ApiSevice.getAll('profile/get');
+    console.log(subscribtions);
+    setIsSubscribed(Boolean(subscribtions.find(s => s === pageUser.id)));
+  }, [pageUser, user]);
+
   return (
     <Panel id={props.id}>
       <PanelHeader
@@ -92,7 +105,15 @@ const Profile = props => {
           </a>
         </Group>
       }
-      <Button onClick={() => connectGroup()}>Добавить группу</Button>
+      {
+        (pageUser?.id === user?.id) ?
+          <Button onClick={() => connectGroup()}>Добавить группу</Button> :
+
+          !isSubscribed ?
+            <Button onClick={subscribe}>Подписаться</Button> :
+            <Button onClick={unsubscribe}>Отписаться</Button>
+
+      }
 
       {
         adminedGroups.length !== 0 && <Group header={
@@ -121,11 +142,6 @@ const Profile = props => {
           </HorizontalScroll>
         </Group>
       }
-
-      {
-        pageUser.id !== user.id && <Button onClick={subscribe}> Подписаться на чела </Button>
-      }
-
 
       <Group description={pageUser?.id === user?.id && "Ваши и те, на которые вы подписаны, события"}>
         <Header>Активные события</Header>

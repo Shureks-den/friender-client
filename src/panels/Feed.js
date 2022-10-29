@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Panel, PanelHeader, Header, Group, CardGrid, ContentCard, Tabs, TabsItem, HorizontalScroll, Badge, Button, ButtonGroup, Spinner, IconButton } from '@vkontakte/vkui';
+import { Panel, PanelHeader, Group, CardGrid, ContentCard, Tabs, TabsItem, HorizontalScroll, Badge, Button, ButtonGroup, Spinner, IconButton, FixedLayout, Search, Separator } from '@vkontakte/vkui';
 import { Icon24NewsfeedOutline, Icon24LogoVk, Icon24Users, Icon24ShareOutline, Icon24LikeOutline, Icon24Like } from '@vkontakte/icons';
 import ApiSevice from '../modules/ApiSevice';
 
@@ -12,6 +12,15 @@ import { setActiveEvents } from '../store/user/userSlice';
 
 import { monthNames } from '../variables/constants';
 
+import AwesomeDebouncePromise from 'awesome-debounce-promise';
+import {
+  useAsync,
+  useAsyncAbortable,
+  useAsyncCallback,
+  UseAsyncReturn,
+} from 'react-async-hook';
+import useConstant from 'use-constant';
+
 const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
   const dispatch = useDispatch();
   const [eventsData, setEventsData] = useState([]);
@@ -20,7 +29,8 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
   const user = useSelector(state => state.user.value);
   const activeEvents = useSelector(state => state.user.activeEvents);
 
-  const [selected, setSelected] = React.useState('newEvents');
+  const [selected, setSelected] = useState('newEvents');
+  const [isSearchEmpty, setIsSearchEmpty] = useState(true);
 
   const subscribe = async (elem) => {
     if (!activeEventsIds.find(i => i === elem.id)) {
@@ -33,7 +43,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
         dispatch(setActiveEvents(activeEvents));
       }
     }
-  }
+  };
 
   const createLink = (id, onSuccess) => {
     const link = document.createElement('a');
@@ -142,14 +152,20 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
     setEvents(res);
   }
 
-  useEffect(async () => {
+  const getEvents = async () => {
     setEventsData([]);
     if (selected === 'newEvents') {
       await getNewEvents();
     } else if (selected === 'vkEvents') {
       await getVkEvents();
     }
-  }, [user, selected, activeEventsIds]);
+  }
+
+  useEffect(async () => {
+    if (isSearchEmpty) {
+      await getEvents();
+    }
+  }, [user, selected, activeEventsIds, isSearchEmpty]);
 
   useEffect(() => {
     setActiveEventsIds(activeEvents.map(a => a.id));
@@ -158,7 +174,19 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
   return (
     <Panel id={id}>
       <PanelHeader style={{ textAlign: 'center' }} separator={false}>Лента событий</PanelHeader>
-      <Scrollable selected={selected} setSelected={setSelected} />
+      <Scrollable selected={selected} setSelected={setSelected}/>
+      {
+        selected === 'newEvents' &&
+        <SearchDebounced selected='newEvents' setEvents={(res) => setEvents(res)} setSearch={setIsSearchEmpty}/>
+      }
+      {
+        selected === 'vkEvents' &&
+        <SearchDebounced selected='vkEvents' setEvents={(res) => setEvents(res, true)} setSearch={setIsSearchEmpty}/>
+      }
+      {
+        selected === 'subscriptions' &&
+        <SearchDebounced selected='subscriptions' setSearch={setIsSearchEmpty}/>
+      }
       <Group>
         <CardGrid size='l'>
           {eventsData.length ? eventsData : <Spinner size="large" style={{ margin: "20px 0" }} />}
@@ -199,6 +227,66 @@ const Scrollable = (props) => {
     </Group>
   );
 };
+
+const SearchDebounced = props => {
+  const handleSearchInput = async (e) => {
+    const sources = props.selected === 'newEvents' ? ['user', 'group'] : ['vk_event'];
+    const {response} = await ApiSevice.post('search', {
+      words: e.split(' '),
+      sources: sources
+    });
+    console.log(response);
+    if (response.length) {
+      console.log(response);
+      props.setEvents(response);
+    }
+  }
+
+  const useSearch = () => {
+    const [inputText, setInputText] = useState('');
+  
+    // Debounce the original search async function
+    const debouncedSearchStarwarsHero = useConstant(() =>
+      AwesomeDebouncePromise(handleSearchInput, 300)
+    );
+  
+    const search = useAsyncAbortable(
+      async (abortSignal, text) => {
+
+        if (text.length === 0) {
+          return [];
+        }
+
+        else {
+          return debouncedSearchStarwarsHero(text, abortSignal);
+        }
+      },
+
+      [inputText]
+    );
+  
+    // Return everything needed for the hook consumer
+    return {
+      inputText,
+      setInputText,
+      search,
+    };
+  };
+
+  const { inputText, setInputText, search } = useSearch();
+
+  useEffect(() => {
+    if (inputText.length === 0) {
+      props.setSearch(true);
+    } else {
+      props.setSearch(false);
+    }
+  }, [inputText]);
+  
+  return (
+    <Search value={inputText} onChange={e => setInputText(e.target.value)}/>
+  )
+}
 
 Feed.propTypes = {
   id: PropTypes.string.isRequired,

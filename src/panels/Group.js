@@ -17,6 +17,24 @@ const GroupView = props => {
   const [usersEvents, setUsersEvents] = useState([]);
   const [finishedEvents, setFinishedEvents] = useState([]);
 
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  const subscribe = async () => {
+    const response = await ApiSevice.post('profile/subscribe', {
+      user_id: pageGroup.id,
+    });
+    setIsSubscribed(true);
+    console.log(response);
+  };
+
+  const unsubscribe = async () => {
+    const response = await ApiSevice.post('profile/unsubscribe', {
+      user_id: pageGroup.id,
+    });
+    setIsSubscribed(false);
+    console.log(response);
+  }
+
   const user = useSelector(state => state.user.value);
 
   const handleAddEvent = async (admin) => {
@@ -84,6 +102,15 @@ const GroupView = props => {
     }
   }, [user, pageGroup]);
 
+  useEffect(async () => {
+    if (!pageGroup.id || isAdmin) {
+      return;
+    }
+    const subscribtions = await ApiSevice.getAll('profile/get');
+    console.log(subscribtions);
+    setIsSubscribed(Boolean(subscribtions.find(s => s === pageGroup.id)));
+  }, [pageGroup, user, isAdmin]);
+
   return (
     <Panel id={props.id}>
       <PanelHeader
@@ -102,6 +129,12 @@ const GroupView = props => {
             </Cell>
           </a>
         </Group>
+      }
+      {
+        !isAdmin &&
+          !isSubscribed ?
+          <Button onClick={subscribe}>Подписаться</Button> :
+          <Button onClick={unsubscribe}>Отписаться</Button>
       }
 
       <Group>

@@ -26,15 +26,18 @@
     "@vkontakte/vk-tunnel": "^0.1.2",
     "@vkontakte/vkjs": "0.20.0",
     "@vkontakte/vkui": "4.28.1",
+    "awesome-debounce-promise": "^2.1.0",
     "eruda": "^2.4.1",
     "eruda-code": "^2.0.0",
     "eruda-dom": "^2.0.0",
     "prop-types": "^15.7.2",
     "react": "^17.0.2",
+    "react-async-hook": "^4.0.0",
     "react-dom": "^17.0.2",
     "react-redux": "^8.0.4",
     "react-router-vkminiapps-updated": "^1.2.3",
-    "semistandard": "^16.0.1"
+    "semistandard": "^16.0.1",
+    "use-constant": "^1.1.1"
   },
   "devDependencies": {
     "@babel/preset-react": "^7.18.6",

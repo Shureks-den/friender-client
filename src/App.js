@@ -143,13 +143,6 @@ const App = ({ router }) => {
                   <Icon28AddCircleOutline />
                 </TabbarItem>
                 <TabbarItem
-                  onClick={() => toView(ViewTypes.CHATS)}
-                  selected={false}
-                  text='Группы'
-                >
-                  <Icon28Users />
-                </TabbarItem>
-                <TabbarItem
                   onClick={() => goToProfile(user.id)}
                   selected={router.activeView === ViewTypes.PROFILE}
                   text='Профиль'
