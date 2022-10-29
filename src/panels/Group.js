@@ -132,9 +132,9 @@ const GroupView = props => {
       }
       {
         !isAdmin &&
-          !isSubscribed ?
+          (!isSubscribed ?
           <Button onClick={subscribe}>Подписаться</Button> :
-          <Button onClick={unsubscribe}>Отписаться</Button>
+          <Button onClick={unsubscribe}>Отписаться</Button>)
       }
 
       <Group>

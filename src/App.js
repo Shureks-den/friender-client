@@ -35,8 +35,8 @@ const App = ({ router }) => {
     VkApiService.updateConfigWatcher(setScheme);
     async function fetchData() {
       const user = await VkApiService.fetchUserData();
-      dispatch(set(user));
       ApiSevice.setHeaderId(user.id);
+      dispatch(set(user));
       const activeEvents = await ApiSevice.getAll('events', {
         id: user.id,
         is_active: true,

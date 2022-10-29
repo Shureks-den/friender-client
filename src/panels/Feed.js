@@ -2,15 +2,17 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Panel, PanelHeader, Group, CardGrid, ContentCard, Tabs, TabsItem, HorizontalScroll, Badge, Button, ButtonGroup, Spinner, IconButton, FixedLayout, Search, Separator } from '@vkontakte/vkui';
+import { Panel, PanelHeader, Group, CardGrid, ContentCard, Tabs, TabsItem, HorizontalScroll, Badge, Button, ButtonGroup, Spinner, IconButton, FixedLayout, Search, FormItem, Select, FormLayoutGroup, Div } from '@vkontakte/vkui';
+import { Icon24SortOutline } from '@vkontakte/icons';
 import { Icon24NewsfeedOutline, Icon24LogoVk, Icon24Users, Icon24ShareOutline, Icon24LikeOutline, Icon24Like } from '@vkontakte/icons';
 import ApiSevice from '../modules/ApiSevice';
 
 import '../assets/styles/Feed.scss';
 
 import { setActiveEvents } from '../store/user/userSlice';
+import { set } from '../store/categories/categoriesSlice';
 
-import { monthNames } from '../variables/constants';
+import { monthNames, cities } from '../variables/constants';
 
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import {
@@ -22,6 +24,7 @@ import {
 import useConstant from 'use-constant';
 
 const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
+  const categories = useSelector(state => state.categories.value);
   const dispatch = useDispatch();
   const [eventsData, setEventsData] = useState([]);
   const [activeEventsIds, setActiveEventsIds] = useState([]);
@@ -31,6 +34,23 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
 
   const [selected, setSelected] = useState('newEvents');
   const [isSearchEmpty, setIsSearchEmpty] = useState(true);
+
+  const [searchCategory, setSearchCategory] = useState('');
+  const [searchCity, setSearchCity] = useState('');
+
+  useEffect(async () => {
+    const cat = await ApiSevice.getAll('categories');
+    if (!cat) return;
+    dispatch(set(cat));
+  }, [user]);
+
+  const searchByCategory = async (value) => {
+    setSearchCategory(value);
+  }
+
+  const searchByCity = async (value) => {
+    setSearchCity(value);
+  }
 
   const subscribe = async (elem) => {
     if (!activeEventsIds.find(i => i === elem.id)) {
@@ -140,6 +160,8 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
     const res = await ApiSevice.getAll('events', {
       is_active: true,
       source: 'vk_event',
+      category: searchCategory,
+      city: searchCity,
     });
     setEvents(res, true);
   }
@@ -148,6 +170,18 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
     const res = await ApiSevice.getAll('events', {
       is_active: true,
       source: 'not_vk',
+      category: searchCategory,
+      city: searchCity,
+    });
+    setEvents(res);
+  }
+
+  const getSubscribedEvents = async () => {
+    const res = await ApiSevice.getAll('events', {
+      id: user.id,
+      source: 'subscribe',
+      category: searchCategory,
+      city: searchCity,
     });
     setEvents(res);
   }
@@ -158,6 +192,8 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
       await getNewEvents();
     } else if (selected === 'vkEvents') {
       await getVkEvents();
+    } else if (selected === 'subscriptions') {
+      await getSubscribedEvents();
     }
   }
 
@@ -165,7 +201,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
     if (isSearchEmpty) {
       await getEvents();
     }
-  }, [user, selected, activeEventsIds, isSearchEmpty]);
+  }, [user, selected, activeEventsIds, isSearchEmpty, searchCategory, searchCity]);
 
   useEffect(() => {
     setActiveEventsIds(activeEvents.map(a => a.id));
@@ -174,22 +210,64 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
   return (
     <Panel id={id}>
       <PanelHeader style={{ textAlign: 'center' }} separator={false}>Лента событий</PanelHeader>
-      <Scrollable selected={selected} setSelected={setSelected}/>
+      <Scrollable selected={selected} setSelected={setSelected} />
       {
         selected === 'newEvents' &&
-        <SearchDebounced selected='newEvents' setEvents={(res) => setEvents(res)} setSearch={setIsSearchEmpty}/>
+        <SearchDebounced selected='newEvents' setEvents={(res) => setEvents(res)} setSearch={setIsSearchEmpty} />
       }
       {
         selected === 'vkEvents' &&
-        <SearchDebounced selected='vkEvents' setEvents={(res) => setEvents(res, true)} setSearch={setIsSearchEmpty}/>
+        <SearchDebounced selected='vkEvents' setEvents={(res) => setEvents(res, true)} setSearch={setIsSearchEmpty} />
       }
       {
         selected === 'subscriptions' &&
-        <SearchDebounced selected='subscriptions' setSearch={setIsSearchEmpty}/>
+        <SearchDebounced selected='subscriptions' setSearch={setIsSearchEmpty} />
       }
+      <FormLayoutGroup
+        mode="horizontal"
+      >
+        <FormItem bottom="Категория">
+          <Select
+            options={[
+              ...categories
+            ].map((i) => ({
+              label: i,
+              value: i
+            }))}
+            placeholder='Выберите категорию'
+            onChange={(e) => searchByCategory(e.target.value)}
+          />
+        </FormItem>
+        <FormItem bottom="Город">
+          <Select
+            options={[
+              ...cities
+            ].map((i) => ({
+              label: i,
+              value: i
+            }))}
+            placeholder='Выберите город'
+            onChange={(e) => searchByCity(e.target.value)}
+          />
+        </FormItem>
+        <FormItem bottom="Сортировать по">
+          <Select
+            options={[
+              ...cities
+            ].map((i) => ({
+              label: i,
+              value: i
+            }))}
+            placeholder=''
+            onChange={(e) => searchByCity(e.target.value)}
+          />
+        </FormItem>
+        <IconButton> <Icon24SortOutline /> </IconButton>
+      </FormLayoutGroup>
+
       <Group>
         <CardGrid size='l'>
-          {eventsData.length ? eventsData : <Spinner size="large" style={{ margin: "20px 0" }} />}
+          {eventsData.length ? eventsData : selected !== 'subscriptions' ? <Spinner size="large" style={{ margin: "20px 0" }} /> : <Div>Нет событий :(</Div>}
         </CardGrid>
       </Group>
     </Panel>
@@ -217,8 +295,8 @@ const Scrollable = (props) => {
           </TabsItem>
           <TabsItem
             status={<Badge mode="prominent" />}
-            selected={props.selected === "friendEvents"}
-            onClick={() => props.setSelected("friendEvents")}
+            selected={props.selected === "subscriptions"}
+            onClick={() => props.setSelected("subscriptions")}
           >
             Подписки
           </TabsItem>
@@ -231,7 +309,7 @@ const Scrollable = (props) => {
 const SearchDebounced = props => {
   const handleSearchInput = async (e) => {
     const sources = props.selected === 'newEvents' ? ['user', 'group'] : ['vk_event'];
-    const {response} = await ApiSevice.post('search', {
+    const { response } = await ApiSevice.post('search', {
       words: e.split(' '),
       sources: sources
     });
@@ -244,27 +322,21 @@ const SearchDebounced = props => {
 
   const useSearch = () => {
     const [inputText, setInputText] = useState('');
-  
+
     // Debounce the original search async function
     const debouncedSearchStarwarsHero = useConstant(() =>
       AwesomeDebouncePromise(handleSearchInput, 300)
     );
-  
+
     const search = useAsyncAbortable(
       async (abortSignal, text) => {
-
         if (text.length === 0) {
           return [];
-        }
-
-        else {
+        } else {
           return debouncedSearchStarwarsHero(text, abortSignal);
         }
-      },
+      }, [inputText]);
 
-      [inputText]
-    );
-  
     // Return everything needed for the hook consumer
     return {
       inputText,
@@ -282,9 +354,9 @@ const SearchDebounced = props => {
       props.setSearch(false);
     }
   }, [inputText]);
-  
+
   return (
-    <Search value={inputText} onChange={e => setInputText(e.target.value)}/>
+    <Search value={inputText} onChange={e => setInputText(e.target.value)} />
   )
 }
 
