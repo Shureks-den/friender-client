@@ -49,7 +49,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess}) => {
     if (!res) return;
     console.log(res);
     const listItems = res.map((elem) => {
-      const eventDate = new Date(elem.time_start * 1000);
+      const eventDate = new Date(elem.time_start * (!isVk ? 1000 : 1));
       const time = `${eventDate.getDate()} ${monthNames[eventDate.getMonth()]}, ${eventDate.getHours()}:${eventDate.getMinutes() < 10 ? '0' : ''}${eventDate.getMinutes()}`;
       const eventStart = (day === eventDate.getDate() && month === eventDate.getMonth()) ? 'Сегодня' : '' + time;
       if (isVk) {
