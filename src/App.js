@@ -38,11 +38,15 @@ const App = ({ router }) => {
       const user = await VkApiService.fetchUserData();
       ApiSevice.setHeaderId(user.id);
       dispatch(set(user));
-      const activeEvents = await ApiSevice.getAll('events', {
+      const activeEvents = await ApiSevice.post('events', {
         id: user.id,
-        is_active: true,
+        source: 'not_vk',
+        is_active: {
+          value: true,
+          defined: true,
+        },
       });
-      dispatch(setActiveEvents(activeEvents));
+      dispatch(setActiveEvents(activeEvents.response));
     }
     function checkGroupRedirect() {
       const params = new Proxy(new URLSearchParams(window.location.search), {
@@ -219,7 +223,11 @@ const App = ({ router }) => {
               />
             </View>
             <View id={ViewTypes.SUBSCRIPTIONS} activePanel={router.activePanel}>
-              <Subscriptions id={PanelTypes.SUBSCRIPTIONS} />
+              <Subscriptions
+                id={PanelTypes.SUBSCRIPTIONS}
+                goToProfile={goToProfile}
+                goToGroup={goToGroup}
+              />
             </View>
           </Epic>
         </AppRoot>

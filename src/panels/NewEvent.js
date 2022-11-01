@@ -24,6 +24,11 @@ const NewEvent = props => {
   const [eventDate, setEventDate] = useState(new Date());
   const [coords, setCoords] = useState([]);
   const [isPrivate, setIsPrivate] = useState(false);
+
+  const [hasPrice, setHasPrice] = useState(false);
+  const [paymentLink, setPaymentLink] = useState('');
+  const [ticketPrice, setTicketPrice] = useState('');
+
   const [members, setMembers] = useState(1);
   const [address, setAddress] = useState('');
 
@@ -89,7 +94,7 @@ const NewEvent = props => {
   }, [props.isEditing]);
 
   const sendEvent = async () => {
-    
+
     const body = {
       title: eventTitle,
       description: eventDescription,
@@ -107,6 +112,10 @@ const NewEvent = props => {
       } : null,
       time_start: Math.round(eventDate.getTime() / 1000),
       members_limit: Number(members),
+      ticket: {
+        link: paymentLink,
+        cost: ticketPrice,
+      },
       is_private: isPrivate
     };
     if (props.isEditing) {
@@ -212,14 +221,27 @@ const NewEvent = props => {
         <Textarea placeholder='Самая лучшая тусовка!!!' value={eventDescription} onChange={(e) => onChangeInput(e.target.value, 'description')} />
       </FormItem>
 
-      <FormLayoutGroup mode='horizontal' style={{ alignItems: 'center' }}>
-        <Checkbox value={isPrivate} onChange={((e) => setIsPrivate(e.target.value))}>Приватное событие</Checkbox>
+      <FormLayoutGroup>
         <FormItem top='Количество участников'>
           <Input type='number' min={1} value={members} onChange={(e) => setMembers(e.target.value)} />
         </FormItem>
       </FormLayoutGroup>
 
-      <FormItem>
+
+      <Checkbox value={isPrivate} onChange={((e) => setIsPrivate(!isPrivate))}>Приватное событие</Checkbox>
+      <Checkbox value={hasPrice} onChange={((e) => setHasPrice(!hasPrice))}>Добавить ссылку на билеты</Checkbox>
+      {hasPrice &&
+        <FormLayoutGroup mode='horizontal' style={{ alignItems: 'center' }}>
+          <FormItem top='Цена'>
+            <Input type='number' min={1} value={ticketPrice} onChange={(e) => setTicketPrice(e.target.value)} />
+          </FormItem>
+          <FormItem top='Ссылка для покупки билета'>
+            <Input value={paymentLink} onChange={(e) => setPaymentLink(e.target.value)} />
+          </FormItem>
+        </FormLayoutGroup>
+      }
+
+      <FormItem top="Категория">
         <Select
           options={[
             ...categories

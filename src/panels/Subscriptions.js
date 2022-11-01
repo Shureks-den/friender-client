@@ -85,12 +85,12 @@ const Subscriptions = ({ id, goToProfile, goToGroup }) => {
       await fetchData(groups, 'fetchGroupData', res, goToGroup);
     } else if (subscriptionMode === 'all') {
       if (users.length) {
-        res.push(<Div>Пользователи</Div>);
+        res.push(<Div key={'userTitle'}>Пользователи</Div>);
         await fetchData(users, 'fetchUserData', res, goToProfile);
-        res.push(<Separator />);
+        res.push(<Separator key={'separator'}/>);
       }
       if (groups.length) {
-        res.push(<Div>Группы</Div>);
+        res.push(<Div key={'groupTitle'}>Группы</Div>);
         await fetchData(groups, 'fetchGroupData', res, goToGroup);
       }
     }

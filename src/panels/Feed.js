@@ -68,9 +68,12 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
     if (!activeEventsIds.find(i => i === elem.id)) {
       const response = await ApiSevice.put('event', elem.id, 'subscribe');
       if (response) {
-        const activeEvents = await ApiSevice.getAll('events', {
+        const activeEvents = await ApiSevice.post('events', {
           id: user.id,
-          is_active: true,
+          is_active: {
+            value: true,
+            defined: true,
+          },
         });
         dispatch(setActiveEvents(activeEvents));
       }
@@ -144,7 +147,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
           />
         )
       } else {
-
+        const price = elem.ticket?.cost;
         return (
           <ContentCard
             key={elem.id}
@@ -159,6 +162,11 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
                   <div className='event-caption__info-address'>
                     {city}
                   </div>
+                  {price &&
+                    <div className='event-caption__info-price'>
+                      {price + ' ₽'}
+                    </div>
+                  }
                 </div>
                 <ButtonGroup mode="horizontal" gap="m" style={{ alignItems: 'center' }}>
                   <IconButton onClick={() => subscribe(elem)}>
@@ -177,70 +185,37 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
     setEventsData(listItems);
   }
 
-  const getVkEvents = async () => {
-    const sort = {};
-    sort[sortValue === 'Количество участников' ? 'sort_members' : ''] = sortOrder;
-    const res = await ApiSevice.getAll('events', {
-      is_active: true,
-      source: 'vk_event',
-      category: searchCategory,
-      city: searchCity,
-      ...sort,
-    });
-    setEvents(res, true);
-  }
-
-  const getNewEvents = async () => {
-    const sort = {};
-    sort[sortValue === 'Количество участников' ? 'sort_members' : ''] = sortOrder;
-    const res = await ApiSevice.getAll('events', {
-      is_active: true,
-      source: 'not_vk',
-      category: searchCategory,
-      city: searchCity,
-      ...sort,
-    });
-    setEvents(res);
-  }
-
-  const getSubscribedEvents = async () => {
-    const sort = {};
-    sort[sortValue === 'Количество участников' ? 'sort_members' : ''] = sortOrder;
-    const res = await ApiSevice.getAll('events', {
-      id: user.id,
-      source: 'subscribe',
-      category: searchCategory,
-      city: searchCity,
-      ...sort,
-    });
-    setEvents(res);
-  }
-  
   const getTypedEvents = async (type) => {
     const sort = {};
     sort[sortValue === 'Количество участников' ? 'sort_members' : ''] = sortOrder;
     const source = type === 'newEvents' ? 'not_vk' : type === 'vkEvents' ? 'vk_event' : 'subscribe';
-    const res = await ApiSevice.getAll('events', {
-      is_active: true,
-      source: 'not_vk',
-      category: searchCategory,
+    const sources = type === 'newEvents' ? ['user', 'group'] : ['vk_event'];
+    const res = await ApiSevice.post('events', {
+      is_active: {
+        value: true,
+        defined: true,
+      },
+      source: source,
       city: searchCity,
-      words: searchWords,
+      category: searchCategory,
+
+      search: {
+        enabled: Boolean(searchWords.length),
+        data: {
+          words: searchWords,
+          sources: sources
+        }
+      },
       ...sort,
     });
-    setEvents(res, type === 'vkEvents');
+    if (res) {
+      setEvents(res.response, type === 'vkEvents');
+    }
   }
 
   const getEvents = async () => {
     setEventsData([]);
     await getTypedEvents(selected);
-    // if (selected === 'newEvents') {
-    //   await getNewEvents(эnewEvents);
-    // } else if (selected === 'vkEvents') {
-    //   await getVkEvents();
-    // } else if (selected === 'subscriptions') {
-    //   await getSubscribedEvents();
-    // }
   }
 
   useEffect(async () => {
@@ -268,7 +243,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
         <FormItem bottom="Категория">
           <Select
             options={[
-              ...categories
+              ...categories, ''
             ].map((i) => ({
               label: i,
               value: i
@@ -357,16 +332,18 @@ const SearchDebounced = props => {
     const [inputText, setInputText] = useState('');
 
     // Debounce the original search async function
-    const debouncedSearchStarwarsHero = useConstant(() =>
+    const debounceQuery = useConstant(() =>
       AwesomeDebouncePromise(handleSearchInput, 300)
     );
 
     const search = useAsyncAbortable(
       async (abortSignal, text) => {
         if (text.length === 0) {
+          props.setSearchWords([]);
+
           return [];
         } else {
-          return debouncedSearchStarwarsHero(text, abortSignal);
+          return debounceQuery(text, abortSignal);
         }
       }, [inputText]);
 
@@ -377,8 +354,18 @@ const SearchDebounced = props => {
       search,
     };
   };
-
   const { inputText, setInputText, search } = useSearch();
+
+  useEffect(() => {
+    console.log(inputText)
+    if (!inputText.length) {
+      setTimeout(() => {
+        props.setSearchWords([]);
+      }, 300);
+    }
+  }, [inputText])
+
+
 
   return (
     <Search value={inputText} onChange={e => setInputText(e.target.value)} />

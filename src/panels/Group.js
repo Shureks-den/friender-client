@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Panel, PanelHeader, PanelHeaderBack, Avatar, Cell, Group, Header, HorizontalCell, HorizontalScroll, Button, Separator } from '@vkontakte/vkui';
+import { Panel, PanelHeader, PanelHeaderBack, Avatar, Cell, Group, Header, HorizontalCell, HorizontalScroll, Button, Separator, FormItem, Checkbox } from '@vkontakte/vkui';
 import VkApiService from '../modules/VkApiService';
 import ApiSevice from '../modules/ApiSevice';
 
@@ -11,6 +11,7 @@ const GroupView = props => {
   const dispatch = useDispatch();
 
   const [pageGroup, setPageGroup] = useState({});
+  const [allowUserEvents, setAllowUserEvents] = useState(true);
   const [isAdmin, setIsAdminOnPage] = useState(false);
 
   const [adminEvents, setAdminEvents] = useState([]);
@@ -18,6 +19,16 @@ const GroupView = props => {
   const [finishedEvents, setFinishedEvents] = useState([]);
 
   const [isSubscribed, setIsSubscribed] = useState(false);
+
+  const handleChangeAllowUserEvents = async () => {
+    const response = await ApiSevice.put('group', '', 'update', {
+      group_id: pageGroup.id,
+      user_id: user.id,
+      allow_user_events: !allowUserEvents,
+    });
+    console.log(response);
+    setAllowUserEvents(!allowUserEvents);
+  }
 
   const subscribe = async () => {
     const response = await ApiSevice.post('profile/subscribe', {
@@ -49,12 +60,25 @@ const GroupView = props => {
       const groupId = props.groupId ?? window.location.hash?.slice(1).split('=').slice(1, 2).join('');
 
       const gr = await VkApiService.fetchGroupData(Number(groupId));
-      const adminEvents = await ApiSevice.getAll('events', {
-        group_id: Number(groupId),
-        is_admin: true,
-        is_active: true,
+      const grInfo = await ApiSevice.getAll('group/get', {
+        group_id: groupId
       });
-      const domEvents = adminEvents?.map((e, idx) =>
+      if (grInfo) {
+        console.log(grInfo.allow_user_events)
+        setAllowUserEvents(grInfo.allow_user_events);
+      }
+      const adminEvents = await ApiSevice.post('events', {
+        group_id: Number(groupId),
+        is_admin: {
+          defined: true,
+          value: true
+        },
+        is_active: {
+          defined: true,
+          value: true
+        },
+      });
+      const domEvents = adminEvents?.response.map((e, idx) =>
         <HorizontalCell key={idx} header={e.title} size="l" subtitle={new Date(e.time_start * 1000).toLocaleString()} onClick={() => props.goTo(e.id)}>
           <img
             className={'profile-active-card__avatar'}
@@ -64,12 +88,18 @@ const GroupView = props => {
       );
       setAdminEvents(domEvents);
 
-      const usersEvents = await ApiSevice.getAll('events', {
+      const usersEvents = await ApiSevice.post('events', {
         group_id: Number(groupId),
-        is_admin: false,
-        is_active: true,
+        is_admin: {
+          defined: true,
+          value: false
+        },
+        is_active: {
+          defined: true,
+          value: true
+        },
       });
-      const domUserEvents = usersEvents?.map((e, idx) =>
+      const domUserEvents = usersEvents?.response.map((e, idx) =>
         <HorizontalCell key={idx} header={e.title} size="l" subtitle={new Date(e.time_start * 1000).toLocaleString()} onClick={() => props.goTo(e.id)}>
           <img
             className={'profile-active-card__avatar'}
@@ -79,11 +109,14 @@ const GroupView = props => {
       );
       setUsersEvents(domUserEvents);
 
-      const historyEvents = await ApiSevice.getAll('events', {
+      const historyEvents = await ApiSevice.post('events', {
         group_id: Number(groupId),
-        is_active: false,
+        is_active: {
+          defined: true,
+          value: false
+        },
       });
-      setFinishedEvents(historyEvents);
+      setFinishedEvents(historyEvents.response);
 
       setPageGroup(gr);
     } catch (err) {
@@ -131,8 +164,12 @@ const GroupView = props => {
         </Group>
       }
       {
+        isAdmin &&
+        <Checkbox defaultChecked={allowUserEvents} onChange={handleChangeAllowUserEvents} style={{ marginBottom: '10px' }}>Разрешить пользовательские события</Checkbox>
+      }
+      {
         !isAdmin &&
-          (!isSubscribed ?
+        (!isSubscribed ?
           <Button onClick={subscribe}>Подписаться</Button> :
           <Button onClick={unsubscribe}>Отписаться</Button>)
       }
@@ -153,21 +190,24 @@ const GroupView = props => {
         </HorizontalScroll>
       </Group>
 
-      <Group>
-        <Header
-          aside={
-            <Button onClick={() => handleAddEvent(false)}>
-              Добавить событие
-            </Button>
-          }>Найти компанию</Header>
-        <HorizontalScroll
-          showArrows
-          getScrollToLeft={(i) => i - 120}
-          getScrollToRight={(i) => i + 120}
-        >
-          <div style={{ display: "flex" }}>{usersEvents}</div>
-        </HorizontalScroll>
-      </Group>
+      {allowUserEvents &&
+        <Group>
+          <Header
+            aside={
+              <Button onClick={() => handleAddEvent(false)}>
+                Добавить событие
+              </Button>
+            }>Найти компанию</Header>
+          <HorizontalScroll
+            showArrows
+            getScrollToLeft={(i) => i - 120}
+            getScrollToRight={(i) => i + 120}
+          >
+            <div style={{ display: "flex" }}>{usersEvents}</div>
+          </HorizontalScroll>
+        </Group>
+      }
+
 
 
 

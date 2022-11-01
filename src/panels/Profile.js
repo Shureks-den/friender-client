@@ -39,14 +39,18 @@ const Profile = props => {
   }
 
   useEffect(async () => {
+    if (!user.id) return;
     try {
       const userId = props.profileId ?? window.location.hash?.slice(1).split('=').slice(1, 2).join('');
       const u = await VkApiService.fetchUserData(Number(userId));
-      const events = await ApiSevice.getAll('events', {
+      const events = await ApiSevice.post('events', {
         id: u.id,
-        is_active: true,
+        is_active: {
+          defined: true,
+          value: true,
+        },
       });
-      const domEvents = events.map((e, idx) =>
+      const domEvents = events.response.map((e, idx) =>
         <HorizontalCell key={idx} header={e.title} size="l" subtitle={new Date(e.time_start * 1000).toLocaleString()} onClick={() => props.goTo(e.id)}>
           <img
             className={e.author === user?.id ? 'profile-active-card__avatar-author' : 'profile-active-card__avatar'}
@@ -55,11 +59,14 @@ const Profile = props => {
         </HorizontalCell>
       );
       setActiveEvents(domEvents);
-      const eevents = await ApiSevice.getAll('events', {
+      const eevents = await ApiSevice.post('events', {
         id: u.id,
-        is_active: false,
+        is_active: {
+          defined: true,
+          value: false,
+        },
       });
-      setFinishedEvents(eevents);
+      setFinishedEvents(eevents.response);
 
       const adminedGroups = await ApiSevice.getAll('group', {
         user_id: userId

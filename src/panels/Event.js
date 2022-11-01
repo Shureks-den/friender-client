@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 
-import { Panel, PanelHeader, PanelHeaderBack, Input, FormItem, Button, Card, Group, Text, Header, Cell, Avatar, HorizontalScroll, HorizontalCell, ButtonGroup, IconButton } from '@vkontakte/vkui';
+import { Panel, PanelHeader, PanelHeaderBack, Input, FormItem, Button, Card, Group, Text, Header, Cell, Avatar, HorizontalScroll, HorizontalCell, ButtonGroup, IconButton, Link, InfoRow } from '@vkontakte/vkui';
 import { Icon24Share, Icon24Camera, Icon24Message } from '@vkontakte/icons';
 import '../assets/styles/Event.scss';
 
@@ -32,11 +32,14 @@ const Event = props => {
     const response = await ApiSevice.put('event', id, 'subscribe');
     setIsMember(true);
     if (response) {
-      const activeEvents = await ApiSevice.getAll('events', {
+      const { response } = await ApiSevice.post('events', {
         id: user.id,
-        is_active: true,
+        is_active: {
+          define: true,
+          value: true,
+        },
       });
-      dispatch(setActiveEvents(activeEvents));
+      dispatch(setActiveEvents(response));
     }
   }
 
@@ -48,11 +51,14 @@ const Event = props => {
       props.go();
     }
     if (response) {
-      const activeEvents = await ApiSevice.getAll('events', {
+      const { response } = await ApiSevice.post('events', {
         id: user.id,
-        is_active: true,
+        is_active: {
+          define: true,
+          value: true,
+        },
       });
-      dispatch(setActiveEvents(activeEvents));
+      dispatch(setActiveEvents(response));
     }
   }
 
@@ -62,11 +68,14 @@ const Event = props => {
       is_admin: Boolean(adminedGroups.find(g => g.group_id === eventData?.group_info?.group_id))
     });
     if (response) {
-      const activeEvents = await ApiSevice.getAll('events', {
+      const { response } = await ApiSevice.post('events', {
         id: user.id,
-        is_active: true,
+        is_active: {
+          define: true,
+          value: true,
+        },
       });
-      dispatch(setActiveEvents(activeEvents));
+      dispatch(setActiveEvents(response));
     }
     props.go();
   }
@@ -183,8 +192,25 @@ const Event = props => {
       </Group>
 
       <FormItem top='Время события'>
-        <Text weight="bold" style={{ padding: '15px 10px' }}>{eventDate}</Text>
+        <InfoRow weight="bold" style={{ padding: '10px 0px' }}>{eventDate}</InfoRow>
       </FormItem>
+
+      {
+        (eventData?.ticket?.cost || eventData?.ticket?.link) &&
+        <FormItem top='Информация о билетах'>
+          {
+            eventData.ticket.cost
+            &&
+            <InfoRow weight="bold" style={{ padding: '10px 0px' }}>Цена: {eventData.ticket.cost} ₽</InfoRow>
+          }
+          {
+            eventData.ticket.link
+            &&
+            <Link href={eventData.ticket.link} target='_blank'>Ссылка для покупки билета</Link>
+          }
+        </FormItem>
+      }
+
 
       <Map isClickable={false} latitude={eventData.geo?.latitude} longitude={eventData.geo?.longitude} address={address} setAddress={setAddress} />
 
