@@ -108,7 +108,7 @@ const GroupView = props => {
     }
     const subscribtions = await ApiSevice.getAll('profile/get');
     console.log(subscribtions);
-    setIsSubscribed(Boolean(subscribtions.find(s => s === pageGroup.id)));
+    setIsSubscribed(Boolean(subscribtions.groups.find(s => s === pageGroup.id)));
   }, [pageGroup, user, isAdmin]);
 
   return (

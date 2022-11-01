@@ -33,8 +33,8 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
   const activeEvents = useSelector(state => state.user.activeEvents);
 
   const [selected, setSelected] = useState('newEvents');
-  const [isSearchEmpty, setIsSearchEmpty] = useState(true);
 
+  const [searchWords, setSearchWords] = useState([]);
   const [searchCategory, setSearchCategory] = useState('');
   const [searchCity, setSearchCity] = useState('');
   const [sortValue, setSortValue] = useState('');
@@ -215,23 +215,37 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
     });
     setEvents(res);
   }
+  
+  const getTypedEvents = async (type) => {
+    const sort = {};
+    sort[sortValue === 'Количество участников' ? 'sort_members' : ''] = sortOrder;
+    const source = type === 'newEvents' ? 'not_vk' : type === 'vkEvents' ? 'vk_event' : 'subscribe';
+    const res = await ApiSevice.getAll('events', {
+      is_active: true,
+      source: 'not_vk',
+      category: searchCategory,
+      city: searchCity,
+      words: searchWords,
+      ...sort,
+    });
+    setEvents(res, type === 'vkEvents');
+  }
 
   const getEvents = async () => {
     setEventsData([]);
-    if (selected === 'newEvents') {
-      await getNewEvents();
-    } else if (selected === 'vkEvents') {
-      await getVkEvents();
-    } else if (selected === 'subscriptions') {
-      await getSubscribedEvents();
-    }
+    await getTypedEvents(selected);
+    // if (selected === 'newEvents') {
+    //   await getNewEvents(эnewEvents);
+    // } else if (selected === 'vkEvents') {
+    //   await getVkEvents();
+    // } else if (selected === 'subscriptions') {
+    //   await getSubscribedEvents();
+    // }
   }
 
   useEffect(async () => {
-    if (isSearchEmpty) {
-      await getEvents();
-    }
-  }, [user, selected, activeEventsIds, isSearchEmpty, searchCategory, searchCity, sortOrder]);
+    await getEvents();
+  }, [user, selected, activeEventsIds, searchCategory, searchCity, sortOrder, searchWords]);
 
   useEffect(() => {
     setActiveEventsIds(activeEvents.map(a => a.id));
@@ -247,18 +261,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
     <Panel id={id}>
       <PanelHeader style={{ textAlign: 'center' }} separator={false}>Лента событий</PanelHeader>
       <Scrollable selected={selected} setSelected={setSelected} />
-      {
-        selected === 'newEvents' &&
-        <SearchDebounced selected='newEvents' setEvents={(res) => setEvents(res)} setSearch={setIsSearchEmpty} />
-      }
-      {
-        selected === 'vkEvents' &&
-        <SearchDebounced selected='vkEvents' setEvents={(res) => setEvents(res, true)} setSearch={setIsSearchEmpty} />
-      }
-      {
-        selected === 'subscriptions' &&
-        <SearchDebounced selected='subscriptions' setSearch={setIsSearchEmpty} />
-      }
+      <SearchDebounced setSearchWords={setSearchWords} />
       <FormLayoutGroup
         mode="horizontal"
       >
@@ -347,16 +350,7 @@ const Scrollable = (props) => {
 
 const SearchDebounced = props => {
   const handleSearchInput = async (e) => {
-    const sources = props.selected === 'newEvents' ? ['user', 'group'] : ['vk_event'];
-    const { response } = await ApiSevice.post('search', {
-      words: e.split(' '),
-      sources: sources
-    });
-    console.log(response);
-    if (response.length) {
-      console.log(response);
-      props.setEvents(response);
-    }
+    props.setSearchWords(e.split(' '));
   }
 
   const useSearch = () => {
@@ -385,14 +379,6 @@ const SearchDebounced = props => {
   };
 
   const { inputText, setInputText, search } = useSearch();
-
-  useEffect(() => {
-    if (inputText.length === 0) {
-      props.setSearch(true);
-    } else {
-      props.setSearch(false);
-    }
-  }, [inputText]);
 
   return (
     <Search value={inputText} onChange={e => setInputText(e.target.value)} />

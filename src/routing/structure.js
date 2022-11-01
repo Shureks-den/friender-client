@@ -7,6 +7,7 @@ export const ViewTypes = {
   EVENT: 'EVENT',
   GROUP: 'GROUP',
   CHATS: 'CHATS',
+  SUBSCRIPTIONS: 'SUBSCRIPTIONS'
 };
 
 export const PanelTypes = {
@@ -16,6 +17,7 @@ export const PanelTypes = {
   EVENT: 'EVENT',
   GROUP: 'GROUP',
   CHATS: 'CHATS',
+  SUBSCRIPTIONS: 'SUBSCRIPTIONS'
 };
 
 export const structure = [
@@ -76,6 +78,16 @@ export const structure = [
       {
         id: PanelTypes.CHATS,
         hash: 'chats'
+      }
+    ]
+  },
+  {
+    id: ViewTypes.SUBSCRIPTIONS,
+    hash: '',
+    panels: [
+      {
+        id: PanelTypes.SUBSCRIPTIONS,
+        hash: 'subscriptions'
       }
     ]
   },

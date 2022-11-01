@@ -83,7 +83,7 @@ const Profile = props => {
     }
     const subscribtions = await ApiSevice.getAll('profile/get');
     console.log(subscribtions);
-    setIsSubscribed(Boolean(subscribtions.find(s => s === pageUser.id)));
+    setIsSubscribed(Boolean(subscribtions.users.find(s => s === pageUser.id)));
   }, [pageUser, user]);
 
   return (

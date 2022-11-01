@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, AdaptivityProvider, AppRoot, ConfigProvider, Epic, Tabbar, TabbarItem, Panel, PanelHeader } from '@vkontakte/vkui';
-import { Icon28NewsfeedOutline, Icon28AddCircleOutline, Icon28Profile, Icon28Message, Icon28Users } from '@vkontakte/icons';
+import { Icon28NewsfeedOutline, Icon28AddCircleOutline, Icon28Profile, Icon28MessageOutline, Icon28UsersOutline } from '@vkontakte/icons';
 import '@vkontakte/vkui/dist/vkui.css';
 
 import { withRouter, useRouterSelector, useRouterActions } from 'react-router-vkminiapps-updated';
@@ -19,6 +19,7 @@ import Event from './panels/Event.js';
 import Profile from './panels/Profile.js';
 import GroupView from './panels/Group.js';
 import Chats from './panels/Chats.js';
+import Subscriptions from './panels/Subscriptions.js';
 
 const App = ({ router }) => {
   const dispatch = useDispatch();
@@ -133,7 +134,7 @@ const App = ({ router }) => {
                   selected={router.activeView === ViewTypes.CHATS}
                   text='Чаты'
                 >
-                  <Icon28Message />
+                  <Icon28MessageOutline />
                 </TabbarItem>
                 <TabbarItem
                   onClick={() => goToNewAdd()}
@@ -141,6 +142,13 @@ const App = ({ router }) => {
                   text='Новое событие'
                 >
                   <Icon28AddCircleOutline />
+                </TabbarItem>
+                <TabbarItem
+                  onClick={() => toView(ViewTypes.SUBSCRIPTIONS)}
+                  selected={router.activeView === ViewTypes.SUBSCRIPTIONS}
+                  text='Подписки'
+                >
+                  <Icon28UsersOutline />
                 </TabbarItem>
                 <TabbarItem
                   onClick={() => goToProfile(user.id)}
@@ -209,6 +217,9 @@ const App = ({ router }) => {
                 getUserInfo={VkApiService.fetchUserData}
                 goToProfile={goToProfile}
               />
+            </View>
+            <View id={ViewTypes.SUBSCRIPTIONS} activePanel={router.activePanel}>
+              <Subscriptions id={PanelTypes.SUBSCRIPTIONS} />
             </View>
           </Epic>
         </AppRoot>
