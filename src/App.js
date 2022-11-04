@@ -12,6 +12,7 @@ import ApiSevice from './modules/ApiSevice.js';
 import { useSelector, useDispatch } from 'react-redux';
 import { remove, set, setActiveEvents } from './store/user/userSlice';
 import { removeGroupId, setAdminedGroups } from './store/group/groupSlice';
+import { setCities } from './store/cities/citiesSlice';
 
 import Feed from './panels/Feed';
 import NewEvent from './panels/NewEvent';
@@ -70,24 +71,31 @@ const App = ({ router }) => {
     if (adminedGroups) {
       dispatch(setAdminedGroups({ adminedGroups: adminedGroups }));
     }
+    const cities = await ApiSevice.getAll('cities');
+    if (cities) {
+      dispatch(setCities(cities));
+    }
   }, [user])
 
   const goToEditing = async id => {
     setIsEditing(true);
     setEventId(id);
     router.toView(ViewTypes.ADDNEW);
+    window.scrollTo({ y: 0, behavior: 'smooth' });
     await VkApiService.setNewLocation(`newEvent?id=${id}&isEditing=true`);
   };
 
   const goTo = async id => {
     setEventId(id);
     router.toView(ViewTypes.EVENT);
+    window.scrollTo({ y: 0, behavior: 'smooth' });
     await VkApiService.setNewLocation(`event?id=${id}`);
   };
 
   const goToGroup = async id => {
     setGroupId(id);
     router.toView(ViewTypes.GROUP);
+    window.scrollTo({ y: 0, behavior: 'smooth' });
     await VkApiService.setNewLocation(`group?id=${id}`);
   };
 
@@ -97,11 +105,13 @@ const App = ({ router }) => {
     }
     setIsEditing(false);
     router.toView(ViewTypes.ADDNEW);
+    window.scrollTo({ y: 0, behavior: 'smooth' });
   };
 
   const goToProfile = async id => {
     setProfileId(id);
     router.toView(ViewTypes.PROFILE);
+    window.scrollTo({ y: 0, behavior: 'smooth' });
     await VkApiService.setNewLocation(`profile?id=${id}`);
   };
 
@@ -117,6 +127,7 @@ const App = ({ router }) => {
 
   const toView = (view) => {
     router.toView(view);
+    window.scrollTo({ y: 0, behavior: 'smooth' });
   };
 
   return (

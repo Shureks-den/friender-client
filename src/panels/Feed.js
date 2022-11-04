@@ -12,7 +12,7 @@ import '../assets/styles/Feed.scss';
 import { setActiveEvents } from '../store/user/userSlice';
 import { set } from '../store/categories/categoriesSlice';
 
-import { monthNames, cities, sortOptions } from '../variables/constants';
+import { monthNames, sortOptions } from '../variables/constants';
 
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import {
@@ -24,10 +24,24 @@ import {
 import useConstant from 'use-constant';
 
 const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
+  let debounce = false;
+  let i = 0;
+  
   const categories = useSelector(state => state.categories.value);
+  const limit = 20;
+  const [page, setPage] = useState(0);
+  const cities = useSelector(state => state.cities.value);
   const dispatch = useDispatch();
   const [eventsData, setEventsData] = useState([]);
   const [activeEventsIds, setActiveEventsIds] = useState([]);
+  const scrollEvent = (e) => {
+    if (document.body.scrollHeight* 0.7 < window.scrollY && !debounce) {
+      setPage(i + 1);
+      i++;
+      debounce = true;
+      setTimeout(() => debounce = false, 500);
+    }
+  }
 
   const user = useSelector(state => state.user.value);
   const activeEvents = useSelector(state => state.user.activeEvents);
@@ -75,7 +89,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
             defined: true,
           },
         });
-        dispatch(setActiveEvents(activeEvents));
+        dispatch(setActiveEvents(activeEvents.res));
       }
     }
   };
@@ -96,7 +110,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
       category: elem.category,
       source: 'user',
       group_info: null,
-      time_start: elem.time_start / 1000, // тут милисекунды
+      time_start: elem.time_start, // тут милисекунды
       members_limit: Number(5),
       is_private: false,
     };
@@ -105,7 +119,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
     onSuccess(response.id);
   }
 
-  const setEvents = (res, isVk) => {
+  const setEvents = (res, isVk, pagination) => {
     const today = new Date();
     const day = today.getDate();
     const month = today.getMonth();
@@ -182,10 +196,14 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
       }
 
     });
-    setEventsData(listItems);
+    if (pagination) {
+      setEventsData(eventsData.concat(listItems));
+    } else {
+      setEventsData(listItems);
+    }
   }
 
-  const getTypedEvents = async (type) => {
+  const getTypedEvents = async (type, pagination) => {
     const sort = {};
     sort[sortValue === 'Количество участников' ? 'sort_members' : ''] = sortOrder;
     const source = type === 'newEvents' ? 'not_vk' : type === 'vkEvents' ? 'vk_event' : 'subscribe';
@@ -206,14 +224,17 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
           sources: sources
         }
       },
+      limit: limit,
+      page: page,
       ...sort,
     });
     if (res) {
-      setEvents(res.response, type === 'vkEvents');
+      setEvents(res.response, type === 'vkEvents', pagination);
     }
   }
 
   const getEvents = async () => {
+    setPage(0);
     setEventsData([]);
     await getTypedEvents(selected);
   }
@@ -221,6 +242,10 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
   useEffect(async () => {
     await getEvents();
   }, [user, selected, activeEventsIds, searchCategory, searchCity, sortOrder, searchWords]);
+
+  useEffect(async () => {
+    await getTypedEvents(selected, true);
+  }, [page])
 
   useEffect(() => {
     setActiveEventsIds(activeEvents.map(a => a.id));
@@ -231,6 +256,13 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
     setSearchCity('');
     setSort('');
   }, [selected])
+
+  useEffect(() => {
+    document.addEventListener('scroll', scrollEvent);
+    return function cleanup() {
+      document.removeEventListener('scroll', scrollEvent);
+    }
+  }, []);
 
   return (
     <Panel id={id}>
@@ -243,7 +275,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
         <FormItem bottom="Категория">
           <Select
             options={[
-              ...categories, ''
+              '', ...categories
             ].map((i) => ({
               label: i,
               value: i
@@ -256,7 +288,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
         <FormItem bottom="Город">
           <Select
             options={[
-              ...cities
+              '', ...cities
             ].map((i) => ({
               label: i,
               value: i
