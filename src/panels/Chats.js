@@ -66,7 +66,6 @@ const Chats = (props) => {
   useEffect(() => {
     if (!socket) return;
     socket.onmessage = (event) => {
-      console.log([...messages, JSON.parse(event.data)], 'aaa')
       setMessages([...messages, JSON.parse(event.data)]);
     }
     socket.onerror = function (error) {
@@ -78,9 +77,7 @@ const Chats = (props) => {
   }, [socket, messages]);
 
   const sendMessage = (text) => {
-    console.log(socket, "СООБЩЕНИЕ ВОТ ВОТ ОТПРАВИТСЯ")
     socket.send(text);
-    console.log(socket, "СООБЩЕНИЕ ОТПРАВИЛОСЬ")
   };
 
   const closeChat = () => {
@@ -146,7 +143,6 @@ const Messages = ({ messages, users, user, goToProfile, closeChat }) => {
   }
 
   useEffect(() => {
-    console.log('wtf', messages)
     const messagesCopy = messages;
     for (let idx = 0; idx < messagesCopy.length; idx++) {
       if (new Date(messagesCopy[idx].time_created * 1000).getDate() < new Date(messagesCopy[idx + 1]?.time_created * 1000).getDate()) {
@@ -154,11 +150,10 @@ const Messages = ({ messages, users, user, goToProfile, closeChat }) => {
         idx++;
       }
     }
-    if (messagesCopy[0]) {
+    if (messagesCopy[0] && !messagesCopy[0].isSeparator) {
       messagesCopy.unshift({ isSeparator: true, time_created: messagesCopy[0].time_created });
     }
-    console.log(messagesCopy);
-    setDomMessages(messages.map((m, idx) => {
+    setDomMessages(messagesCopy.map((m, idx) => {
       const isSeparator = m.isSeparator;
       const time = new Date(m.time_created * 1000);
       const timeFormatted = `${time.getHours()}:${time.getMinutes() < 10 ? '0' : ''}${time.getMinutes()}`;
@@ -209,7 +204,10 @@ const Messages = ({ messages, users, user, goToProfile, closeChat }) => {
 const ChatView = (props) => {
   const [message, setMessage] = useState('');
   const send = () => {
-    props.sendMessage(message);
+    if (message.length) {
+      props.sendMessage(message);
+    }
+    
     setMessage('');
   };
   const handleEnterClick = (e) => {

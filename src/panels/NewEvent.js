@@ -163,11 +163,6 @@ const NewEvent = props => {
     }
   };
 
-  const goBack = () => {
-    dispatch(removeGroupId());
-    props.go();
-  }
-
   const changeImage = (e) => {
     const files = Array.from(e.target.files);
     setEventImages(files);
