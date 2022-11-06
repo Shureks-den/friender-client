@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Panel, PanelHeader, Group, CardGrid, ContentCard, Tabs, TabsItem, HorizontalScroll, Badge, Button, ButtonGroup, Spinner, IconButton, FixedLayout, Search, FormItem, Select, FormLayoutGroup, Div } from '@vkontakte/vkui';
+import { Panel, PanelHeader, Group, CardGrid, ContentCard, Tabs, TabsItem, HorizontalScroll, Badge, Button, ButtonGroup, Spinner, IconButton, SimpleCell, Search, FormItem, Select, FormLayoutGroup, Div, Avatar } from '@vkontakte/vkui';
 import { Icon24NewsfeedOutline, Icon24LogoVk, Icon24Users, Icon24ShareOutline, Icon24LikeOutline, Icon24Like } from '@vkontakte/icons';
 import { Icon24ArrowDownOutline, Icon24ArrowUpOutline, Icon24SortOutline } from '@vkontakte/icons';
 import ApiSevice from '../modules/ApiSevice';
@@ -11,7 +11,7 @@ import '../assets/styles/Feed.scss';
 
 import { set } from '../store/categories/categoriesSlice';
 
-import { monthNames, sortOptions } from '../variables/constants';
+import { monthNames, shortMonthNames, sortOptions } from '../variables/constants';
 
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import {
@@ -23,8 +23,9 @@ import {
 import useConstant from 'use-constant';
 
 import { ShareModal } from '../components/ShareModal/ShareModal';
+import VkApiService from '../modules/VkApiService';
 
-const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess }) => {
+const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile }) => {
   const dispatch = useDispatch();
 
   const cities = useSelector(state => state.cities.value);
@@ -67,17 +68,13 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess }) => {
   }
 
   const setSort = (value) => {
-    if (value === '') {
-      setSortOrder('');
-    } else {
-      setSortOrder('asc');
-    }
+    setSortOrder('asc');
     setSortValue(value);
   }
 
   useEffect(async () => {
+    if (!user.id || categories.length) return;
     const cat = await ApiSevice.getAll('categories');
-    if (!cat) return;
     dispatch(set(cat));
   }, [user]);
 
@@ -116,18 +113,24 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess }) => {
     onSuccess(response.id);
   }
 
-  const setEvents = (res, isVk, pagination) => {
+
+  const setEvents = async (res, isVk, pagination) => {
+    if (!res) return;
     const today = new Date();
     const day = today.getDate();
     const month = today.getMonth();
 
-    if (!res) return;
-    console.log(res);
+    const authors = await VkApiService.getUsersInfo(res.map(el => el.author).filter((v, i, a) => a.indexOf(v) === i).join(','));
+
     const listItems = res.map((elem) => {
       const eventDate = new Date(elem.time_start * 1000);
-      const time = `${eventDate.getDate()} ${monthNames[eventDate.getMonth()]}, ${eventDate.getHours()}:${eventDate.getMinutes() < 10 ? '0' : ''}${eventDate.getMinutes()}`;
-      const eventStart = ((day === eventDate.getDate() && month === eventDate.getMonth()) ? 'Сегодня ' : '') + time;
+      const time = `${eventDate.getDate()} ${monthNames[eventDate.getMonth()]}, `;
+      const hour = `${eventDate.getHours()}:${eventDate.getMinutes() < 10 ? '0' : ''}${eventDate.getMinutes()}`
+      const eventStart = ((day === eventDate.getDate() && month === eventDate.getMonth()) ? 'Сегодня, ' : time) + hour;
       const city = elem.geo.address ? elem.geo.address.split(',')[0] : '';
+
+      const created = new Date(elem.time_created);
+      const createdTime = `${created.getDate()} ${shortMonthNames[created.getMonth()]} ${created.getFullYear()} ${created.getHours()}:${created.getMinutes() < 10 ? '0' : ''}${created.getMinutes()}`;
       if (isVk) {
         return (
           <ContentCard
@@ -159,11 +162,29 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess }) => {
         )
       } else {
         const price = elem.ticket?.cost;
+        const author = authors.find(a => a.id === elem.author);
         return (
           <ContentCard
             key={elem.id}
             src={elem.avatar.avatar_url}
-            subtitle={elem.title}
+            subtitle={
+              <div className='event-subtitle-wrapper'>
+                <SimpleCell
+                  style={{paddingLeft: '0px'}}
+                  before={author.photo_200 ? <Avatar size={32} src={author.photo_200} /> : null}
+                  onClick={() => goToProfile(author.id)}
+                >
+                  <div>
+                    <div className='event-subtitle-wrapper__name'>{`${author.first_name} ${author.last_name}`}</div>
+                    <div className='event-subtitle-wrapper__created'>{createdTime}</div>
+                  </div>
+                </SimpleCell>
+                <IconButton onClick={() => openShareModal(elem.id, elem?.title, elem?.avatar.url, elem?.avatar.avatar_url)}>
+                  <Icon24ShareOutline />
+                </IconButton>
+              </div>
+            }
+            header={elem.title}
             caption={
               <div className="event-caption">
                 <div className='event-caption__info-wrapper'>
@@ -173,22 +194,22 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess }) => {
                   <div className='event-caption__info-address'>
                     {city}
                   </div>
-                  {price &&
+                  {price ?
                     <div className='event-caption__info-price'>
                       {price + ' ₽'}
                     </div>
+                    :
+                    <div className='event-caption__info-price'>
+                      Цена не указана
+                    </div>
                   }
                 </div>
-                <ButtonGroup mode="horizontal" gap="m" style={{ alignItems: 'center' }}>
-                  <IconButton onClick={() => openShareModal(elem.id, elem?.title, elem?.avatar.url, elem?.avatar.avatar_url)}>
-                    <Icon24ShareOutline />
-                  </IconButton>
-                  <Button onClick={() => go(elem.id)} style={{ position: 'absolute', right: '16px' }} >Подробнее</Button>
+                <ButtonGroup mode="vertical" align='right' style={{ marginTop: '15px', display: 'unset', textAlign: 'center', alignItems: 'unset' }}>
+                  <Button onClick={() => go(elem.id)} size="m">Подробнее</Button>
                 </ButtonGroup>
               </div>}
           />)
       }
-
     });
     if (pagination) {
       setEventsData(eventsData.concat(listItems));
@@ -234,8 +255,10 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess }) => {
   }
 
   useEffect(async () => {
+    if (!user.id) return;
+    console.log(selected, searchCategory, searchCity, sortOrder, searchWords)
     await getEvents();
-  }, [user, selected, searchCategory, searchCity, sortOrder, searchWords]);
+  }, [selected, searchCategory, searchCity, sortOrder, searchWords]);
 
   useEffect(async () => {
     await getTypedEvents(selected, true);
@@ -255,7 +278,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess }) => {
   }, []);
 
   return (
-    <Panel id={id}>
+    <Panel id={id} style={{overflowX: user.platform === 'web' ? '' : 'hidden'}}>
       <PanelHeader style={{ textAlign: 'center' }} separator={false}>Лента событий</PanelHeader>
       <Scrollable selected={selected} setSelected={setSelected} />
       <SearchDebounced setSearchWords={setSearchWords} />
@@ -384,7 +407,6 @@ const SearchDebounced = props => {
   const { inputText, setInputText, search } = useSearch();
 
   useEffect(() => {
-    console.log(inputText)
     if (!inputText.length) {
       setTimeout(() => {
         props.setSearchWords([]);
@@ -395,7 +417,7 @@ const SearchDebounced = props => {
 
 
   return (
-    <Search value={inputText} onChange={e => setInputText(e.target.value)} />
+    <Search value={inputText} onChange={e => setInputText(e.target.value)} style={{overflow: 'hidden'}}/>
   )
 }
 

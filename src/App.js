@@ -181,6 +181,7 @@ const App = ({ router }) => {
                 id={PanelTypes.MAIN_HOME}
                 fetchedUser={user}
                 go={(id) => goTo(id)}
+                goToProfile={goToProfile}
                 onSuccess={goTo}
                 makeRepost={makeRepost}
                 makeShare={makeShare}

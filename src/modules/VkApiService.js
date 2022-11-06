@@ -18,7 +18,7 @@ class VkApiService {
   }
 
   scrollToTop() {
-    return bridge.send("VKWebAppScroll", {"top": 1, "speed": 600});
+    return bridge.send("VKWebAppScroll", { "top": 1, "speed": 600 });
   }
 
   async setNewLocation(location) {
@@ -63,6 +63,19 @@ class VkApiService {
       user_id: userId,
     });
     return group_id;
+  }
+
+  async getUsersInfo(ids) {
+    const { response } = await bridge.send('VKWebAppCallAPIMethod', {
+      method: 'users.get',
+      params: {
+        user_ids: ids,
+        fields: 'photo_200',
+        v: '5.131',
+        access_token: 'c5c153f8c5c153f8c5c153f855c6d1bc6ccc5c1c5c153f8a6fdcb72d0f2bd10c4e5a1e3'
+      }
+    });
+    return response;
   }
 
 

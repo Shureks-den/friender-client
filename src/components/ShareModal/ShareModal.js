@@ -5,7 +5,6 @@ import { Icon56ShareOutline } from '@vkontakte/icons';
 import { ModalCard, Button, ModalRoot, SplitLayout, ButtonGroup } from '@vkontakte/vkui';
 
 export const ShareModal = ({ activeModal, setActiveModal, share }) => {
-  useEffect(() => console.log(share), [share])
   const modal = (
     <ModalRoot
       activeModal={activeModal}
