@@ -119,9 +119,7 @@ const Event = props => {
       setEventImage(imageSrc);
       setSliderData([imageSrc, ...res.images].map(i =>
         <Card key={i}>
-          <div style={{ maxHeight: user.platform === 'web' ? '300px' : '500px' }}>
-            <img src={i} className='event__avatar' />
-          </div>
+          <img style={{ maxHeight: user.platform === 'web' ? '300px' : '500px' }} src={i} className='event__avatar' />
         </Card>
       ));
 
