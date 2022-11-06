@@ -9,7 +9,6 @@ import ApiSevice from '../modules/ApiSevice';
 
 import '../assets/styles/Feed.scss';
 
-import { setActiveEvents } from '../store/user/userSlice';
 import { set } from '../store/categories/categoriesSlice';
 
 import { monthNames, sortOptions } from '../variables/constants';
@@ -23,19 +22,24 @@ import {
 } from 'react-async-hook';
 import useConstant from 'use-constant';
 
-const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
+import { ShareModal } from '../components/ShareModal/ShareModal';
+
+const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess }) => {
+  const dispatch = useDispatch();
+
+  const cities = useSelector(state => state.cities.value);
+  const categories = useSelector(state => state.categories.value);
+
+  const [page, setPage] = useState(0);
+
+  const [eventsData, setEventsData] = useState([]);
+  const [activeModal, setActiveModal] = useState(null);
+
   let debounce = false;
   let i = 0;
-  
-  const categories = useSelector(state => state.categories.value);
   const limit = 20;
-  const [page, setPage] = useState(0);
-  const cities = useSelector(state => state.cities.value);
-  const dispatch = useDispatch();
-  const [eventsData, setEventsData] = useState([]);
-  const [activeEventsIds, setActiveEventsIds] = useState([]);
   const scrollEvent = (e) => {
-    if (document.body.scrollHeight* 0.7 < window.scrollY && !debounce) {
+    if (document.body.scrollHeight * 0.7 < window.scrollY && !debounce) {
       setPage(i + 1);
       i++;
       debounce = true;
@@ -44,7 +48,6 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
   }
 
   const user = useSelector(state => state.user.value);
-  const activeEvents = useSelector(state => state.user.activeEvents);
 
   const [selected, setSelected] = useState('newEvents');
 
@@ -78,27 +81,21 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
     dispatch(set(cat));
   }, [user]);
 
-  const subscribe = async (elem) => {
-    if (!activeEventsIds.find(i => i === elem.id)) {
-      const response = await ApiSevice.put('event', elem.id, 'subscribe');
-      if (response) {
-        const activeEvents = await ApiSevice.post('events', {
-          id: user.id,
-          is_active: {
-            value: true,
-            defined: true,
-          },
-        });
-        dispatch(setActiveEvents(activeEvents.res));
-      }
-    }
-  };
-
   const createLink = (id, onSuccess) => {
     const link = document.createElement('a');
     link.href = `https://vk.com/event${id}`;
     link.target = '_blank';
     link.click();
+  }
+
+  const [share, setShare] = useState(null);
+
+  const openShareModal = (eventId, title, eventImageId, avatarUrl) => {
+    const repost = () => makeRepost(eventId, title, eventImageId);
+    const share = () => makeShare(eventId);
+    const story = () => makeStory(eventId, title, avatarUrl);
+    setShare({ repost: repost, share: share, story: story });
+    setActiveModal('SHARE-MODAL');
   }
 
   const makeCopy = async (elem) => {
@@ -183,10 +180,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
                   }
                 </div>
                 <ButtonGroup mode="horizontal" gap="m" style={{ alignItems: 'center' }}>
-                  <IconButton onClick={() => subscribe(elem)}>
-                    {activeEventsIds.find(i => i === elem.id) ? <Icon24Like /> : <Icon24LikeOutline />}
-                  </IconButton>
-                  <IconButton onClick={() => makeRepost(elem.id, elem.title, elem.avatar_url)}>
+                  <IconButton onClick={() => openShareModal(elem.id, elem?.title, elem?.avatar.url, elem?.avatar.avatar_url)}>
                     <Icon24ShareOutline />
                   </IconButton>
                   <Button onClick={() => go(elem.id)} style={{ position: 'absolute', right: '16px' }} >Подробнее</Button>
@@ -241,15 +235,11 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
 
   useEffect(async () => {
     await getEvents();
-  }, [user, selected, activeEventsIds, searchCategory, searchCity, sortOrder, searchWords]);
+  }, [user, selected, searchCategory, searchCity, sortOrder, searchWords]);
 
   useEffect(async () => {
     await getTypedEvents(selected, true);
   }, [page])
-
-  useEffect(() => {
-    setActiveEventsIds(activeEvents.map(a => a.id));
-  }, [activeEvents]);
 
   useEffect(() => {
     setSearchCategory('');
@@ -269,6 +259,11 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
       <PanelHeader style={{ textAlign: 'center' }} separator={false}>Лента событий</PanelHeader>
       <Scrollable selected={selected} setSelected={setSelected} />
       <SearchDebounced setSearchWords={setSearchWords} />
+      <ShareModal
+        activeModal={activeModal}
+        setActiveModal={setActiveModal}
+        share={share}
+      />
       <FormLayoutGroup
         mode="horizontal"
       >

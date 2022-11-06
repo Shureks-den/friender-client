@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 
 import { Panel, PanelHeader, PanelHeaderBack, Input, FormItem, Button, Card, Group, Text, Header, Cell, Avatar, HorizontalScroll, HorizontalCell, ButtonGroup, IconButton, Link, InfoRow, Spacing, Separator, CardScroll } from '@vkontakte/vkui';
 import { Icon24Share, Icon24Camera, Icon24Message } from '@vkontakte/icons';
-import ReactImagesCarousel from 'react-images-carousel';
 
 import '../assets/styles/Event.scss';
 
@@ -13,7 +12,6 @@ import ApiSevice from '../modules/ApiSevice';
 import { setActiveEvents } from '../store/user/userSlice';
 
 import Map from '../components/Map/Map.js';
-import VkApiService from '../modules/VkApiService';
 
 import ics from '../modules/ics.js';
 
@@ -228,7 +226,7 @@ const Event = props => {
           <IconButton onClick={() => props.makeRepost(eventId, eventData?.title, eventImageId)}>
             <Icon24Share />
           </IconButton>
-          <IconButton onClick={() => VkApiService.postStory(eventId, eventData?.title, eventData?.avatar.avatar_url)}>
+          <IconButton onClick={() => props.makeStory(eventId, eventData?.title, eventData?.avatar.avatar_url)}>
             <Icon24Camera />
           </IconButton>
           <IconButton onClick={() => props.makeShare(eventId)}>

@@ -121,6 +121,11 @@ const App = ({ router }) => {
     console.log(response);
   };
 
+  const makeStory = async (id, title, avatarUrl) => {
+    const response = await VkApiService.postStory(id, title, avatarUrl);
+    console.log(response);
+  };
+
   const toView = (view) => {
     router.toView(view);
   };
@@ -170,6 +175,7 @@ const App = ({ router }) => {
               </Tabbar>
             }
           >
+
             <View id={ViewTypes.MAIN} activePanel={router.activePanel}>
               <Feed
                 id={PanelTypes.MAIN_HOME}
@@ -178,6 +184,7 @@ const App = ({ router }) => {
                 onSuccess={goTo}
                 makeRepost={makeRepost}
                 makeShare={makeShare}
+                makeStory={makeStory}
               />
             </View>
 
@@ -216,6 +223,7 @@ const App = ({ router }) => {
                 go={() => router.toBack()}
                 makeRepost={makeRepost}
                 makeShare={makeShare}
+                makeStory={makeStory}
                 getUserInfo={VkApiService.fetchUserData}
                 goToProfile={goToProfile}
                 goToEditing={goToEditing}
