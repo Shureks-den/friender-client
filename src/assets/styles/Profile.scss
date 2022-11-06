@@ -13,6 +13,7 @@
     border-radius: 8px;
     border: "1px solid var(--vkui--color_image_placeholder_alpha)";
     object-fit: "cover";
+    aspect-ratio: 16/9;
 
     &-author {
       width: 220px;
@@ -37,3 +38,29 @@
 .profile__link {
   text-decoration: none;
 }
+
+.events-finished__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  row-gap: 10px;
+  column-gap: 10px;
+  justify-content: center;
+  align-items: center;
+  justify-items: center;
+  padding: 0 16px;
+
+  & .vkuiHorizontalCell--android:first-child::before, .vkuiHorizontalCell--android:last-child::after, .vkuiHorizontalCell--vkcom:first-child::before, .vkuiHorizontalCell--vkcom:last-child::after {
+    display: none;
+  }
+  
+}
+
+.profile-finished-card__avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  border: "1px solid var(--vkui--color_image_placeholder_alpha)";
+  object-fit: "cover";
+  aspect-ratio: 16/9;
+}
+

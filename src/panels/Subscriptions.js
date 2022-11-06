@@ -20,7 +20,7 @@ const Subscriptions = ({ id, goToProfile, goToGroup }) => {
 
   const user = useSelector(state => state.user.value);
 
-  const fetchData = async (array, apiMethod, redirectFunc) => {
+  const fetchData = async (array, apiMethod) => {
     const info = [];
     for (let i = 0; i < array.length; i++) {
       const userInfo = await VkApiService[apiMethod](array[i]);
@@ -34,16 +34,16 @@ const Subscriptions = ({ id, goToProfile, goToGroup }) => {
     setIsLoading(true);
     const res = await ApiSevice.getAll('profile/get');
 
-    const usersData = await fetchData(res.users, 'fetchUserData', goToProfile);
+    const usersData = await fetchData(res.users, 'fetchUserData');
     setUsers(usersData);
 
-    const gropsData = await fetchData(res.groups, 'fetchGroupData', goToGroup);
+    const gropsData = await fetchData(res.groups, 'fetchGroupData');
     setGroups(gropsData);
 
     setIsLoading(false);
   }, [user]);
 
-  const setShowingInfo = (value) => {
+  const setShowingInfo = (value, redirectFunc) => {
     setData(value.map((user) => {
       return (
         <Cell
@@ -60,13 +60,14 @@ const Subscriptions = ({ id, goToProfile, goToGroup }) => {
 
   useEffect(async () => {
     const show = selected === 'users' ? users : groups;
+    const redirectFunc = selected === 'users' ? goToProfile : goToGroup;
     if (inputText) {
       setShowingInfo(show.filter(e => {
         const value = e.name ? e.name : `${e.first_name} ${e.last_name}`;
         return value.toLowerCase().includes(inputText.toLowerCase());
-      }));
+      }), redirectFunc);
     } else {
-      setShowingInfo(show);
+      setShowingInfo(show, redirectFunc);
     }
   }, [selected, users, groups, inputText]);
 

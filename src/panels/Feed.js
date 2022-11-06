@@ -306,7 +306,7 @@ const Feed = ({ id, go, makeRepost, fetchedUser, onSuccess }) => {
               label: i,
               value: i
             }))}
-            placeholder=''
+            placeholder='Выберите параметр сортировки'
             value={sortValue}
             onChange={(e) => setSort(e.target.value)}
           />

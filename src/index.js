@@ -5,6 +5,7 @@ import App from './App';
 
 import { RouterProvider } from 'react-router-vkminiapps-updated';
 import { structure } from './routing/structure.js';
+import '@vkontakte/vkui/dist/fonts.css';
 
 import store from './store/store.js';
 import { Provider } from 'react-redux';

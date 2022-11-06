@@ -8,5 +8,5 @@ export const cities = [
 ];
 
 export const sortOptions = [
-  'Количество участников', 'Цене', ''
+  '', 'Количество участников', 'Цене',
 ];

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Panel, PanelHeader, PanelHeaderBack, Avatar, Cell, Group, Header, HorizontalCell, HorizontalScroll, Button } from '@vkontakte/vkui';
+import { Panel, PanelHeader, PanelHeaderBack, Avatar, Cell, Group, Header, HorizontalCell, HorizontalScroll, Button, Spinner, Link, Text } from '@vkontakte/vkui';
 import VkApiService from '../modules/VkApiService';
 import ApiSevice from '../modules/ApiSevice';
 
@@ -10,6 +10,7 @@ import '../assets/styles/Profile.scss';
 const Profile = props => {
   const [pageUser, setPageUser] = useState({});
   const [activeEvents, setActiveEvents] = useState([]);
+  const [adminedEvents, setAdminedEvents] = useState([]);
   const [finishedEvents, setFinishedEvents] = useState([]);
   const [adminedGroups, setAdminedGroups] = useState([]);
 
@@ -38,6 +39,30 @@ const Profile = props => {
     console.log(response);
   }
 
+  const transfromToList = (value, isFinished = false) => {
+    return (value.map((e, idx) => {
+      return (
+        <HorizontalCell
+          key={idx}
+          header={
+            <Text style={{ wordBreak: 'break-word' }}>
+              {e.title}
+            </Text>
+          }
+          size="l"
+          style={{ height: '100%', width: isFinished ? '100%' : '' }}
+          subtitle={new Date(e.time_start * 1000).toLocaleString()}
+          onClick={() => props.goTo(e.id)}>
+          <img
+            className={isFinished ? 'profile-finished-card__avatar' : 'profile-active-card__avatar'}
+            src={e.avatar.avatar_url}
+          />
+        </HorizontalCell>
+      );
+    }))
+
+  };
+
   useEffect(async () => {
     if (!user.id) return;
     try {
@@ -50,23 +75,17 @@ const Profile = props => {
           value: true,
         },
       });
-      const domEvents = events.response.map((e, idx) =>
-        <HorizontalCell key={idx} header={e.title} size="l" subtitle={new Date(e.time_start * 1000).toLocaleString()} onClick={() => props.goTo(e.id)}>
-          <img
-            className={e.author === user?.id ? 'profile-active-card__avatar-author' : 'profile-active-card__avatar'}
-            src={e.avatar.avatar_url}
-          />
-        </HorizontalCell>
-      );
-      setActiveEvents(domEvents);
-      const eevents = await ApiSevice.post('events', {
+      setActiveEvents(transfromToList(events.response.filter(e => e.author !== u.id)));
+      setAdminedEvents(transfromToList(events.response.filter(e => e.author === u.id)));
+
+      const finish = await ApiSevice.post('events', {
         id: u.id,
         is_active: {
           defined: true,
           value: false,
         },
       });
-      setFinishedEvents(eevents.response);
+      setFinishedEvents(transfromToList(finish.response, true));
 
       const adminedGroups = await ApiSevice.getAll('group', {
         user_id: userId
@@ -101,27 +120,29 @@ const Profile = props => {
         Пользователь
       </PanelHeader>
       {
-        pageUser
-        && <Group header={<Header mode="secondary"></Header>}>
-          <a className='profile__link' target="_blank" href={`https://vk.com/id${pageUser.id}`}>
+        pageUser.id ?
+          <Group header={<Header mode="secondary"></Header>}>
+
             <Cell
               before={pageUser.photo_200 ? <Avatar src={pageUser.photo_200} /> : null}
+              after={
+                (pageUser?.id === user?.id) ?
+                  <Button onClick={() => connectGroup()}>Добавить группу</Button> :
+
+                  !isSubscribed ?
+                    <Button onClick={subscribe}>Подписаться</Button> :
+                    <Button onClick={unsubscribe}>Отписаться</Button>
+
+              }
             >
-              {`${pageUser.first_name} ${pageUser.last_name}`}
+              <div>
+                <div>{`${pageUser.first_name} ${pageUser.last_name}`}</div>
+                <Link className='profile__link' target="_blank" href={`https://vk.com/id${pageUser.id}`}>Ссылка на страницу</Link>
+              </div>
             </Cell>
-          </a>
-        </Group>
+          </Group>
+          : <Spinner size="large" style={{ margin: "20px 0" }} />
       }
-      {
-        (pageUser?.id === user?.id) ?
-          <Button onClick={() => connectGroup()}>Добавить группу</Button> :
-
-          !isSubscribed ?
-            <Button onClick={subscribe}>Подписаться</Button> :
-            <Button onClick={unsubscribe}>Отписаться</Button>
-
-      }
-
       {
         adminedGroups.length !== 0 && <Group header={
           <Header>
@@ -150,8 +171,17 @@ const Profile = props => {
         </Group>
       }
 
-      <Group description={pageUser?.id === user?.id && "Ваши и те, на которые вы подписаны, события"}>
-        <Header>Активные события</Header>
+      <Group header={<Header>{user.id === pageUser.id ? 'Мои события' : 'Организатор'} {adminedEvents.length}</Header>}>
+        <HorizontalScroll
+          showArrows
+          getScrollToLeft={(i) => i - 120}
+          getScrollToRight={(i) => i + 120}
+        >
+          <div style={{ display: "flex" }}>{adminedEvents}</div>
+        </HorizontalScroll>
+      </Group>
+
+      <Group header={<Header>Компании {activeEvents.length}</Header>}>
         <HorizontalScroll
           showArrows
           getScrollToLeft={(i) => i - 120}
@@ -163,33 +193,14 @@ const Profile = props => {
 
       <Group header={
         <Header>
-          История
+          Прошедшие события {finishedEvents.length}
         </Header>
       }
       >
-        <HorizontalScroll
-          top='Изображения'
-          showArrows
-          getScrollToLeft={(i) => i - 120}
-          getScrollToRight={(i) => i + 120}
-        >
-          <div style={{ display: 'flex', userSelect: 'none' }}>
-            {finishedEvents.map((ev, idx) =>
-              <HorizontalCell size='m' key={idx} onClick={() => props.goTo(ev.id)}>
-                <Avatar
-                  size={88}
-                  mode='app'
-                  src={ev.avatar.avatar_url}
-                />
-              </HorizontalCell>
-            )}
-          </div>
-        </HorizontalScroll>
+        <div className='events-finished__grid'>
+          {finishedEvents}
+        </div>
       </Group>
-
-      {/* <Header>События</Header>
-      <ImageGrid /> */}
-
     </Panel>
   )
 }
