@@ -50,7 +50,7 @@ const Profile = props => {
             </Text>
           }
           size="l"
-          style={{ height: '100%', width: isFinished ? '100%' : '' }}
+          style={{ height: '100%', width: isFinished ? '100%' : '', maxWidth: isFinished ? '' : '275px' }}
           subtitle={new Date(e.time_start * 1000).toLocaleString()}
           onClick={() => props.goTo(e.id)}>
           <img
