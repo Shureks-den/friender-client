@@ -56,6 +56,7 @@ const GroupView = props => {
   };
 
   useEffect(async () => {
+    if (!user.id) return;
     try {
       const groupId = props.groupId ?? window.location.hash?.slice(1).split('=').slice(1, 2).join('');
 
@@ -122,7 +123,7 @@ const GroupView = props => {
     } catch (err) {
       console.log(err);
     }
-  }, [props.groupId]);
+  }, [props.groupId, user]);
 
   useEffect(async () => {
     if (pageGroup.id) {

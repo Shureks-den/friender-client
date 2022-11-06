@@ -107,7 +107,7 @@ const Event = props => {
   }, []);
 
   useEffect(async () => {
-    if (!user) return;
+    if (!user.id) return;
     try {
       const eId = props.eventId.length !== 0 ? props.eventId : window.location.hash?.slice(1).split('=').slice(1, 2).join('');
       setEventId(eId);
