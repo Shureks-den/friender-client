@@ -81,21 +81,18 @@ const App = ({ router }) => {
     setIsEditing(true);
     setEventId(id);
     router.toView(ViewTypes.ADDNEW);
-    window.scrollTo({ y: 0, behavior: 'smooth' });
     await VkApiService.setNewLocation(`newEvent?id=${id}&isEditing=true`);
   };
 
   const goTo = async id => {
     setEventId(id);
     router.toView(ViewTypes.EVENT);
-    window.scrollTo({ y: 0, behavior: 'smooth' });
     await VkApiService.setNewLocation(`event?id=${id}`);
   };
 
   const goToGroup = async id => {
     setGroupId(id);
     router.toView(ViewTypes.GROUP);
-    window.scrollTo({ y: 0, behavior: 'smooth' });
     await VkApiService.setNewLocation(`group?id=${id}`);
   };
 
@@ -111,7 +108,6 @@ const App = ({ router }) => {
   const goToProfile = async id => {
     setProfileId(id);
     router.toView(ViewTypes.PROFILE);
-    window.scrollTo({ y: 0, behavior: 'smooth' });
     await VkApiService.setNewLocation(`profile?id=${id}`);
   };
 
@@ -127,7 +123,6 @@ const App = ({ router }) => {
 
   const toView = (view) => {
     router.toView(view);
-    window.scrollTo({ y: 0, behavior: 'smooth' });
   };
 
   return (

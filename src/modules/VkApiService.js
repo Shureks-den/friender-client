@@ -6,6 +6,8 @@ class VkApiService {
 
   async fetchUserData(id = 0) {
     const user = await bridge.send('VKWebAppGetUserInfo', id ? { user_id: id } : {});
+    const { platform } = await bridge.send('VKWebAppGetClientVersion');
+    user.platform = platform;
     return user;
   }
 
@@ -13,6 +15,10 @@ class VkApiService {
     return await bridge.send('VKWebAppGetGroupInfo', {
       group_id: id,
     });
+  }
+
+  scrollToTop() {
+    return bridge.send("VKWebAppScroll", {"top": 1, "speed": 600});
   }
 
   async setNewLocation(location) {

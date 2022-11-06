@@ -11,9 +11,11 @@ import { remove, set } from '../store/categories/categoriesSlice.js';
 import { removeGroupId } from '../store/group/groupSlice';
 
 import Map from '../components/Map/Map.js';
+import VkApiService from '../modules/VkApiService';
 
 const NewEvent = props => {
   const dispatch = useDispatch();
+  const startPage = useRef(null);
   const user = useSelector(state => state.user.value);
 
   const isAdmin = useSelector(state => state.groupInfo.isAdmin);
@@ -57,6 +59,10 @@ const NewEvent = props => {
       setFormAreaItemStatus('default');
     }
   };
+
+  useEffect(() => {
+    startPage.current?.scrollIntoView();
+  }, []);
 
   useEffect(async () => {
     console.log(groupId)
@@ -132,7 +138,7 @@ const NewEvent = props => {
       } else {
         setFormAreaItemStatus('error');
       }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      VkApiService.scrollToTop();
       return;
     }
 
@@ -172,6 +178,7 @@ const NewEvent = props => {
 
   return (
     <Panel id={props.id}>
+    <div ref={startPage} />
       <PanelHeader
         style={{ textAlign: 'center' }}
       >
