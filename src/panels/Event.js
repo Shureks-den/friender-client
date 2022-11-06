@@ -107,6 +107,7 @@ const Event = props => {
   }, []);
 
   useEffect(async () => {
+    if (!user) return;
     try {
       const eId = props.eventId.length !== 0 ? props.eventId : window.location.hash?.slice(1).split('=').slice(1, 2).join('');
       setEventId(eId);
@@ -118,7 +119,7 @@ const Event = props => {
       setEventImage(imageSrc);
       setSliderData([imageSrc, ...res.images].map(i =>
         <Card key={i}>
-          <div style={{ maxHeight: '300px' }}>
+          <div style={{ maxHeight: user.platform === 'web' ? '300px' : '500px' }}>
             <img src={i} className='event__avatar' />
           </div>
         </Card>
@@ -161,7 +162,8 @@ const Event = props => {
       </PanelHeader>
 
       <Group>
-        <CardScroll size="m">
+        <CardScroll size={user.platform === 'web' ? 'm' : 'l'}
+        >
           {sliderData}
         </CardScroll>
       </Group>
