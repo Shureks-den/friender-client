@@ -25,7 +25,7 @@ import useConstant from 'use-constant';
 import { ShareModal } from '../components/ShareModal/ShareModal';
 import VkApiService from '../modules/VkApiService';
 
-const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile }) => {
+const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile, goToGroup }) => {
   const dispatch = useDispatch();
 
   const cities = useSelector(state => state.cities.value);
@@ -49,6 +49,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
   }
 
   const user = useSelector(state => state.user.value);
+  const userToken = useSelector(state => state.user.token);
 
   const [selected, setSelected] = useState('newEvents');
 
@@ -120,7 +121,18 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
     const day = today.getDate();
     const month = today.getMonth();
 
-    const authors = await VkApiService.getUsersInfo(res.map(el => el.author).filter((v, i, a) => a.indexOf(v) === i).join(','));
+    const authors = !isVk ? await VkApiService.getUsersInfo(
+      res
+        .map(el => el.author)
+        .filter((v, i, a) => a.indexOf(v) === i)
+        .join(',')
+      , userToken) : [];
+    const groups = !isVk ? await VkApiService.getGroupsInfo(
+      res
+        .map(el => el.group_info.group_id)
+        .filter((v, i, a) => a.indexOf(v) === i)
+        .join(','), userToken
+    ) : [];
 
     const listItems = res.map((elem) => {
       const eventDate = new Date(elem.time_start * 1000);
@@ -163,6 +175,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
       } else {
         const price = elem.ticket?.cost;
         const author = authors.find(a => a.id === elem.author);
+        const group = elem.group_info.group_id ? groups.find(gr => gr.id === elem.group_info.group_id) : null;
         return (
           <ContentCard
             key={elem.id}
@@ -170,12 +183,14 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
             subtitle={
               <div className='event-subtitle-wrapper'>
                 <SimpleCell
-                  style={{paddingLeft: '0px'}}
-                  before={author.photo_200 ? <Avatar size={32} src={author.photo_200} /> : null}
-                  onClick={() => goToProfile(author.id)}
+                  style={{ paddingLeft: '0px' }}
+                  before={group ?
+                    group.photo_200 ? <Avatar size={32} src={group.photo_200} /> : null :
+                    author.photo_200 ? <Avatar size={32} src={author.photo_200} /> : null}
+                  onClick={() => group ? goToGroup(group.id) : goToProfile(author.id)}
                 >
                   <div>
-                    <div className='event-subtitle-wrapper__name'>{`${author.first_name} ${author.last_name}`}</div>
+                    <div className='event-subtitle-wrapper__name'>{group ? group.name : `${author.first_name} ${author.last_name}`}</div>
                     <div className='event-subtitle-wrapper__created'>{createdTime}</div>
                   </div>
                 </SimpleCell>
@@ -256,9 +271,8 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
 
   useEffect(async () => {
     if (!user.id) return;
-    console.log(selected, searchCategory, searchCity, sortOrder, searchWords)
     await getEvents();
-  }, [selected, searchCategory, searchCity, sortOrder, searchWords]);
+  }, [selected, searchCategory, searchCity, sortOrder, user, searchWords.join('')]);
 
   useEffect(async () => {
     await getTypedEvents(selected, true);
@@ -278,7 +292,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
   }, []);
 
   return (
-    <Panel id={id} style={{overflowX: user.platform === 'web' ? '' : 'hidden'}}>
+    <Panel id={id} style={{ overflowX: user.platform === 'web' ? '' : 'hidden' }}>
       <PanelHeader style={{ textAlign: 'center' }} separator={false}>Лента событий</PanelHeader>
       <Scrollable selected={selected} setSelected={setSelected} />
       <SearchDebounced setSearchWords={setSearchWords} />
@@ -389,7 +403,7 @@ const SearchDebounced = props => {
     const search = useAsyncAbortable(
       async (abortSignal, text) => {
         if (text.length === 0) {
-          props.setSearchWords([]);
+          // props.setSearchWords([]);
 
           return [];
         } else {
@@ -417,7 +431,7 @@ const SearchDebounced = props => {
 
 
   return (
-    <Search value={inputText} onChange={e => setInputText(e.target.value)} style={{overflow: 'hidden'}}/>
+    <Search value={inputText} onChange={e => setInputText(e.target.value)} style={{ overflow: 'hidden' }} />
   )
 }
 

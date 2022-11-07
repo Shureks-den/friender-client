@@ -10,7 +10,7 @@ import VkApiService from './modules/VkApiService.js';
 import ApiSevice from './modules/ApiSevice.js';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { remove, set, setActiveEvents } from './store/user/userSlice';
+import { remove, set, setActiveEvents, setToken} from './store/user/userSlice';
 import { removeGroupId, setAdminedGroups } from './store/group/groupSlice';
 import { setCities } from './store/cities/citiesSlice';
 
@@ -37,6 +37,9 @@ const App = ({ router }) => {
     VkApiService.updateConfigWatcher(setScheme);
     async function fetchData() {
       const user = await VkApiService.fetchUserData();
+      await VkApiService.getSessionInfo();
+      const token = await VkApiService.getUserToken();
+      dispatch(setToken(token));
       ApiSevice.setHeaderId(user.id);
       dispatch(set(user));
       const activeEvents = await ApiSevice.post('events', {
@@ -182,6 +185,7 @@ const App = ({ router }) => {
                 fetchedUser={user}
                 go={(id) => goTo(id)}
                 goToProfile={goToProfile}
+                goToGroup={goToGroup}
                 onSuccess={goTo}
                 makeRepost={makeRepost}
                 makeShare={makeShare}
