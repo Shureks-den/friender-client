@@ -116,6 +116,7 @@ const Profile = props => {
     <Panel id={props.id}>
       <PanelHeader
         style={{ textAlign: 'center' }}
+        left={<PanelHeaderBack onClick={props.go} data-to='home' />}
       >
         Пользователь
       </PanelHeader>

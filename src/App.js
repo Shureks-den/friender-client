@@ -32,6 +32,7 @@ const App = ({ router }) => {
   const [profileId, setProfileId] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [groupId, setGroupId] = useState(null);
+  const [chatId, setChatId] = useState(null);
 
   useEffect(() => {
     VkApiService.updateConfigWatcher(setScheme);
@@ -97,6 +98,12 @@ const App = ({ router }) => {
     setGroupId(id);
     router.toView(ViewTypes.GROUP);
     await VkApiService.setNewLocation(`group?id=${id}`);
+  };
+
+  const goToChat = async id => {
+    setChatId(id);
+    router.toView(ViewTypes.CHATS);
+    await VkApiService.setNewLocation(`chats?id=${id}`);
   };
 
   const goToNewAdd = (deleteGroupInfo = true) => {
@@ -230,13 +237,18 @@ const App = ({ router }) => {
                 makeShare={makeShare}
                 makeStory={makeStory}
                 getUserInfo={VkApiService.fetchUserData}
+                getUsersInfo={VkApiService.getUsersInfo}
+                getGroupInfo={VkApiService.getGroupsInfo}
                 goToProfile={goToProfile}
+                goToGroup={goToGroup}
+                goToChat={goToChat}
                 goToEditing={goToEditing}
               />
             </View>
             <View id={ViewTypes.CHATS} activePanel={router.activePanel}>
               <Chats
                 id={PanelTypes.CHATS}
+                chatId={chatId}
                 getUserInfo={VkApiService.fetchUserData}
                 goToProfile={goToProfile}
               />

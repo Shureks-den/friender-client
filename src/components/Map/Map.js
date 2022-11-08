@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 
-import { Input, FormItem, Group } from '@vkontakte/vkui';
+import { Input, FormItem, Group, Div } from '@vkontakte/vkui';
 
 import './Map.scss';
 
-const Map = ({address, setAddress, setCoords, latitude, longitude, isClickable }) => {
+const Map = ({ address, setAddress, setCoords, latitude, longitude, isClickable, showAddress = true }) => {
   const [yMap, setYMap] = useState(null);
   const [isClicked, setIsClicked] = useState(false);
 
@@ -53,7 +53,9 @@ const Map = ({address, setAddress, setCoords, latitude, longitude, isClickable }
       const myMap = new ymaps.Map('ymaps', {
         center: [latitude ?? 55.796931, longitude ?? 37.537847],
         zoom: 14,
-        controls: ['zoomControl', 'fullscreenControl']
+        controls: ['zoomControl', 'fullscreenControl'],
+      }, {
+        autoFitToViewport: 'always'
       });
       setYMap(myMap);
 
@@ -83,6 +85,7 @@ const Map = ({address, setAddress, setCoords, latitude, longitude, isClickable }
       }
     });
     yMap.geoObjects.add(myGeoObject);
+    yMap.setCenter([latitude, longitude]);
     await transformCoords([latitude ?? 55.796931, longitude ?? 37.537847]);
   }, [latitude, longitude, yMap])
 
@@ -115,12 +118,16 @@ const Map = ({address, setAddress, setCoords, latitude, longitude, isClickable }
 
   return (
     <Group>
-      <div className='ymaps__container'>
-        <FormItem top='Адрес' className='ymaps__input'>
-          <Input type='text' title='Адрес' label='Название события' id='address' value={address} onInput={(e) => handleType(e)} onBlur={(e) => handlePlaceMark(e)} disabled={!isClickable} />
-        </FormItem>
+      <Div className='ymaps__container'>
+        {
+          showAddress &&
+          <FormItem top='Адрес' className='ymaps__input'>
+            <Input type='text' title='Адрес' label='Название события' id='address' value={address} onInput={(e) => handleType(e)} onBlur={(e) => handlePlaceMark(e)} disabled={!isClickable} />
+          </FormItem>
+        }
+
         <div id='ymaps' />
-      </div>
+      </Div>
     </Group>
   );
 };

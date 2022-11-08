@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Panel, PanelHeader, Group, CardGrid, ContentCard, Tabs, TabsItem, HorizontalScroll, Badge, Button, ButtonGroup, Spinner, IconButton, SimpleCell, Search, FormItem, Select, FormLayoutGroup, Div, Avatar } from '@vkontakte/vkui';
-import { Icon24NewsfeedOutline, Icon24LogoVk, Icon24Users, Icon24ShareOutline, Icon24LikeOutline, Icon24Like } from '@vkontakte/icons';
+import { Icon24NewsfeedOutline, Icon24LogoVk, Icon24Users, Icon24ShareOutline, Icon24LikeOutline, Icon24Like, Icon24Share } from '@vkontakte/icons';
 import { Icon24ArrowDownOutline, Icon24ArrowUpOutline, Icon24SortOutline } from '@vkontakte/icons';
 import ApiSevice from '../modules/ApiSevice';
 
@@ -137,7 +137,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
     const listItems = res.map((elem) => {
       const eventDate = new Date(elem.time_start * 1000);
       const time = `${eventDate.getDate()} ${monthNames[eventDate.getMonth()]}, `;
-      const hour = `${eventDate.getHours()}:${eventDate.getMinutes() < 10 ? '0' : ''}${eventDate.getMinutes()}`
+      const hour = `${eventDate.getHours()}:${eventDate.getMinutes() < 10 ? '0' : ''}${eventDate.getMinutes()}`;
       const eventStart = ((day === eventDate.getDate() && month === eventDate.getMonth()) ? 'Сегодня, ' : time) + hour;
       const city = elem.geo.address ? elem.geo.address.split(',')[0] : '';
 
@@ -194,8 +194,8 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
                     <div className='event-subtitle-wrapper__created'>{createdTime}</div>
                   </div>
                 </SimpleCell>
-                <IconButton onClick={() => openShareModal(elem.id, elem?.title, elem?.avatar.url, elem?.avatar.avatar_url)}>
-                  <Icon24ShareOutline />
+                <IconButton onClick={() => openShareModal(elem.id, elem?.title, elem?.avatar.avatar_vk_id, elem?.avatar.avatar_url)}>
+                  <Icon24Share />
                 </IconButton>
               </div>
             }
@@ -272,7 +272,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
   useEffect(async () => {
     if (!user.id) return;
     await getEvents();
-  }, [selected, searchCategory, searchCity, sortOrder, user, searchWords.join('')]);
+  }, [selected, searchCategory, searchCity, sortOrder, sortValue, user, searchWords.join('')]);
 
   useEffect(async () => {
     await getTypedEvents(selected, true);
@@ -343,7 +343,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
             onChange={(e) => setSort(e.target.value)}
           />
         </FormItem>
-        {sortValue !== '' && <IconButton onClick={setOrder}> {sortOrder === 'asc' ? <Icon24ArrowUpOutline /> : <Icon24ArrowDownOutline />} </IconButton>}
+        {sortValue !== '' && <IconButton onClick={setOrder}> {sortOrder === 'asc' ? <Icon24ArrowDownOutline /> : <Icon24ArrowUpOutline />} </IconButton>}
       </FormLayoutGroup>
 
       <Group>

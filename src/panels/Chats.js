@@ -92,10 +92,19 @@ const Chats = (props) => {
     }
   }, [user, isChatsListOpen]);
 
+  useEffect(() => {
+    if (!user.id) return;
+    const chatId = props.chatId ? props.chatId : window.location.hash?.slice(1).split('=').slice(1, 2).join('');
+    if (chatId) {
+      openChat(chatId, user.id, socket);
+    }
+  }, [user]);
+
   return (
     <Panel id={props.id}>
       <PanelHeader left={!isChatsListOpen && <PanelHeaderBack onClick={() => setIsChatsListOpen(true)} />} style={{ textAlign: 'center' }} separator={false}>Чаты</PanelHeader>
-      {isChatsListOpen && <ChatsLists chats={chats} openChat={openChat} userId={user.id} />}
+      {isChatsListOpen &&
+        <ChatsLists chats={chats} openChat={openChat} userId={user.id} />}
       {messages && <Messages messages={messages} users={members} user={user} goToProfile={props.goToProfile} closeChat={closeChat} />}
       {!isChatsListOpen && <ChatView sendMessage={sendMessage} />}
       <div ref={messagesEndRef} />
@@ -207,7 +216,7 @@ const ChatView = (props) => {
     if (message.length) {
       props.sendMessage(message);
     }
-    
+
     setMessage('');
   };
   const handleEnterClick = (e) => {
