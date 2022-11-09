@@ -1,14 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-import { Panel, PanelHeader, PanelHeaderBack, Input, FormItem, Textarea, Button, File, HorizontalCell, HorizontalScroll, Avatar, Calendar, Group, Header, Checkbox, FormLayoutGroup, Select } from '@vkontakte/vkui';
+import { Panel, PanelHeader, Input, FormItem, Textarea, Div, Button, CustomSelectOption, File, HorizontalCell, HorizontalScroll, Avatar, Calendar, Group, Header, Checkbox, FormLayoutGroup, Select, Spacing } from '@vkontakte/vkui';
 import { Icon24Camera } from '@vkontakte/icons';
 
 import ApiSevice from '../modules/ApiSevice';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { remove, set } from '../store/categories/categoriesSlice.js';
-import { removeGroupId } from '../store/group/groupSlice';
 
 import Map from '../components/Map/Map.js';
 import VkApiService from '../modules/VkApiService';
@@ -18,8 +17,8 @@ const NewEvent = props => {
   const startPage = useRef(null);
   const user = useSelector(state => state.user.value);
 
-  const isAdmin = useSelector(state => state.groupInfo.isAdmin);
-  const groupId = useSelector(state => state.groupInfo.groupId);
+  const groups = useSelector(state => state.groupInfo.adminedGroups);
+  const [groupId, setGroupId] = useState('');
 
   const [eventTitle, setEventTitle] = useState('');
   const [eventDescription, setEventDescription] = useState('');
@@ -29,7 +28,7 @@ const NewEvent = props => {
 
   const [hasPrice, setHasPrice] = useState(false);
   const [paymentLink, setPaymentLink] = useState('');
-  const [ticketPrice, setTicketPrice] = useState('');
+  const [ticketPrice, setTicketPrice] = useState(0);
 
   const [members, setMembers] = useState(1);
   const [address, setAddress] = useState('');
@@ -41,7 +40,7 @@ const NewEvent = props => {
   const [eventId, setEventId] = useState(null);
 
   const categories = useSelector(state => state.categories.value);
-  const [category, setCategory] = useState('Туса');
+  const [category, setCategory] = useState('');
 
   const [imagesSrc, setImagesSrc] = useState([]);
   const [eventImages, setEventImages] = useState([]);
@@ -65,7 +64,6 @@ const NewEvent = props => {
   }, []);
 
   useEffect(async () => {
-    console.log(groupId)
     if (!categories.length) {
       const categories = await ApiSevice.getAll('categories');
       if (!categories) return;
@@ -113,14 +111,14 @@ const NewEvent = props => {
         longitude: coords[1]
       },
       group_info: groupId ? {
-        group_id: groupId,
-        is_admin: isAdmin,
+        group_id: Number(groupId),
+        is_admin: true,
       } : null,
       time_start: Math.round(eventDate.getTime() / 1000),
       members_limit: Number(members),
       ticket: {
         link: paymentLink,
-        cost: ticketPrice,
+        cost: String(ticketPrice),
       },
       is_private: isPrivate
     };
@@ -162,7 +160,6 @@ const NewEvent = props => {
     if (response.id) {
       if (groupId) {
         props.onSuccessGroup(groupId);
-        dispatch(removeGroupId());
       } else {
         props.onSuccess(response.id);
       }
@@ -178,15 +175,12 @@ const NewEvent = props => {
 
   return (
     <Panel id={props.id}>
-    <div ref={startPage} />
+      <div ref={startPage} />
       <PanelHeader
         style={{ textAlign: 'center' }}
       >
         Новое событие
       </PanelHeader>
-      <FormItem top='Название события' status={formTitleItemStatus} bottom={formTitleItemStatus === 'error' && 'Форма содержит недопустимые слова'}>
-        <Input type='text' title='Название События' label='Название события' value={eventTitle} onChange={(e) => onChangeInput(e.target.value, 'title')} />
-      </FormItem>
       <FormItem top='Загрузите фото'>
         <File before={<Icon24Camera role='presentation' />} size='m' accept='image/png, image/gif, image/jpeg' multiple onInput={changeImage}>
           Открыть галерею
@@ -219,42 +213,45 @@ const NewEvent = props => {
           </HorizontalScroll>
         </Group>}
 
-      <FormItem top='Описание события' status={formTextAreaItemStatus} bottom={formTextAreaItemStatus === 'error' && 'Форма содержит недопустимые слова'}>
-        <Textarea placeholder='Самая лучшая тусовка!!!' value={eventDescription} onChange={(e) => onChangeInput(e.target.value, 'description')} />
+      <FormItem top='Название события' status={formTitleItemStatus} bottom={formTitleItemStatus === 'error' && 'Форма содержит недопустимые слова'}>
+        <Input type='text' title='Название События' label='Название события' value={eventTitle} onChange={(e) => onChangeInput(e.target.value, 'title')} />
       </FormItem>
 
-      <FormLayoutGroup>
-        <FormItem top='Количество участников'>
-          <Input type='number' min={1} value={members} onChange={(e) => setMembers(e.target.value)} />
-        </FormItem>
-      </FormLayoutGroup>
-
-
-      <Checkbox value={isPrivate} onChange={((e) => setIsPrivate(!isPrivate))}>Приватное событие</Checkbox>
-      <Checkbox value={hasPrice} onChange={((e) => setHasPrice(!hasPrice))}>Добавить ссылку на билеты</Checkbox>
-      {hasPrice &&
-        <FormLayoutGroup mode='horizontal' style={{ alignItems: 'center' }}>
-          <FormItem top='Цена'>
-            <Input type='number' min={1} value={ticketPrice} onChange={(e) => setTicketPrice(e.target.value)} />
-          </FormItem>
-          <FormItem top='Ссылка для покупки билета'>
-            <Input value={paymentLink} onChange={(e) => setPaymentLink(e.target.value)} />
-          </FormItem>
-        </FormLayoutGroup>
-      }
+      <FormItem top='Описание события' status={formTextAreaItemStatus} bottom={formTextAreaItemStatus === 'error' && 'Форма содержит недопустимые слова'}>
+        <Textarea value={eventDescription} onChange={(e) => onChangeInput(e.target.value, 'description')} />
+      </FormItem>
 
       <FormItem top="Категория">
         <Select
+          placeholder='Не выбрана'
           options={[
             ...categories
           ].map((i) => ({
             label: i,
             value: i
           }))}
-          defaultValue='Туса'
           onChange={(e) => setCategory(e.target.value)}
         />
       </FormItem>
+
+      <FormItem top='Количество участников'>
+        <Input type='number' min={1} value={members} onChange={(e) => setMembers(e.target.value)} />
+      </FormItem>
+
+      <FormItem top='Цена'>
+        <Input type='number' min={0} value={ticketPrice} onChange={(e) => setTicketPrice(e.target.value)} />
+      </FormItem>
+
+
+      <Checkbox value={isPrivate} onChange={((e) => setIsPrivate(!isPrivate))}>Приватное событие</Checkbox>
+      <Checkbox value={hasPrice} onChange={((e) => setHasPrice(!hasPrice))}>Добавить ссылку на билеты</Checkbox>
+      {hasPrice &&
+        <FormLayoutGroup mode='horizontal' style={{ alignItems: 'center' }}>
+          <FormItem top='Ссылка для покупки билета'>
+            <Input value={paymentLink} onChange={(e) => setPaymentLink(e.target.value)} />
+          </FormItem>
+        </FormLayoutGroup>
+      }
 
       <Group header={
         <Header>
@@ -276,7 +273,34 @@ const NewEvent = props => {
 
       <Map isClickable={true} setCoords={setCoords} latitude={latitude} longitude={longitude} address={address} setAddress={setAddress} />
 
-      <Button sizeY='regular' onClick={sendEvent}> {props.isEditing ? 'Редактировать' : 'Опубликовать'} </Button>
+      {groups && groups.length &&
+        <FormItem top='Администратор события'>
+          <Select
+            options={
+              [
+                { label: 'От своего имени', value: '', avatar: user.photo_100 },
+                ...groups
+                  .map((gr) => ({
+                    label: gr.name,
+                    value: String(gr.id),
+                    avatar: gr.photo_100,
+                  }))
+              ]
+            }
+            onChange={(e) => setGroupId(e.target.value)}
+            value={groupId}
+            renderOption={({ option, ...restProps }) => (
+            <CustomSelectOption
+              {...restProps}
+              before={<Avatar size={24} src={option.avatar} />}
+            />
+          )}
+          />
+        </FormItem>
+      }
+      <Div>
+        <Button stretched sizeY='regular' onClick={sendEvent}> {props.isEditing ? 'Редактировать' : 'Опубликовать'} </Button>
+      </Div>
     </Panel>
   );
 };

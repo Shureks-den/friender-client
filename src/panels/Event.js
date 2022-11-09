@@ -167,7 +167,8 @@ const Event = props => {
             >
               {sliderData}
             </CardScroll> :
-            sliderData
+            <Div>{sliderData}</Div>
+            
         }
       </Group>
 
@@ -193,11 +194,11 @@ const Event = props => {
           <Text weight='1' className='event__info-title'>Цена:</Text>
           {
             eventData.ticket && (
-              (eventData?.ticket.cost !== 0 && eventData?.ticket.link) ?
+              (Number(eventData?.ticket.cost) !== 0 && eventData?.ticket.link) ?
                 <Link href={eventData.ticket.link} target='_blank'>{eventData.ticket.cost} ₽</Link> :
-                eventData?.ticket.cost && eventData?.ticket.cost !== 0 ?
+                eventData?.ticket.cost && Number(eventData?.ticket.cost) !== 0 ?
                   <Text weight='3' className='event__info-data'>{eventData.ticket.cost} ₽</Text> :
-                  eventData?.ticket.cost === 0 ?
+                  Number(eventData?.ticket.cost) === 0 ?
                     <Text weight='3' className='event__info-data'>Бесплатно</Text> :
                     <Text weight='3' className='event__info-data'>Не указана</Text>
             )

@@ -10,7 +10,7 @@ import VkApiService from './modules/VkApiService.js';
 import ApiSevice from './modules/ApiSevice.js';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { remove, set, setActiveEvents, setToken} from './store/user/userSlice';
+import { remove, set, setActiveEvents, setToken } from './store/user/userSlice';
 import { removeGroupId, setAdminedGroups } from './store/group/groupSlice';
 import { setCities } from './store/cities/citiesSlice';
 
@@ -27,6 +27,7 @@ const App = ({ router }) => {
   const [scheme, setScheme] = useState('bright_light');
 
   const user = useSelector(state => state.user.value);
+  const userToken = useSelector(state => state.user.token);
 
   const [eventId, setEventId] = useState('');
   const [profileId, setProfileId] = useState(null);
@@ -73,7 +74,10 @@ const App = ({ router }) => {
       user_id: user.id
     });
     if (adminedGroups) {
-      dispatch(setAdminedGroups({ adminedGroups: adminedGroups }));
+      const groupInfo = await VkApiService.getGroupsInfo(
+        adminedGroups.map(g => g.group_id).join(','), userToken
+      );
+      dispatch(setAdminedGroups({ adminedGroups: groupInfo }));
     }
     const cities = await ApiSevice.getAll('cities');
     if (cities) {

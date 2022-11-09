@@ -3,6 +3,10 @@
 }
 
 .ymaps {
+  &__input {
+    padding-left: 0px;
+    padding-right: 0px;
+  }
   &-2-1-79-search__suggest {
     background-color: var( --field_background,var(--vkui--color_field_background) ) !important;
     color: #818c99;

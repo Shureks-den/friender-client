@@ -210,6 +210,11 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
                     {city}
                   </div>
                   {price ?
+                    Number(price) === 0 ? 
+                    <div className='event-caption__info-price'>
+                      Бесплатно
+                    </div>
+                    :
                     <div className='event-caption__info-price'>
                       {price + ' ₽'}
                     </div>

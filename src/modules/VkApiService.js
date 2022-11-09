@@ -96,6 +96,7 @@ class VkApiService {
       method: 'groups.getById',
       params: {
         group_ids: ids,
+        fields: 'photo_200, photo_100',
         v: '5.131',
         access_token: token
       }

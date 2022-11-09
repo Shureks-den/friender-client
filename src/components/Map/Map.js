@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 
-import { Input, FormItem, Group, Div } from '@vkontakte/vkui';
+import { Input, FormItem, Group, Div, Spacing } from '@vkontakte/vkui';
 
 import './Map.scss';
 
@@ -121,10 +121,18 @@ const Map = ({ address, setAddress, setCoords, latitude, longitude, isClickable,
       <Div className='ymaps__container'>
         {
           showAddress &&
-          <FormItem top='Адрес' className='ymaps__input'>
+          <FormItem top='Место' className='ymaps__input'>
             <Input type='text' title='Адрес' label='Название события' id='address' value={address} onInput={(e) => handleType(e)} onBlur={(e) => handlePlaceMark(e)} disabled={!isClickable} />
           </FormItem>
+          
         }
+
+        {
+          showAddress &&
+          <Spacing size={16} />
+        }
+
+        
 
         <div id='ymaps' />
       </Div>
