@@ -35,7 +35,6 @@ const NewEvent = props => {
   const [address, setAddress] = useState('');
 
   // для редактирования
-  const [editAvatar, setAvatar] = useState({});
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [eventId, setEventId] = useState(null);
@@ -77,19 +76,27 @@ const NewEvent = props => {
     const eId = props.eventId.length !== 0 ? props.eventId : window.location.hash?.slice(1).split('=').slice(1, 2).join('');
     setEventId(eId);
     const res = await ApiSevice.get('event/get', eId);
-    if (res.author !== user.id) props.go();
+    if (res.author !== user.id) {
+      props.go();
+      return;
+    }
     if (!res) return;
-    const { time_start, title, description, category, members_limit, is_private, images, avatar, geo } = res;
+    const { time_start, title, description, category, members_limit, is_private, images, avatar, geo, ticket } = res;
     setEventDate(new Date(time_start * 1000), new Date());
     setEventTitle(title ?? '');
     setEventDescription(description ?? '');
     setIsPrivate(is_private ?? false);
     setMembers(members_limit ?? 1);
     setCategory(category);
-    setAvatar(avatar);
 
-    const img = images.unshift(avatar?.avatar_url);
-    setImagesSrc(img);
+    images.unshift(avatar?.avatar_url);
+    setImagesSrc(images);
+
+    setTicketPrice(Number(ticket.cost));
+    if (ticket.link) {
+      setHasPrice(true);
+      setPaymentLink(ticket.link);
+    }
 
     setLatitude(geo?.latitude);
     setLongitude(geo?.longitude);
@@ -101,7 +108,7 @@ const NewEvent = props => {
     const body = {
       title: eventTitle,
       description: eventDescription,
-      author: props.userId,
+      author: user.id,
       category: category,
       source: groupId ? 'group' : 'user',
       geo: {
@@ -116,14 +123,13 @@ const NewEvent = props => {
       time_start: Math.round(eventDate.getTime() / 1000),
       members_limit: Number(members),
       ticket: {
-        link: paymentLink,
+        link: hasPrice ? paymentLink : null,
         cost: String(ticketPrice),
       },
       is_private: isPrivate
     };
     if (props.isEditing) {
       body.id = eventId;
-      body.avatar = editAvatar;
     }
     const { code, response } = props.isEditing ? await ApiSevice.put('event', '', 'change', body) : await ApiSevice.post('event/create', body);
     console.log(code, response, 'aaa', eventImages.length)
@@ -241,6 +247,7 @@ const NewEvent = props => {
             label: i,
             value: i
           }))}
+          value={category}
           onChange={(e) => setCategory(e.target.value)}
         />
       </FormItem>
@@ -255,7 +262,7 @@ const NewEvent = props => {
 
 
       {/* <Checkbox value={isPrivate} onChange={((e) => setIsPrivate(!isPrivate))}>Приватное событие</Checkbox> */}
-      <Checkbox value={hasPrice} onChange={((e) => setHasPrice(!hasPrice))}>Добавить ссылку на билеты</Checkbox>
+      <Checkbox checked={hasPrice} value={hasPrice} onChange={((e) => setHasPrice(!hasPrice))}>Добавить ссылку на билеты</Checkbox>
       {hasPrice &&
         <FormLayoutGroup mode='horizontal' style={{ alignItems: 'center' }}>
           <FormItem top='Ссылка для покупки билета'>

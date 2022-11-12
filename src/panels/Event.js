@@ -195,7 +195,7 @@ const Event = props => {
           {
             eventData.ticket && (
               (Number(eventData?.ticket.cost) !== 0 && eventData?.ticket.link) ?
-                <Link href={eventData.ticket.link} target='_blank'>{eventData.ticket.cost} ₽</Link> :
+                <Link href={eventData.ticket.link} target='_blank' className='event__info-data'>{eventData.ticket.cost} ₽</Link> :
                 eventData?.ticket.cost && Number(eventData?.ticket.cost) !== 0 ?
                   <Text weight='3' className='event__info-data'>{eventData.ticket.cost} ₽</Text> :
                   Number(eventData?.ticket.cost) === 0 ?
