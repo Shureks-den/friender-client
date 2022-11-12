@@ -8,6 +8,7 @@ import ApiSevice from '../modules/ApiSevice';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { remove, set } from '../store/categories/categoriesSlice.js';
+import { setIsAdmin, setGroupId } from '../store/group/groupSlice.js';
 
 import Map from '../components/Map/Map.js';
 import VkApiService from '../modules/VkApiService';
@@ -19,7 +20,7 @@ const NewEvent = props => {
   const user = useSelector(state => state.user.value);
 
   const groups = useSelector(state => state.groupInfo.adminedGroups);
-  const [groupId, setGroupId] = useState('');
+  const [groupId, setStateGroupId] = useState('');
 
   const [eventTitle, setEventTitle] = useState('');
   const [eventDescription, setEventDescription] = useState('');
@@ -48,6 +49,8 @@ const NewEvent = props => {
   const [formTitleItemStatus, setFormTitleItemStatus] = useState('default');
   const [formTextAreaItemStatus, setFormAreaItemStatus] = useState('default');
 
+  const suggestGroupId = useSelector(state => state.groupInfo.groupId);
+
   const onChangeInput = (value, where) => {
     if (where === 'title') {
       setEventTitle(value);
@@ -62,6 +65,12 @@ const NewEvent = props => {
   useEffect(() => {
     startPage.current?.scrollIntoView();
   }, []);
+
+  useEffect(() => {
+    if (Boolean(suggestGroupId)) {
+      setStateGroupId(suggestGroupId);
+    }
+  }, [suggestGroupId])
 
   useEffect(async () => {
     if (!user.id || categories.length) return;
@@ -118,7 +127,7 @@ const NewEvent = props => {
       },
       group_info: groupId ? {
         group_id: Number(groupId),
-        is_admin: true,
+        is_admin: Boolean(suggestGroupId) ? false : true,
       } : null,
       time_start: Math.round(eventDate.getTime() / 1000),
       members_limit: Number(members),
@@ -164,6 +173,7 @@ const NewEvent = props => {
     }
     if (response.id) {
       if (groupId) {
+        dispatch(setGroupId({ groupId: null }));
         props.onSuccessGroup(groupId);
       } else {
         props.onSuccess(response.id);
@@ -291,7 +301,7 @@ const NewEvent = props => {
 
       <Map isClickable={true} setCoords={setCoords} latitude={latitude} longitude={longitude} address={address} setAddress={setAddress} />
 
-      {Boolean(groups?.length) &&
+      {(Boolean(groups?.length) && !Boolean(suggestGroupId)) &&
         <FormItem top='Администратор события'>
           <Select
             options={
@@ -305,7 +315,7 @@ const NewEvent = props => {
                   }))
               ]
             }
-            onChange={(e) => setGroupId(e.target.value)}
+            onChange={(e) => setStateGroupId(e.target.value)}
             value={groupId}
             renderOption={({ option, ...restProps }) => (
               <CustomSelectOption

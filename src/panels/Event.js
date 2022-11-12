@@ -42,6 +42,7 @@ const Event = props => {
 
   const [activeModal, setActiveModal] = useState(null);
   const [share, setShare] = useState(null);
+  const [isNeedApprove, setIsNeedApprove] = useState(false);
 
   const openShareModal = (eventId, title, eventImageId, avatarUrl) => {
     const repost = () => props.makeRepost(eventId, title, eventImageId);
@@ -78,6 +79,16 @@ const Event = props => {
     if (!eventData.is_active) {
       props.go();
     }
+  }
+
+  const approve = async (id, value) => {
+    const response = await ApiSevice.post('group/event/approve', {
+      group_id: eventGroup.id,
+      event_uid: id,
+      approve: value
+    });
+    console.log(response);
+    props.goToGroup(eventGroup.id)
   }
 
   const deleteEvent = async (id) => {
@@ -133,6 +144,10 @@ const Event = props => {
         setEventGroup(group);
       }
 
+      if (res.group_info?.is_need_approve) {
+        setIsNeedApprove(true);
+      }
+
       setIsMember(Boolean(res.members?.find(m => m === user?.id)));
       const transformedMembers = await props.getUsersInfo(res.members.join(','), userToken);
       setMembers(transformedMembers.filter(m => m.id !== res.author).map(m =>
@@ -169,7 +184,7 @@ const Event = props => {
               {sliderData}
             </CardScroll> :
             <Div>{sliderData}</Div>
-            
+
         }
       </Group>
 
@@ -213,46 +228,70 @@ const Event = props => {
 
       <Map isClickable={false} latitude={eventData.geo?.latitude} longitude={eventData.geo?.longitude} address={address} setAddress={setAddress} showAddress={false} />
 
-      <ButtonGroup mode="vertical" align='center' style={{ display: 'unset', textAlign: 'center', alignItems: 'unset' }}>
-        <ButtonGroup
-          mode="horizontal"
-          style={{ alignItems: 'center' }}
-        >
-          {
-            (user?.id === eventData.author || adminedGroups.find(g => g.group_id === eventData?.group_info?.group_id)) &&
-            eventData.is_active && user?.id === eventData.author &&
-            <Button size="m" onClick={() => props.goToEditing(eventId)}> Редактировать </Button>
-          }
+      {
+        isNeedApprove ?
+          <ButtonGroup mode="vertical" align='center' style={{ display: 'unset', textAlign: 'center', alignItems: 'unset' }}>
+            <ButtonGroup
+              mode="horizontal"
+              style={{ alignItems: 'center' }}
+            >
+              {
+                (adminedGroups.find(g => g.id === eventData?.group_info?.group_id)) &&
+                eventData.is_active &&
+                <Button size="m" onClick={() => approve(eventId, true)}> Одобрить событие </Button>
+              }
+              {
+                (adminedGroups.find(g => g.id === eventData?.group_info?.group_id)) &&
+                eventData.is_active &&
+                <Button size="m" onClick={() => approve(eventId, false)}> Отклонить событие </Button>
+              }
 
-          {
-            (user?.id === eventData.author || adminedGroups.find(g => g.group_id === eventData?.group_info?.group_id)) &&
-            eventData.is_active &&
-            <Button size="m" onClick={() => deleteEvent(eventId)}> Удалить событие </Button>
-          }
+            </ButtonGroup>
+          </ButtonGroup> :
+          // не требует аппрува - стандартная логика
+          <ButtonGroup mode="vertical" align='center' style={{ display: 'unset', textAlign: 'center', alignItems: 'unset' }}>
+            <ButtonGroup
+              mode="horizontal"
+              style={{ alignItems: 'center' }}
+            >
+              {
+                (user?.id === eventData.author) &&
+                eventData.is_active && user?.id === eventData.author &&
+                <Button size="m" onClick={() => props.goToEditing(eventId)}> Редактировать </Button>
+              }
 
-          {
-            (!isMember && user?.id !== eventData.author && eventData.is_active) &&
-            <Button size="m" onClick={() => subscribe(eventId)}> Я пойду </Button>
-          }
+              {
+                (user?.id === eventData.author) &&
+                eventData.is_active &&
+                <Button size="m" onClick={() => deleteEvent(eventId)}> Удалить событие </Button>
+              }
 
-          {
-            (isMember && user?.id !== eventData.author && eventData.is_active) &&
-            <Button size="m" onClick={() => unsubscribe(eventId)}> Отказаться от участия </Button>
-          }
+              {
+                (!isMember && user?.id !== eventData.author && eventData.is_active) &&
+                <Button size="m" onClick={() => subscribe(eventId)}> Я пойду </Button>
+              }
 
-          {
-            eventData.is_active &&
-            <IconButton onClick={() => openShareModal(eventData.id, eventData?.title, eventData?.avatar.avatar_vk_id, eventData?.avatar.avatar_url)}>
-              <Icon24Share />
-            </IconButton>
-          }
+              {
+                (isMember && user?.id !== eventData.author && eventData.is_active) &&
+                <Button size="m" onClick={() => unsubscribe(eventId)}> Отказаться от участия </Button>
+              }
 
-          {
-            user.platform === 'web' &&
-            <IconButton onClick={downloadCalendar}> <Icon24CalendarOutline /> </IconButton>
-          }
-        </ButtonGroup>
-      </ButtonGroup>
+              {
+                eventData.is_active &&
+                <IconButton onClick={() => openShareModal(eventData.id, eventData?.title, eventData?.avatar.avatar_vk_id, eventData?.avatar.avatar_url)}>
+                  <Icon24Share />
+                </IconButton>
+              }
+
+              {
+                user.platform === 'web' &&
+                <IconButton onClick={downloadCalendar}> <Icon24CalendarOutline /> </IconButton>
+              }
+            </ButtonGroup>
+          </ButtonGroup>
+      }
+
+
 
       <Spacing />
       <Separator />
@@ -280,16 +319,20 @@ const Event = props => {
           : <Text> Публичное событие </Text>
       }
 
-      <Group header={<Header>Участники {members.length}</Header>} style={{ minHeight: '60px' }}>
-        {members.length ?
-          <HorizontalScroll showArrows
-            getScrollToLeft={(i) => i - 120}
-            getScrollToRight={(i) => i + 120}>
-            <div style={{ display: "flex" }}>{members}</div>
-          </HorizontalScroll> :
-          <Spacing size={60} />
-        }
-      </Group>
+      {
+        !isNeedApprove &&
+        <Group header={<Header>Участники {members.length}</Header>} style={{ minHeight: '60px' }}>
+          {members.length ?
+            <HorizontalScroll showArrows
+              getScrollToLeft={(i) => i - 120}
+              getScrollToRight={(i) => i + 120}>
+              <div style={{ display: "flex" }}>{members}</div>
+            </HorizontalScroll> :
+            <Spacing size={60} />
+          }
+        </Group>
+      }
+
 
     </Panel>
   );
