@@ -69,7 +69,7 @@ const Event = props => {
   const subscribe = async (id) => {
     const response = await ApiSevice.put('event', id, 'subscribe');
     setIsMember(true);
-    props.goToChat(id);
+    setActiveModal('JOIN-MODAL');
   }
 
   const unsubscribe = async (id) => {
@@ -157,6 +157,7 @@ const Event = props => {
         activeModal={activeModal}
         setActiveModal={setActiveModal}
         share={share}
+        goToChat={() => props.goToChat(eventData.id)}
       />
 
       <Group>

@@ -127,6 +127,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
         .filter((v, i, a) => a.indexOf(v) === i)
         .join(',')
       , userToken) : [];
+
     const groups = !isVk ? await VkApiService.getGroupsInfo(
       res
         .map(el => el.group_info.group_id)
@@ -210,14 +211,14 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
                     {city}
                   </div>
                   {price ?
-                    Number(price) === 0 ? 
-                    <div className='event-caption__info-price'>
-                      Бесплатно
-                    </div>
-                    :
-                    <div className='event-caption__info-price'>
-                      {price + ' ₽'}
-                    </div>
+                    Number(price) === 0 ?
+                      <div className='event-caption__info-price'>
+                        Бесплатно
+                      </div>
+                      :
+                      <div className='event-caption__info-price'>
+                        {price + ' ₽'}
+                      </div>
                     :
                     <div className='event-caption__info-price'>
                       Цена не указана
@@ -311,12 +312,20 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
       >
         <FormItem bottom="Категория">
           <Select
-            options={[
-              '', ...categories
-            ].map((i) => ({
-              label: i,
-              value: i
-            }))}
+            options={
+              [
+                {
+                  label: 'Все',
+                  value: '',
+                },
+                ...categories
+                  .map((i) => ({
+                    label: i,
+                    value: i
+                  })
+                )
+              ]
+            }
             placeholder='Выберите категорию'
             value={searchCategory}
             onChange={(e) => setSearchCategory(e.target.value)}
@@ -324,12 +333,20 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
         </FormItem>
         <FormItem bottom="Город">
           <Select
-            options={[
-              '', ...cities
-            ].map((i) => ({
-              label: i,
-              value: i
-            }))}
+            options={
+              [
+                {
+                  label: 'Все',
+                  value: '',
+                },
+                ...cities
+                  .map((i) => ({
+                    label: i,
+                    value: i
+                  })
+                )
+              ]
+            }
             placeholder='Выберите город'
             value={searchCity}
             onChange={(e) => setSearchCity(e.target.value)}

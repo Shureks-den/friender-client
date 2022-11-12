@@ -109,6 +109,7 @@ const App = ({ router }) => {
     setChatId(id);
     router.toView(ViewTypes.CHATS);
     await VkApiService.setNewLocation(`chats?id=${id}`);
+    setTimeout(() => setChatId(null), 0);
   };
 
   const goToNewAdd = (deleteGroupInfo = true) => {
@@ -254,7 +255,8 @@ const App = ({ router }) => {
               <Chats
                 id={PanelTypes.CHATS}
                 chatId={chatId}
-                getUserInfo={VkApiService.fetchUserData}
+                getUserInfo={VkApiService.getUsersInfo}
+                goToEvent={goTo}
                 goToProfile={goToProfile}
               />
             </View>

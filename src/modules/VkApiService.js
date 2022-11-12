@@ -40,7 +40,6 @@ class VkApiService {
   }
 
   async repost(eventId, eventTitle, eventAvatar) {
-    console.log(eventAvatar)
     const response = await bridge.send('VKWebAppShowWallPostBox', {
       message: `Ищу компанию для ${eventTitle}, присоединяйтесь!`,
       attachments:
@@ -92,6 +91,7 @@ class VkApiService {
   }
 
   async getGroupsInfo(ids, token) {
+    if (!ids) return [];
     const { response } = await bridge.send('VKWebAppCallAPIMethod', {
       method: 'groups.getById',
       params: {

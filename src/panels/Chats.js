@@ -2,7 +2,7 @@ import React, { useState, useEffect, Fragment, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Panel, PanelHeader, Header, Group, Cell, SimpleCell, Avatar, TabsItem, HorizontalScroll, Badge, Separator, Div, IconButton, WriteBar, WriteBarIcon, FixedLayout, PanelHeaderBack } from '@vkontakte/vkui';
+import { Panel, PanelHeader, Header, Group, Cell, SimpleCell, Avatar, Div, IconButton, WriteBar, WriteBarIcon, FixedLayout, PanelHeaderBack, Search } from '@vkontakte/vkui';
 import { Icon28MessageOutline } from '@vkontakte/icons';
 import ApiSevice from '../modules/ApiSevice';
 
@@ -12,13 +12,19 @@ import { monthNames } from '../variables/constants';
 
 const Chats = (props) => {
   const user = useSelector(state => state.user.value);
+  const userToken = useSelector(state => state.user.token);
   const messagesEndRef = useRef(null);
 
   const [chats, setChats] = useState([]);
+  const [displayChats, setDisplayChats] = useState([]);
   const [isChatsListOpen, setIsChatsListOpen] = useState(true);
+  const [inputText, setInputText] = useState('');
+
+  const [chatInfo, setChatInfo] = useState({});
   const [members, setMembers] = useState([]);
   const [messages, setMessages] = useState([]);
   const [socket, setSocket] = useState(null);
+
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -37,19 +43,29 @@ const Chats = (props) => {
     }
   }
 
+  useEffect(() => {
+    setDisplayChats(chats);
+  }, [chats]);
+
+  useEffect(() => {
+    setDisplayChats([...chats.filter(c => c.event_title.includes(inputText))]);
+  }, [inputText]);
+
   const getHistory = async (id) => {
     const messages = await ApiSevice.getAll('messages', {
       event: id,
       page: 0,
       limit: 100
     });
-    console.log(messages);
-    const { members } = await ApiSevice.get('event/get', id);
-    const fetchedUsers = [];
-    for (let i = 0; i < members.length; i++) {
-      const member = await props.getUserInfo(members[i]);
-      fetchedUsers.push(member);
-    }
+    const { members, avatar, title } = await ApiSevice.get('event/get', id);
+    setChatInfo({ avatar: avatar.avatar_url, title: title, id: id });
+    const allMembers = members;
+    messages.forEach(m => {
+      if (allMembers.findIndex(u => u === m.user_id) === -1) {
+        allMembers.push(m.user_id);
+      }
+    });
+    const fetchedUsers = await props.getUserInfo(allMembers.join(','), userToken);
     setMembers(fetchedUsers);
     setMessages(messages.reverse());
   }
@@ -65,8 +81,14 @@ const Chats = (props) => {
 
   useEffect(() => {
     if (!socket) return;
-    socket.onmessage = (event) => {
-      setMessages([...messages, JSON.parse(event.data)]);
+    socket.onmessage = async (event) => {
+      const messageData = JSON.parse(event.data);
+      const userId = messageData.user_id;
+      if (!members.find(m => m.id === userId)) {
+        const userInfo = await props.getUserInfo(String(userId), userToken);
+        setMembers([...members, userInfo]);
+      }
+      setTimeout(() => setMessages([...messages, messageData]), 0);
     }
     socket.onerror = function (error) {
       console.log('error', error)
@@ -86,6 +108,7 @@ const Chats = (props) => {
   }
 
   useEffect(async () => {
+    if (!user.id) return;
     if (isChatsListOpen) {
       closeChat();
       await getAllChats();
@@ -103,10 +126,36 @@ const Chats = (props) => {
   return (
     <Panel id={props.id}>
       <PanelHeader left={!isChatsListOpen && <PanelHeaderBack onClick={() => setIsChatsListOpen(true)} />} style={{ textAlign: 'center' }} separator={false}>Чаты</PanelHeader>
-      {isChatsListOpen &&
-        <ChatsLists chats={chats} openChat={openChat} userId={user.id} />}
-      {messages && <Messages messages={messages} users={members} user={user} goToProfile={props.goToProfile} closeChat={closeChat} />}
-      {!isChatsListOpen && <ChatView sendMessage={sendMessage} />}
+      {
+        isChatsListOpen &&
+        <Search value={inputText} onChange={e => setInputText(e.target.value)} />
+      }
+      {
+        isChatsListOpen &&
+        <ChatsLists chats={displayChats} openChat={openChat} userId={user.id} />
+      }
+      {
+        !isChatsListOpen &&
+        <FixedLayout vertical='top' className='chat__info'>
+          <Cell
+            before={chatInfo.avatar ? <Avatar src={chatInfo.avatar} size={25}/> : null}
+            onClick={() => props.goToEvent(chatInfo.id)}
+            className='chat__info-cell'
+          >
+            {`${chatInfo.title}`}
+          </Cell>
+        </FixedLayout>
+      }
+
+      {
+        !isChatsListOpen &&
+        <Messages messages={messages} users={members} user={user} goToProfile={props.goToProfile} closeChat={closeChat} />
+      }
+
+      {
+        !isChatsListOpen &&
+        <ChatView sendMessage={sendMessage} />
+      }
       <div ref={messagesEndRef} />
     </Panel>
   );
@@ -114,7 +163,6 @@ const Chats = (props) => {
 
 
 const ChatsLists = (props) => {
-  console.log(props)
   const chats = props.chats.map(c => {
     return (
       <SimpleCell
@@ -177,7 +225,7 @@ const Messages = ({ messages, users, user, goToProfile, closeChat }) => {
           </Div>);
       } else {
         return (
-          <Div key={idx} className={(m.user_id === user.id ? 'message-author' : 'message-user') + ' message'}>
+          <Div key={idx} className={(m.user_id === user.id ? 'message-author' : 'message-user') + ' message'} style={{paddingBottom: '6px', paddingTop: '6px'}}>
             {!isUser &&
               <Cell
                 before={profile.photo_200 ? <Avatar src={profile.photo_200} /> : null}
@@ -204,7 +252,7 @@ const Messages = ({ messages, users, user, goToProfile, closeChat }) => {
   }, [messages]);
 
   return (
-    <Group className={'chat__messages'}>
+    <Group className={'chat__messages'} style={{paddingTop: '45px'}}>
       {domMessages}
     </Group>
   )

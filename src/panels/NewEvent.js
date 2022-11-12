@@ -92,7 +92,7 @@ const NewEvent = props => {
     images.unshift(avatar?.avatar_url);
     setImagesSrc(images);
 
-    setTicketPrice(Number(ticket.cost));
+    setTicketPrice(Number(ticket.cost ?? 0));
     if (ticket.link) {
       setHasPrice(true);
       setPaymentLink(ticket.link);

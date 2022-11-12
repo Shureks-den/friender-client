@@ -1,10 +1,10 @@
 
 import React, { useEffect, useState, useRef } from 'react';
-import { Icon56ShareOutline } from '@vkontakte/icons';
+import { Icon56ShareOutline, Icon56MessagesOutline } from '@vkontakte/icons';
 
 import { ModalCard, Button, ModalRoot, SplitLayout, ButtonGroup } from '@vkontakte/vkui';
 
-export const ShareModal = ({ activeModal, setActiveModal, share }) => {
+export const ShareModal = ({ activeModal, setActiveModal, share, goToChat }) => {
   const modal = (
     <ModalRoot
       activeModal={activeModal}
@@ -42,6 +42,27 @@ export const ShareModal = ({ activeModal, setActiveModal, share }) => {
               onClick={() => share.story()}
             >
               Опубликовать историю
+            </Button>
+          </ButtonGroup>
+        }
+      >
+      </ModalCard>
+      <ModalCard
+        id='JOIN-MODAL'
+        onClose={() => setActiveModal(null)}
+        icon={<Icon56MessagesOutline />}
+        style={{ alignItems: 'center' }}
+        header="Вы записались на событие!"
+        subheader="Перейдите в чат, чтобы начать общаться с участниками"
+        actions={
+          <ButtonGroup mode='vertical' stretched={true}>
+            <Button
+              size="m"
+              mode="primary"
+              stretched={true}
+              onClick={() => goToChat()}
+            >
+              Перейти
             </Button>
           </ButtonGroup>
         }

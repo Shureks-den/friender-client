@@ -14,6 +14,7 @@
   }
 
   &-wrapper {
+    padding: 8px 12px;
     border-radius: 10px;
     background-color: var(--vkui--color_background_content);
     width: fit-content;
@@ -75,6 +76,19 @@
 }
 
 .chat {
+  &__info {
+    z-index: 2;
+    border-bottom: solid 1px var(--separator_common);
+    background-color: var(--background_content);
+
+    &-cell .vkuiSimpleCell__children {
+      font-weight: 600;
+      padding-left: 0.25rem;
+      font-size: 12px;
+      line-height: 14px;
+      letter-spacing: 0.06px;
+    }
+  }
   &__input {
     border-top: solid 1px var(--separator_common);
   }
