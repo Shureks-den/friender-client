@@ -70,10 +70,11 @@ const App = ({ router }) => {
   }, []);
 
   useEffect(async () => {
+    if (!user.id) return;
     const adminedGroups = await ApiSevice.getAll('group', {
       user_id: user.id
     });
-    if (adminedGroups) {
+    if (adminedGroups.length) {
       const groupInfo = await VkApiService.getGroupsInfo(
         adminedGroups.map(g => g.group_id).join(','), userToken
       );

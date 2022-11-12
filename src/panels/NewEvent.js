@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-import { Panel, PanelHeader, Input, FormItem, Textarea, Div, Button, CustomSelectOption, File, HorizontalCell, HorizontalScroll, Avatar, Calendar, Group, Header, Checkbox, FormLayoutGroup, Select, Spacing } from '@vkontakte/vkui';
-import { Icon24Camera } from '@vkontakte/icons';
+import { Panel, PanelHeader, Input, FormItem, Textarea, Div, Button, CustomSelectOption, File, HorizontalCell, HorizontalScroll, Avatar, Calendar, Group, Header, Checkbox, FormLayoutGroup, Select, CardScroll, Card, IconButton, Spacing } from '@vkontakte/vkui';
+import { Icon20Cancel, Icon28AddSquareOutline, Icon24Camera } from '@vkontakte/icons';
 
 import ApiSevice from '../modules/ApiSevice';
 
@@ -11,6 +11,7 @@ import { remove, set } from '../store/categories/categoriesSlice.js';
 
 import Map from '../components/Map/Map.js';
 import VkApiService from '../modules/VkApiService';
+import '../assets/styles/NewEvent.scss';
 
 const NewEvent = props => {
   const dispatch = useDispatch();
@@ -64,11 +65,9 @@ const NewEvent = props => {
   }, []);
 
   useEffect(async () => {
-    if (!categories.length) {
-      const categories = await ApiSevice.getAll('categories');
-      if (!categories) return;
-      dispatch(set(categories));
-    }
+    if (!user.id || categories.length) return;
+    const cat = await ApiSevice.getAll('categories');
+    dispatch(set(cat));
     setCategory(categories[0]);
   }, [user]);
 
@@ -168,10 +167,19 @@ const NewEvent = props => {
 
   const changeImage = (e) => {
     const files = Array.from(e.target.files);
-    setEventImages(files);
+    setEventImages([...eventImages, ...files]);
     const src = files.map(f => URL.createObjectURL(f));
-    setImagesSrc(src);
+    setImagesSrc([...imagesSrc, ...src]);
   };
+
+  const removePhoto = (idx) => {
+    const newImages = eventImages;
+    newImages.splice(idx, 1);
+    const newSrcs = imagesSrc;
+    newSrcs.splice(idx, 1);
+    setEventImages([...newImages]);
+    setImagesSrc([...newSrcs]);
+  }
 
   return (
     <Panel id={props.id}>
@@ -181,37 +189,40 @@ const NewEvent = props => {
       >
         Новое событие
       </PanelHeader>
-      <FormItem top='Загрузите фото'>
-        <File before={<Icon24Camera role='presentation' />} size='m' accept='image/png, image/gif, image/jpeg' multiple onInput={changeImage}>
-          Открыть галерею
-        </File>
-      </FormItem>
-      {imagesSrc.length > 0 &&
-        <Group header={
-          <Header>
-            Изображения
-          </Header>
-        }
-        >
-          <HorizontalScroll
-            top='Изображения'
-            showArrows
-            getScrollToLeft={(i) => i - 120}
-            getScrollToRight={(i) => i + 120}
+
+      {
+        imagesSrc.length ?
+          <CardScroll
+            size={user.platform === 'web' ? 'm' : 'l'}
+            style={{paddingTop: '20px'}}
+
           >
-            <div style={{ display: 'flex', userSelect: 'none' }}>
-              {imagesSrc.map((url, idx) =>
-                <HorizontalCell size='m' key={idx}>
-                  <Avatar
-                    size={88}
-                    mode='app'
-                    src={url}
-                  />
-                </HorizontalCell>
-              )}
+            {imagesSrc.map((i, idx) =>
+              <Card key={i}>
+                <div>
+                  <Icon20Cancel style={{position: 'absolute', right: '0px', cursor: 'pointer'}} onClick={() => removePhoto(idx)}/>
+                  <img style={{ maxHeight: user.platform === 'web' ? '300px' : '500px' }} src={i} className='event__avatar' />
+                </div>
+              </Card>)
+            }
+          </CardScroll> :
+          <Div>
+            <div style={{ maxHeight: user.platform === 'web' ? '300px' : '500px', background: 'grey', textAlign: 'center' }} className='event__file-background' >
+              <File before={<Icon28AddSquareOutline />} size='m' accept='image/png, image/gif, image/jpeg' className='event__file-input' multiple onInput={changeImage}>
+                Добавить фото
+              </File>
             </div>
-          </HorizontalScroll>
-        </Group>}
+          </Div>
+      }
+
+      {
+        Boolean(imagesSrc.length) &&
+        <FormItem top='Добавить фото'>
+          <File before={<Icon24Camera role='presentation' />} size='m' accept='image/png, image/gif, image/jpeg' multiple onInput={changeImage}>
+            Открыть галерею
+          </File>
+        </FormItem>
+      }
 
       <FormItem top='Название события' status={formTitleItemStatus} bottom={formTitleItemStatus === 'error' && 'Форма содержит недопустимые слова'}>
         <Input type='text' title='Название События' label='Название события' value={eventTitle} onChange={(e) => onChangeInput(e.target.value, 'title')} />
@@ -243,7 +254,7 @@ const NewEvent = props => {
       </FormItem>
 
 
-      <Checkbox value={isPrivate} onChange={((e) => setIsPrivate(!isPrivate))}>Приватное событие</Checkbox>
+      {/* <Checkbox value={isPrivate} onChange={((e) => setIsPrivate(!isPrivate))}>Приватное событие</Checkbox> */}
       <Checkbox value={hasPrice} onChange={((e) => setHasPrice(!hasPrice))}>Добавить ссылку на билеты</Checkbox>
       {hasPrice &&
         <FormLayoutGroup mode='horizontal' style={{ alignItems: 'center' }}>
@@ -273,7 +284,7 @@ const NewEvent = props => {
 
       <Map isClickable={true} setCoords={setCoords} latitude={latitude} longitude={longitude} address={address} setAddress={setAddress} />
 
-      {groups && groups.length &&
+      {Boolean(groups?.length) &&
         <FormItem top='Администратор события'>
           <Select
             options={
@@ -290,16 +301,17 @@ const NewEvent = props => {
             onChange={(e) => setGroupId(e.target.value)}
             value={groupId}
             renderOption={({ option, ...restProps }) => (
-            <CustomSelectOption
-              {...restProps}
-              before={<Avatar size={24} src={option.avatar} />}
-            />
-          )}
+              <CustomSelectOption
+                {...restProps}
+                before={<Avatar size={24} src={option.avatar} />}
+              />
+            )}
           />
         </FormItem>
       }
       <Div>
         <Button stretched sizeY='regular' onClick={sendEvent}> {props.isEditing ? 'Редактировать' : 'Опубликовать'} </Button>
+        <Spacing size={16} />
       </Div>
     </Panel>
   );

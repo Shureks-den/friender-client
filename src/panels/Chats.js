@@ -57,7 +57,7 @@ const Chats = (props) => {
   const openChat = async (id, userId) => {
     await getHistory(id);
     setIsChatsListOpen(false);
-    const s = new WebSocket(`wss://vk-events.ru/ws/messenger/${id}?user_id=${userId}`);
+    const s = new WebSocket(`wss://vk-events.ru/wsws/messenger/${id}?user_id=${userId}`);
     s.onopen = () => {
       setSocket(s);
     };
