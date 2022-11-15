@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 
+import { NotFoundContent } from '../components/NotFoundContent/NotFoundContent';
 import { Panel, PanelHeader, Group, Tabs, TabsItem, HorizontalScroll, Badge, Spinner, Cell, Avatar, Search, Div } from '@vkontakte/vkui';
 import ApiSevice from '../modules/ApiSevice';
 
@@ -100,7 +101,8 @@ const Subscriptions = ({ id, goToProfile, goToGroup }) => {
           <Spinner size="large" style={{ margin: "20px 0" }} /> :
           data && data.length ?
             data :
-            <Div>{'Нет подписок'}</Div>}
+            <NotFoundContent text={`Нет подписок на ${selected === 'users' ? 'пользователей' : 'группы'}`} iconType='subscriptions' />
+        }
       </Group>
     </Panel>
   );

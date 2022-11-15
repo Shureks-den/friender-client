@@ -3,8 +3,7 @@ import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Panel, PanelHeader, Group, CardGrid, ContentCard, Tabs, TabsItem, HorizontalScroll, Badge, Button, ButtonGroup, Spinner, IconButton, SimpleCell, Search, FormItem, Select, FormLayoutGroup, Div, Avatar } from '@vkontakte/vkui';
-import { Icon24NewsfeedOutline, Icon24LogoVk, Icon24Users, Icon24ShareOutline, Icon24LikeOutline, Icon24Like, Icon24Share } from '@vkontakte/icons';
-import { Icon24ArrowDownOutline, Icon24ArrowUpOutline, Icon24SortOutline } from '@vkontakte/icons';
+import { Icon24ArrowDownOutline, Icon24ArrowUpOutline, Icon24Share } from '@vkontakte/icons';
 import ApiSevice from '../modules/ApiSevice';
 
 import '../assets/styles/Feed.scss';
@@ -22,6 +21,8 @@ import {
 } from 'react-async-hook';
 import useConstant from 'use-constant';
 
+import sadPersik from '../img/sad-persik.png';
+import {NotFoundContent} from '../components/NotFoundContent/NotFoundContent';
 import { ShareModal } from '../components/ShareModal/ShareModal';
 import VkApiService from '../modules/VkApiService';
 
@@ -35,6 +36,8 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
 
   const [eventsData, setEventsData] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
+
+  const [isLoading, setIsLoading] = useState(true);
 
   let debounce = false;
   let i = 0;
@@ -237,6 +240,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
     } else {
       setEventsData(listItems);
     }
+    setIsLoading(false);
   }
 
   const getTypedEvents = async (type, pagination) => {
@@ -270,6 +274,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
   }
 
   const getEvents = async () => {
+    setIsLoading(true);
     setPage(0);
     setEventsData([]);
     await getTypedEvents(selected);
@@ -370,7 +375,10 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
 
       <Group>
         <CardGrid size='l'>
-          {eventsData.length ? eventsData : selected !== 'subscriptions' ? <Spinner size="large" style={{ margin: "20px 0" }} /> : <Div>Нет событий :(</Div>}
+            {
+              isLoading ? <Spinner size="large" style={{ margin: "20px 0" }} /> :
+              eventsData.length ? eventsData : <NotFoundContent text='Ничего не найдено' />
+            }
         </CardGrid>
       </Group>
     </Panel>
@@ -394,7 +402,7 @@ const Scrollable = (props) => {
             selected={props.selected === "vkEvents"}
             onClick={() => props.setSelected("vkEvents")}
           >
-            События Вконтакте
+            События ВКонтакте
           </TabsItem>
           <TabsItem
             status={<Badge mode="prominent" />}

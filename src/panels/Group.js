@@ -11,11 +11,12 @@ const GroupView = props => {
   const dispatch = useDispatch();
 
   const [pageGroup, setPageGroup] = useState({});
-  const [allowUserEvents, setAllowUserEvents] = useState(true);
+  const [allowUserEvents, setAllowUserEvents] = useState(false);
   const [isAdmin, setIsAdminOnPage] = useState(false);
 
   const [adminEvents, setAdminEvents] = useState([]);
   const [usersEvents, setUsersEvents] = useState([]);
+  const [companyEvents, setCompanyEvents] = useState([]);
   const [finishedEvents, setFinishedEvents] = useState([]);
 
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -110,6 +111,26 @@ const GroupView = props => {
         setUsersEvents(domUserEvents);
       }
 
+      const findCompanyEvents = await ApiSevice.post('events', {
+        group_id: Number(groupId),
+        source: 'fork_group',
+        is_active: {
+          defined: true,
+          value: true
+        },
+      });
+      const findCompanyDomEvents = findCompanyEvents?.response.map((e, idx) =>
+        <HorizontalCell key={idx} header={e.title} size="l" subtitle={new Date(e.time_start * 1000).toLocaleString()} onClick={() => props.goTo(e.id)}>
+          <img
+            className={'profile-active-card__avatar'}
+            src={e.avatar.avatar_url}
+          />
+        </HorizontalCell>
+      );
+      setCompanyEvents(findCompanyDomEvents);
+
+      setCompanyEvents
+
       const historyEvents = await ApiSevice.post('events', {
         group_id: Number(groupId),
         is_active: {
@@ -176,7 +197,8 @@ const GroupView = props => {
           <Checkbox defaultChecked={allowUserEvents} onChange={handleChangeAllowUserEvents} style={{ marginBottom: '10px' }}>
             Пользователи могут предлагать свои события
           </Checkbox> :
-          <Div style={{textAlign: 'center'}}>
+          allowUserEvents &&
+          <Div style={{ textAlign: 'center' }}>
             <Button onClick={() => handleAddEvent(false)}>
               Предложить событие
             </Button>
@@ -211,6 +233,19 @@ const GroupView = props => {
           </HorizontalScroll>
         </Group>
       }
+
+
+      <Group>
+        <Header>Поиск компании</Header>
+        <HorizontalScroll
+          showArrows
+          getScrollToLeft={(i) => i - 120}
+          getScrollToRight={(i) => i + 120}
+        >
+          <div style={{ display: "flex" }}>{companyEvents}</div>
+        </HorizontalScroll>
+      </Group>
+
 
 
 

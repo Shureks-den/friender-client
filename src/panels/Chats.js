@@ -2,7 +2,7 @@ import React, { useState, useEffect, Fragment, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Panel, PanelHeader, Header, Group, Cell, SimpleCell, Avatar, Div, IconButton, WriteBar, WriteBarIcon, FixedLayout, PanelHeaderBack, Search } from '@vkontakte/vkui';
+import { Panel, PanelHeader, Header, Group, Cell, SimpleCell, Avatar, Div, IconButton, WriteBar, WriteBarIcon, FixedLayout, Counter, PanelHeaderBack, Search } from '@vkontakte/vkui';
 import { Icon28MessageOutline } from '@vkontakte/icons';
 import ApiSevice from '../modules/ApiSevice';
 
@@ -138,7 +138,7 @@ const Chats = (props) => {
         !isChatsListOpen &&
         <FixedLayout vertical='top' className='chat__info'>
           <Cell
-            before={chatInfo.avatar ? <Avatar src={chatInfo.avatar} size={25}/> : null}
+            before={chatInfo.avatar ? <Avatar src={chatInfo.avatar} size={25} /> : null}
             onClick={() => props.goToEvent(chatInfo.id)}
             className='chat__info-cell'
           >
@@ -173,6 +173,12 @@ const ChatsLists = (props) => {
         onClick={() => props.openChat(c.event_uid, props.userId, props.socket)}
         after={
           <IconButton>
+            {
+              Boolean(c.unread_messages_number ?? 0) &&
+              <Counter size="s" mode="prominent" style={{ position: 'absolute', right: '-0.175rem', top: '0.175rem' }}>
+                {c.unread_messages_number}
+              </Counter>
+            }
             <Icon28MessageOutline />
           </IconButton>
         }
@@ -225,7 +231,7 @@ const Messages = ({ messages, users, user, goToProfile, closeChat }) => {
           </Div>);
       } else {
         return (
-          <Div key={idx} className={(m.user_id === user.id ? 'message-author' : 'message-user') + ' message'} style={{paddingBottom: '6px', paddingTop: '6px'}}>
+          <Div key={idx} className={(m.user_id === user.id ? 'message-author' : 'message-user') + ' message'} style={{ paddingBottom: '6px', paddingTop: '6px' }}>
             {!isUser &&
               <Cell
                 before={profile.photo_200 ? <Avatar src={profile.photo_200} /> : null}
@@ -252,7 +258,7 @@ const Messages = ({ messages, users, user, goToProfile, closeChat }) => {
   }, [messages]);
 
   return (
-    <Group className={'chat__messages'} style={{paddingTop: '45px'}}>
+    <Group className={'chat__messages'} style={{ paddingTop: '45px' }}>
       {domMessages}
     </Group>
   )

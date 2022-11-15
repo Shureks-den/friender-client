@@ -69,15 +69,48 @@ const Event = props => {
 
   const subscribe = async (id) => {
     const response = await ApiSevice.put('event', id, 'subscribe');
+    setMembers([...members, <HorizontalCell size="s" header={user.first_name} onClick={() => props.goToProfile(user.id)} key={user.id}>
+      <Avatar size={64} src={user.photo_100} />
+    </HorizontalCell>]);
     setIsMember(true);
     setActiveModal('JOIN-MODAL');
   }
 
   const unsubscribe = async (id) => {
     const response = await ApiSevice.put('event', id, 'unsubscribe');
+    setActiveModal(null);
+    const userIdx = members.findIndex(m => m.id === user.id);
+    members.splice(userIdx, 1);
     setIsMember(false);
     if (!eventData.is_active) {
       props.go();
+    }
+  }
+
+  const forkEvent = async (event) => {
+    const body = {
+      title: event.title,
+      description: event.description,
+      author: user.id,
+      category: event.category,
+      source: 'fork_group',
+      avatar: event.avatar,
+
+      geo: event.geo,
+      group_info: {
+        group_id: event.group_info.group_id,
+        is_admin: false,
+      },
+      time_start: event.time_start,
+      members_limit: event.members_limit,
+      ticket: event.ticket,
+      images: event.images,
+      parent: event.id
+    };
+
+    const { code, response } = await ApiSevice.post('event/create', body);
+    if (response.id) {
+      props.goToGroup(eventGroup.id);
     }
   }
 
@@ -173,6 +206,7 @@ const Event = props => {
         setActiveModal={setActiveModal}
         share={share}
         goToChat={() => props.goToChat(eventData.id)}
+        unsubscribe={() => unsubscribe(eventData.id)}
       />
 
       <Group>
@@ -273,7 +307,12 @@ const Event = props => {
 
               {
                 (isMember && user?.id !== eventData.author && eventData.is_active) &&
-                <Button size="m" onClick={() => unsubscribe(eventId)}> Отказаться от участия </Button>
+                <Button size="m" onClick={() => setActiveModal('LEAVE-MODAL')}> Отказаться от участия </Button>
+              }
+
+              {
+                Boolean(!isMember && user?.id !== eventData.author && !adminedGroups.find(g => g.id === eventData?.groupInfo?.group_id) && eventData.is_active && eventData?.group_info?.group_id) &&
+                <Button size="m" onClick={() => forkEvent(eventData)}> Собрать компанию </Button>
               }
 
               {
@@ -321,7 +360,7 @@ const Event = props => {
 
       {
         !isNeedApprove &&
-        <Group header={<Header>Участники {members.length}</Header>} style={{ minHeight: '60px' }}>
+        <Group header={<Header>Участники - {members.length} свободных мест - {eventData.members_limit - members.length}</Header>} style={{ minHeight: '60px' }}>
           {members.length ?
             <HorizontalScroll showArrows
               getScrollToLeft={(i) => i - 120}

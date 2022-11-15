@@ -182,7 +182,7 @@ const Profile = props => {
         </HorizontalScroll>
       </Group>
 
-      <Group header={<Header>Компании {activeEvents.length}</Header>}>
+      <Group header={<Header>Собирается посетить {activeEvents.length}</Header>}>
         <HorizontalScroll
           showArrows
           getScrollToLeft={(i) => i - 120}

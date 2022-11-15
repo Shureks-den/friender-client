@@ -50,6 +50,8 @@ const NewEvent = props => {
   const [formTextAreaItemStatus, setFormAreaItemStatus] = useState('default');
 
   const suggestGroupId = useSelector(state => state.groupInfo.groupId);
+  const adminFromGroup = useSelector(state => state.groupInfo.isAdmin);
+  const adminedGroups = useSelector(state => state.groupInfo.adminedGroups);
 
   const onChangeInput = (value, where) => {
     if (where === 'title') {
@@ -113,6 +115,7 @@ const NewEvent = props => {
   }, [props.isEditing]);
 
   const sendEvent = async () => {
+    const isAdmin = (groupId && adminFromGroup) || adminedGroups.find(g => g.id === groupId);
 
     const body = {
       title: eventTitle,
@@ -127,7 +130,7 @@ const NewEvent = props => {
       },
       group_info: groupId ? {
         group_id: Number(groupId),
-        is_admin: Boolean(suggestGroupId) ? false : true,
+        is_admin: isAdmin ? true : false,
       } : null,
       time_start: Math.round(eventDate.getTime() / 1000),
       members_limit: Number(members),
@@ -174,6 +177,7 @@ const NewEvent = props => {
     if (response.id) {
       if (groupId) {
         dispatch(setGroupId({ groupId: null }));
+        dispatch(setIsAdmin({ isAdmin: false }));
         props.onSuccessGroup(groupId);
       } else {
         props.onSuccess(response.id);
