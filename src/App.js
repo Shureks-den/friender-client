@@ -39,7 +39,8 @@ const App = ({ router }) => {
     VkApiService.updateConfigWatcher(setScheme);
     async function fetchData() {
       const user = await VkApiService.fetchUserData();
-      await VkApiService.getSessionInfo();
+      const { vk_access_token_settings } = await VkApiService.getSessionInfo();
+      user.permissions = vk_access_token_settings;
       const token = await VkApiService.getUserToken();
       dispatch(setToken(token));
       ApiSevice.setHeaderId(user.id);

@@ -115,7 +115,7 @@ const NewEvent = props => {
   }, [props.isEditing]);
 
   const sendEvent = async () => {
-    const isAdmin = (groupId && adminFromGroup) || adminedGroups.find(g => g.id === groupId);
+    const isAdmin = (groupId && adminFromGroup) || Boolean(adminedGroups.find(g => g.id === Number(groupId)));
 
     const body = {
       title: eventTitle,
@@ -130,7 +130,7 @@ const NewEvent = props => {
       },
       group_info: groupId ? {
         group_id: Number(groupId),
-        is_admin: isAdmin ? true : false,
+        is_admin: isAdmin,
       } : null,
       time_start: Math.round(eventDate.getTime() / 1000),
       members_limit: Number(members),

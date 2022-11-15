@@ -86,6 +86,15 @@ class ApiService {
     return await response.json();
   }
 
+  async postImageVK(url, formData) {
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData
+    });
+    console.log(response);
+    return await response.json();
+  }
+
   setHeaderId(id) {
     this.#userId = id;
   }

@@ -17,6 +17,16 @@
     width: 100%;
   }
 
+  &__members {
+    &-header {
+      display: flex;
+      align-items: center;
+      flex-direction: row;
+      align-content: space-between;
+      justify-content: space-between
+    }
+  }
+
   &__info {
     &-title {
       display: inline-block;
@@ -34,5 +44,9 @@
       letter-spacing: 0.06px;
     }
   }
+}
+
+.vkuiModalPage__in-wrap {
+  width: auto;
 }
 

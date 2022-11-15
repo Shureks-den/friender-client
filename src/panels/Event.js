@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 
-import { Panel, PanelHeader, PanelHeaderBack, Input, FormItem, Button, Card, Group, Text, Header, Cell, Avatar, HorizontalScroll, HorizontalCell, ButtonGroup, IconButton, Link, InfoRow, Spacing, Separator, CardScroll, Div } from '@vkontakte/vkui';
+import { Panel, PanelHeader, PanelHeaderBack, Input, FormItem, Button, Card, Group, Text, Header, Cell, Avatar, HorizontalScroll, HorizontalCell, ButtonGroup, IconButton, Link, File, Spacing, Separator, CardScroll, Div } from '@vkontakte/vkui';
 import { Icon24Share, Icon24Camera, Icon24Message, Icon24CalendarOutline } from '@vkontakte/icons';
 
 import { monthNames } from '../variables/constants';
@@ -11,13 +11,14 @@ import '../assets/styles/Event.scss';
 
 import ApiSevice from '../modules/ApiSevice';
 
-import { setActiveEvents } from '../store/user/userSlice';
+import { set, setActiveEvents, setToken } from '../store/user/userSlice';
 
 import Map from '../components/Map/Map.js';
 
 import ics from '../modules/ics.js';
 
 import { ShareModal } from '../components/ShareModal/ShareModal';
+import VkApiService from '../modules/VkApiService';
 
 const Event = props => {
   const dispatch = useDispatch();
@@ -25,6 +26,7 @@ const Event = props => {
 
   const [sliderData, setSliderData] = useState([]);
   const [eventData, setEventData] = useState({});
+  const [membersData, setMembersData] = useState([]);
   const [members, setMembers] = useState([]);
   const [eventAuthor, setEventAuthor] = useState(null);
   const [eventGroup, setEventGroup] = useState(null);
@@ -43,6 +45,13 @@ const Event = props => {
   const [activeModal, setActiveModal] = useState(null);
   const [share, setShare] = useState(null);
   const [isNeedApprove, setIsNeedApprove] = useState(false);
+
+  const [usersImages, setUsersImages] = useState([]);
+
+  const changeImage = (e) => {
+    const files = Array.from(e.target.files);
+    setUsersImages(files);
+  }
 
   const openShareModal = (eventId, title, eventImageId, avatarUrl) => {
     const repost = () => props.makeRepost(eventId, title, eventImageId);
@@ -124,6 +133,30 @@ const Event = props => {
     props.goToGroup(eventGroup.id)
   }
 
+  const addPhotos = async () => {
+    const { permissions } = user;
+    if (!permissions.includes('photos')) {
+      const token = await VkApiService.getUserToken('photos');
+      console.log(token);
+      dispatch(setToken(token));
+      const newUser = structuredClone(user);
+      newUser.permissions = 'photos';
+      dispatch(set(newUser));
+    }
+    setActiveModal('PHOTO-MODAL');
+  }
+
+  const removeMember = async (userId) => {
+    const response = await ApiSevice.put('event', event.id, 'unsubscribe', {
+      user: userId
+    });
+    const idx = membersData.findIndex(u => u.id === userId);
+    const mem = members;
+    mem.splice(idx, 1);
+    setMembers([...mem]);
+    console.log(response);
+  }
+
   const deleteEvent = async (id) => {
     const response = await ApiSevice.put('event', id, 'delete', {
       group_id: eventData.group_info.group_id,
@@ -183,6 +216,7 @@ const Event = props => {
 
       setIsMember(Boolean(res.members?.find(m => m === user?.id)));
       const transformedMembers = await props.getUsersInfo(res.members.join(','), userToken);
+      setMembersData(transformedMembers);
       setMembers(transformedMembers.filter(m => m.id !== res.author).map(m =>
         <HorizontalCell size="s" header={m.first_name} onClick={() => props.goToProfile(m.id)} key={m.id}>
           <Avatar size={64} src={m.photo_100} />
@@ -204,7 +238,10 @@ const Event = props => {
       <ShareModal
         activeModal={activeModal}
         setActiveModal={setActiveModal}
+        event={eventData}
         share={share}
+        members={membersData}
+        removeMember={removeMember}
         goToChat={() => props.goToChat(eventData.id)}
         unsubscribe={() => unsubscribe(eventData.id)}
       />
@@ -323,14 +360,17 @@ const Event = props => {
               }
 
               {
-                user.platform === 'web' &&
+                user.platform === 'web' && eventData.is_active &&
                 <IconButton onClick={downloadCalendar}> <Icon24CalendarOutline /> </IconButton>
+              }
+
+              {
+                (!eventData.is_active && isMember) &&
+                <Button size="m" onClick={() => addPhotos()}> Добавить фотографии с мероприятия </Button>
               }
             </ButtonGroup>
           </ButtonGroup>
       }
-
-
 
       <Spacing />
       <Separator />
@@ -360,7 +400,20 @@ const Event = props => {
 
       {
         !isNeedApprove &&
-        <Group header={<Header>Участники - {members.length} свободных мест - {eventData.members_limit - members.length}</Header>} style={{ minHeight: '60px' }}>
+        <Group header={
+          <div className='event__members-header'>
+            <Header>
+              Участники - {members.length} {eventData.is_active && `свободных мест - ${eventData.members_limit - members.length}`}
+            </Header>
+            {
+              user?.id === eventData.author && eventData.is_active &&
+              <Div>
+                <Button onClick={() => setActiveModal('AUTHOR-MODAL')}>Управление</Button>
+              </Div>
+            }
+          </div>
+        } style={{ minHeight: '60px' }}
+        >
           {members.length ?
             <HorizontalScroll showArrows
               getScrollToLeft={(i) => i - 120}
@@ -371,8 +424,6 @@ const Event = props => {
           }
         </Group>
       }
-
-
     </Panel>
   );
 };
