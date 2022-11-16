@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 
-import { Panel, PanelHeader, PanelHeaderBack, Input, FormItem, Button, Card, Group, Text, Header, Cell, Avatar, HorizontalScroll, HorizontalCell, ButtonGroup, IconButton, Link, File, Spacing, Separator, CardScroll, Div } from '@vkontakte/vkui';
+import { Panel, PanelHeader, PanelHeaderBack, Input, FormItem, Button, Card, Group, Text, Header, Cell, Avatar, HorizontalScroll, HorizontalCell, ButtonGroup, IconButton, Link, File, Spacing, Separator, CardScroll, Div, platform } from '@vkontakte/vkui';
 import { Icon24Share, Icon24Camera, Icon24Message, Icon24CalendarOutline } from '@vkontakte/icons';
 
 import { monthNames } from '../variables/constants';
@@ -147,13 +147,12 @@ const Event = props => {
   }
 
   const removeMember = async (userId) => {
-    const response = await ApiSevice.put('event', event.id, 'unsubscribe', {
+    const response = await ApiSevice.put('event', eventData.id, 'unsubscribe', {
       user: userId
     });
     const idx = membersData.findIndex(u => u.id === userId);
-    const mem = members;
-    mem.splice(idx, 1);
-    setMembers([...mem]);
+    membersData.splice(idx, 1);
+    setMembersData([...membersData]);
     console.log(response);
   }
 
@@ -178,6 +177,14 @@ const Event = props => {
   useEffect(() => {
     startPage.current?.scrollIntoView();
   }, []);
+
+  useEffect(() => {
+    setMembers(membersData.filter(m => m.id !== eventData.author).map(m =>
+      <HorizontalCell size="s" header={m.first_name} onClick={() => props.goToProfile(m.id)} key={m.id}>
+        <Avatar size={64} src={m.photo_100} />
+      </HorizontalCell>
+    ));
+  }, [membersData])
 
   useEffect(async () => {
     if (!user.id) return;
@@ -217,11 +224,6 @@ const Event = props => {
       setIsMember(Boolean(res.members?.find(m => m === user?.id)));
       const transformedMembers = await props.getUsersInfo(res.members.join(','), userToken);
       setMembersData(transformedMembers);
-      setMembers(transformedMembers.filter(m => m.id !== res.author).map(m =>
-        <HorizontalCell size="s" header={m.first_name} onClick={() => props.goToProfile(m.id)} key={m.id}>
-          <Avatar size={64} src={m.photo_100} />
-        </HorizontalCell>
-      ));
     } catch (err) {
       console.log(err);
     }
@@ -398,10 +400,11 @@ const Event = props => {
           : <Text> Публичное событие </Text>
       }
 
+
       {
         !isNeedApprove &&
         <Group header={
-          <div className='event__members-header'>
+          <div className='event__members-header' style={{ flexDirection: user.platform !== 'web' ? 'column' : '' }}>
             <Header>
               Участники - {members.length} {eventData.is_active && `свободных мест - ${eventData.members_limit - members.length}`}
             </Header>

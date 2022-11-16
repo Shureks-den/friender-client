@@ -4,10 +4,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Icon56ShareOutline, Icon56MessagesOutline, Icon24Dismiss, Icon24Cancel, Icon24Done } from '@vkontakte/icons';
 import { Icon56ArrowUturnLeftOutline, Icon24PhotosStackOutline, Icon24Camera, Icon28RemoveCircleOutline, Icon28UserStarBadgeOutline } from '@vkontakte/icons';
 
-import { ModalCard, Button, ModalRoot, SplitLayout, ButtonGroup, Input, FormItem, File, Div, Text, ModalPage, SimpleCell, Avatar, Group, Header, IconButton, ModalPageHeader, PanelHeaderButton, PanelHeaderClose, ANDROID, IOS, usePlatform } from '@vkontakte/vkui';
+import { ModalCard, Button, ModalRoot, SplitLayout, ButtonGroup, Input, FormItem, File, Div, Text, ModalPage, SimpleCell, Avatar, Group, Header, IconButton, ModalPageHeader, PanelHeaderButton, PanelHeaderClose, ANDROID, IOS, VKCOM, usePlatform } from '@vkontakte/vkui';
 import ApiSevice from '../../modules/ApiSevice';
 
-export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsubscribe, event, members, removeMember}) => {
+export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsubscribe, event = {}, members = [], removeMember = () => ({}) }) => {
   const platform = usePlatform();
   const user = useSelector(state => state.user.value);
 
@@ -182,7 +182,7 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
 
       <ModalPage
         id='AUTHOR-MODAL'
-        style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
         onClose={() => setActiveModal(null)}
         settlingHeight={100}
         header={
@@ -198,13 +198,8 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
             }
             after={
               <Fragment>
-                {(platform === ANDROID || platform === VKCOM) && (
-                  <PanelHeaderButton onClick={() => setActiveModal(null)}>
-                    <Icon24Done />
-                  </PanelHeaderButton>
-                )}
                 {platform === IOS && (
-                  <PanelHeaderButton onClick={() => setActiveModal(null)}>Готово</PanelHeaderButton>
+                  <PanelHeaderButton onClick={() => setActiveModal(null)}><Icon24Cancel /></PanelHeaderButton>
                 )}
               </Fragment>
             }
@@ -214,20 +209,16 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
         }
       >
         <Group>
-          {members?.map((u) => {
+          {members.sort(m => m.id === user.id ? -1 : 0)?.map((u) => {
             return (
               <SimpleCell
                 before={<Avatar src={u.photo_100} />}
                 key={u.id}
                 after={
-                  u.id === user.id ?
-                    <IconButton>
-                      <Icon28UserStarBadgeOutline />
-                    </IconButton>
-                    :
-                    <IconButton onClick={() => removeMember(u.id)}>
-                      <Icon28RemoveCircleOutline />
-                    </IconButton>
+                  u.id !== user.id &&
+                  <IconButton onClick={() => removeMember(u.id)}>
+                    <Icon28RemoveCircleOutline />
+                  </IconButton>
                 }
               >
                 {`${u.first_name} ${u.last_name}`}
