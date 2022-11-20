@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-import { Panel, PanelHeader, Input, FormItem, Textarea, Div, Button, CustomSelectOption, File, Spinner, HorizontalScroll, Avatar, Calendar, Group, Header, Checkbox, FormLayoutGroup, Select, CardScroll, Card, IconButton, Spacing } from '@vkontakte/vkui';
+import { Panel, PanelHeader, Input, FormItem, Textarea, Div, Button, CustomSelectOption, File, Spinner, Avatar, Calendar, Group, Header, Checkbox, FormLayoutGroup, Select, CardScroll, Card, Text, Spacing } from '@vkontakte/vkui';
 import { Icon20Cancel, Icon28AddSquareOutline, Icon24Camera } from '@vkontakte/icons';
 
 import ApiSevice from '../modules/ApiSevice';
@@ -51,21 +51,58 @@ const NewEvent = props => {
   const [imagesSrc, setImagesSrc] = useState([]);
   const [eventImages, setEventImages] = useState([]);
 
+  // Валидация
+  const titleRef = useRef(null);
   const [formTitleItemStatus, setFormTitleItemStatus] = useState('default');
+  const [titleErrorText, setTitleTextError] = useState('');
+  const descRef = useRef(null);
   const [formTextAreaItemStatus, setFormAreaItemStatus] = useState('default');
+  const [formTextError, setFormTextError] = useState('');
+  const [priceStatus, setPriceStatus] = useState('default');
+  const [priceError, setPriceError] = useState('');
+  const [membersLimitStatus, setMembersLimitStatus] = useState('default');
+  const [membersLimitError, setMembersLimitError] = useState('');
+  const [timeError, setTimeError] = useState('');
 
+  // логика для групп, предложка, пост оттуда
   const suggestGroupId = useSelector(state => state.groupInfo.groupId);
   const adminFromGroup = useSelector(state => state.groupInfo.isAdmin);
   const adminedGroups = useSelector(state => state.groupInfo.adminedGroups);
 
-  const onChangeInput = (value, where) => {
-    if (where === 'title') {
-      setEventTitle(value);
-      setFormTitleItemStatus('default');
+  const scrollTo = (item) => {
+    item.current?.scrollIntoView({behavior: 'smooth'});
+  }
+
+  const setDate = (value) => {
+    if (eventDate.getDate() !== value.getDate()) {
+      value.setHours(12);
+      value.setMinutes(0);
     }
-    if (where === 'description') {
-      setEventDescription(value);
-      setFormAreaItemStatus('default');
+    setTimeError('');
+    setEventDate(value);
+  }
+
+  const onChangeInput = (value, where) => {
+    switch (where) {
+      case 'title':
+        setEventTitle(value);
+        setFormTitleItemStatus('default');
+        break;
+      case 'description':
+        setEventDescription(value);
+        setFormAreaItemStatus('default');
+        break;
+      case 'members':
+        setMembers(value);
+        setMembersLimitStatus('default');
+        break;
+      case 'price':
+        setTicketPrice(value);
+        setPriceStatus('default');
+        break;
+    
+      default:
+        break;
     }
   };
 
@@ -126,6 +163,42 @@ const NewEvent = props => {
   }
 
   const sendEvent = async () => {
+    let hasError = false;
+    if (!eventTitle.length) {
+      setTitleTextError('Название не должно быть пустым');
+      setFormTitleItemStatus('error');
+      hasError = true;
+    }
+
+    if (!eventDescription.length) {
+      setFormTextError('Описание не должно быть пустым');
+      setFormAreaItemStatus('error');
+      hasError = true;
+    }
+
+    if (ticketPrice < 0 || ticketPrice > 10000000 || !Number.isFinite(Number(ticketPrice))) {
+      setPriceStatus('error');
+      setPriceError('Невалидное значение');
+      hasError = true;
+    }
+
+    if (members < 1 || members > 10000000 || !Number.isFinite(Number(members))) {
+      setMembersLimitStatus('error');
+      setMembersLimitError('Невалидное значение');
+      hasError = true;
+    }
+
+    const dateNow = new Date();
+    if (eventDate.getTime() - 1000 * 60 * 60 < dateNow.getTime()) {
+      setTimeError('Не валидное значение времени - событие не должно начинаться раньше чем за час');
+      hasError = true;
+    }
+
+    if (hasError) {
+      startPage.current?.scrollIntoView();
+      return;
+    }
+
     const isAdmin = (groupId && adminFromGroup) || Boolean(adminedGroups.find(g => g.id === Number(groupId)));
 
     const body = {
@@ -161,11 +234,14 @@ const NewEvent = props => {
 
     if (code === 400) {
       if (response.includes('title')) {
+        setTitleTextError('Название содержит недопустимые слова');
         setFormTitleItemStatus('error');
+        scrollTo(titleRef);
       } else {
+        setFormTextError('Описание содержит недопустимые слова');
         setFormAreaItemStatus('error');
+        scrollTo(descRef);
       }
-      VkApiService.scrollToTop();
       return;
     }
 
@@ -189,7 +265,6 @@ const NewEvent = props => {
     setIsLoading(false);
     if (response.id) {
       if (groupId) {
-        console.log(groupId, adminFromGroup)
         if (!adminFromGroup) {
           setActiveModal('SUGGEST-MODAL');
         } else {
@@ -266,11 +341,11 @@ const NewEvent = props => {
         </FormItem>
       }
 
-      <FormItem top='Название события' status={formTitleItemStatus} bottom={formTitleItemStatus === 'error' && 'Форма содержит недопустимые слова'}>
+      <FormItem top='Название события' status={formTitleItemStatus} bottom={formTitleItemStatus === 'error' && titleErrorText} getRootRef={titleRef}>
         <Input type='text' title='Название События' label='Название события' value={eventTitle} onChange={(e) => onChangeInput(e.target.value, 'title')} />
       </FormItem>
 
-      <FormItem top='Описание события' status={formTextAreaItemStatus} bottom={formTextAreaItemStatus === 'error' && 'Форма содержит недопустимые слова'}>
+      <FormItem top='Описание события' status={formTextAreaItemStatus} bottom={formTextAreaItemStatus === 'error' && formTextError} getRootRef={descRef}>
         <Textarea value={eventDescription} onChange={(e) => onChangeInput(e.target.value, 'description')} />
       </FormItem>
 
@@ -288,12 +363,12 @@ const NewEvent = props => {
         />
       </FormItem>
 
-      <FormItem top='Количество участников'>
-        <Input type='number' min={1} value={members} onChange={(e) => setMembers(e.target.value)} />
+      <FormItem top='Количество участников' status={membersLimitStatus} bottom={membersLimitStatus === 'error' && membersLimitError}>
+        <Input type='number' min={1} value={members} onChange={(e) => onChangeInput(e.target.value, 'members')} />
       </FormItem>
 
-      <FormItem top='Цена'>
-        <Input type='number' min={0} value={ticketPrice} onChange={(e) => setTicketPrice(e.target.value)} />
+      <FormItem top='Цена' status={priceStatus} bottom={priceStatus === 'error' && priceError}>
+        <Input type='number' min={0} value={ticketPrice} onChange={(e) => onChangeInput(e.target.value, 'price')} />
       </FormItem>
 
 
@@ -313,16 +388,17 @@ const NewEvent = props => {
         </Header>
       }
       >
-        <div style={{ display: 'flex', marginBottom: '30px', justifyContent: 'space-around' }}>
+        <Div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '30px', justifyContent: 'space-around' }}>
+        {Boolean(timeError.length) && <Text style={{color: 'var(--vkui--color_text_negative)', marginBottom: '10px'}}>{timeError}</Text>}
           <Calendar
             value={eventDate}
-            onChange={setEventDate}
+            onChange={setDate}
             enableTime
             disablePast
             disablePickers
             size='m'
           />
-        </div>
+        </Div>
       </Group>
 
       <Map isClickable={true} setCoords={setCoords} latitude={latitude} longitude={longitude} address={address} setAddress={setAddress} />

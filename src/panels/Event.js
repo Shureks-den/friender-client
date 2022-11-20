@@ -288,7 +288,7 @@ const Event = props => {
           }
           <Spacing size={2} />
           <Text weight='1' className='event__info-title'>Категория:</Text>
-          <Text weight='3' className='event__info-data'>{eventData.category}</Text>
+          <Text weight='3' className='event__info-data'>{eventData.category ?? 'Другое'}</Text>
         </Div>
       </Group>
 
