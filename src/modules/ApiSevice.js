@@ -2,7 +2,7 @@ class ApiService {
   constructor() { };
 
   #hostUrl = 'https://vk-events.ru'
-  
+
   #userId = '';
 
   async getAll(url, params) {
@@ -45,7 +45,7 @@ class ApiService {
       body: JSON.stringify(data)
     });
     const body = await response.json();
-    return {code: response.status, response: body};
+    return { code: response.status, response: body };
   }
 
   async delete(url, id) {
@@ -59,9 +59,13 @@ class ApiService {
     return await response.json();
   }
 
-  async put(url, id = '', postUrl, data) {
+  async put(url, id = '', postUrl = '', data) {
     if (!Boolean(this.#userId)) return;
-    const fetchurl = id === '' ? `${this.#hostUrl}/${url}/${postUrl}` : `${this.#hostUrl}/${url}/${id}/${postUrl}`;
+    const fetchurl = id !== '' ?
+      `${this.#hostUrl}/${url}/${id}/${postUrl}` :
+      postUrl !== '' ?
+        `${this.#hostUrl}/${url}/${postUrl}` :
+        `${this.#hostUrl}/${url}`;
     const response = await fetch(fetchurl, {
       method: 'PUT',
       headers: {
@@ -71,7 +75,7 @@ class ApiService {
       body: JSON.stringify(data),
     });
     const body = await response.json();
-    return {code: response.status, response: body};
+    return { code: response.status, response: body };
   }
 
   async postImage(url, id, formData) {

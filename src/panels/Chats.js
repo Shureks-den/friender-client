@@ -117,8 +117,9 @@ const Chats = (props) => {
 
   useEffect(() => {
     if (!user.id) return;
-    const chatId = props.chatId ? props.chatId : window.location.hash?.slice(1).split('=').slice(1, 2).join('');
-    if (chatId) {
+    const hash = window.location.hash;
+    const chatId = props.chatId ? props.chatId : hash?.slice(1).split('=').slice(1, 2).join('');
+    if (props.chatId || (chatId && hash?.slice(0).includes('chats'))) {
       openChat(chatId, user.id, socket);
     }
   }, [user]);

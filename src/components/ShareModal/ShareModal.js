@@ -1,14 +1,14 @@
 
 import React, { useEffect, useState, useRef, Fragment } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Icon56ShareOutline, Icon56MessagesOutline, Icon24Dismiss, Icon24Cancel, Icon24Done } from '@vkontakte/icons';
+import { Icon56ShareOutline, Icon56MessagesOutline, Icon24Dismiss, Icon24Cancel, Icon24Done, Icon24ReportOutline } from '@vkontakte/icons';
 import { Icon56ArrowUturnLeftOutline, Icon24PhotosStackOutline, Icon24Camera, Icon28RemoveCircleOutline, Icon28UserStarBadgeOutline } from '@vkontakte/icons';
 
-import { ModalCard, Button, ModalRoot, SplitLayout, ButtonGroup, Input, FormItem, File, Div, Text, ModalPage, SimpleCell, Avatar, Group, Header, IconButton, ModalPageHeader, PanelHeaderButton, PanelHeaderClose, ANDROID, IOS, VKCOM, usePlatform } from '@vkontakte/vkui';
+import { ModalCard, Button, ModalRoot, SplitLayout, ButtonGroup, Input, FormItem, File, Div, Text, ModalPage, SimpleCell, Avatar, Group, Header, IconButton, ModalPageHeader, PanelHeaderButton, PanelHeaderClose, ANDROID, IOS, VKCOM, usePlatform, Textarea } from '@vkontakte/vkui';
 import ApiSevice from '../../modules/ApiSevice';
 import VkApiService from '../../modules/VkApiService';
 
-export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsubscribe, event = {}, members = [], removeMember = () => ({}), groupSuggestAction = () => ({}) }) => {
+export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsubscribe, event = {}, members = [], removeMember = () => ({}), groupSuggestAction = () => ({}), reportUserId = null}) => {
   const platform = usePlatform();
   const user = useSelector(state => state.user.value);
   const userToken = useSelector(state => state.user.token);
@@ -17,6 +17,18 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
   const [albumState, setAlbumState] = useState('default');
 
   const [usersImages, setUsersImages] = useState([]);
+
+  const [reportReason, setReportReason] = useState([]);
+
+  const sendReport = async () => {
+    const response = await ApiSevice.put('complaint', '', '', {
+      reason: reportReason,
+      user: reportUserId,
+      event: event.id
+    })
+    console.log(response);
+    setActiveModal('REPORT-SUCCESS-MODAL');
+  }
 
   const changeImage = (e) => {
     const files = Array.from(e.target.files);
@@ -42,9 +54,9 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
     } else {
       const imagesData = await VkApiService.sendImages(event.title, userToken);
       const response = await ApiSevice.postImageToAlbum('event/album/upload', imagesData.uploadUrl, usersImages);
-       console.log(response, '\n');
+      console.log(response, '\n');
       const saveResponse = await VkApiService.saveImages(userToken, imagesData.albumId, response.server, response.photos_list, response.hash);
-     
+
     }
   }
 
@@ -249,6 +261,65 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
         style={{ alignItems: 'center' }}
         header="Событие предложено"
         subheader='Событие будет опубликовано после рассмотрения администратором'
+        actions={
+          <ButtonGroup mode='vertical' stretched={true}>
+            <Button
+              size="m"
+              mode="primary"
+              stretched={true}
+              onClick={() => groupSuggestAction()}
+            >
+              Закрыть
+            </Button>
+          </ButtonGroup>
+        }
+      >
+      </ModalCard>
+
+      <ModalPage
+        id='REPORT-MODAL'
+        settlingHeight={20}
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+        onClose={() => setActiveModal(null)}
+        header={
+          <ModalPageHeader
+            before={
+              <Fragment>
+                {(platform === ANDROID || platform === VKCOM) && (
+                  <PanelHeaderButton onClick={() => setActiveModal(null)}>
+                    <Icon24Cancel />
+                  </PanelHeaderButton>
+                )}
+              </Fragment>
+            }
+            after={
+              <Fragment>
+                {platform === IOS && (
+                  <PanelHeaderButton onClick={() => setActiveModal(null)}><Icon24Cancel /></PanelHeaderButton>
+                )}
+              </Fragment>
+            }
+          >
+            Жалоба на {reportUserId} {reportUserId ? 'пользователя' : 'событие'}
+          </ModalPageHeader>
+        }
+      >
+        <Group>
+          <FormItem top='Причина жалобы'>
+            <Textarea value={reportReason} onChange={(e) => setReportReason(e.target.value)} />
+          </FormItem>
+          <ButtonGroup mode='vertical' stretched={true} style={{ alignItems: 'center' }}>
+            <Button onClick={(e) => sendReport()}>Отправить жалобу</Button>
+          </ButtonGroup>
+        </Group>
+      </ModalPage>
+
+      <ModalCard
+        id='REPORT-SUCCESS-MODAL'
+        onClose={() => setActiveModal(null)}
+        icon={<Icon24ReportOutline width={56} height={56} />}
+        style={{ alignItems: 'center' }}
+        header="Ваша жалоба была отправлена"
         actions={
           <ButtonGroup mode='vertical' stretched={true}>
             <Button

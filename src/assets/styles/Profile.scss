@@ -14,15 +14,6 @@
     border: "1px solid var(--vkui--color_image_placeholder_alpha)";
     object-fit: "cover";
     aspect-ratio: 16/9;
-
-    &-author {
-      width: 220px;
-      height: 124px;
-      border-radius: 8px;
-      border: "1px solid var(--vkui--color_image_placeholder_alpha)";
-      object-fit: "cover";
-      outline: 1px ridge red;
-    }
   }
 
   &__title {

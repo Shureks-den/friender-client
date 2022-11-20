@@ -169,9 +169,19 @@ const NewEvent = props => {
       setFormTitleItemStatus('error');
       hasError = true;
     }
+    if (eventTitle.length > 256) {
+      setTitleTextError('Слишком длинное название');
+      setFormTitleItemStatus('error');
+      hasError = true;
+    }
 
     if (!eventDescription.length) {
       setFormTextError('Описание не должно быть пустым');
+      setFormAreaItemStatus('error');
+      hasError = true;
+    }
+    if (eventDescription.length > 1000) {
+      setFormTextError('Слишком длинное описание');
       setFormAreaItemStatus('error');
       hasError = true;
     }

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Panel, PanelHeader, Group, CardGrid, ContentCard, Tabs, TabsItem, HorizontalScroll, Badge, Button, ButtonGroup, Spinner, IconButton, SimpleCell, Search, FormItem, Select, FormLayoutGroup, Div, Avatar } from '@vkontakte/vkui';
-import { Icon24ArrowDownOutline, Icon24ArrowUpOutline, Icon24Share } from '@vkontakte/icons';
+import { Icon24ArrowDownOutline, Icon24ArrowUpOutline, Icon24ShareOutline } from '@vkontakte/icons';
 import ApiSevice from '../modules/ApiSevice';
 
 import '../assets/styles/Feed.scss';
@@ -199,7 +199,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
                   </div>
                 </SimpleCell>
                 <IconButton onClick={() => openShareModal(elem.id, elem?.title, elem?.avatar.avatar_vk_id, elem?.avatar.avatar_url)}>
-                  <Icon24Share />
+                  <Icon24ShareOutline />
                 </IconButton>
               </div>
             }

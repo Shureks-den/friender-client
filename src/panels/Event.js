@@ -2,8 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 
-import { Panel, PanelHeader, PanelHeaderBack, Input, FormItem, Button, Card, Group, Text, Header, Cell, Avatar, HorizontalScroll, HorizontalCell, ButtonGroup, IconButton, Link, File, Spacing, Separator, CardScroll, Div, platform } from '@vkontakte/vkui';
-import { Icon24Share, Icon24Camera, Icon24Message, Icon24CalendarOutline } from '@vkontakte/icons';
+import { Panel, PanelHeader, PanelHeaderBack, Button, Card, Group, Text, Header, Cell, Avatar, HorizontalScroll, HorizontalCell, ButtonGroup, IconButton, Link, File, Spacing, Separator, CardScroll, Div, platform } from '@vkontakte/vkui';
+import { Icon24ShareOutline, Icon24CalendarOutline, Icon24ReportOutline } from '@vkontakte/icons';
 
 import { monthNames } from '../variables/constants';
 
@@ -46,6 +46,17 @@ const Event = props => {
   const [share, setShare] = useState(null);
   const [isNeedApprove, setIsNeedApprove] = useState(false);
 
+  const [canSubscribe, setCanSubscribe] = useState(false);
+  const [isBanned, setIsBanned] = useState(false);
+
+  useEffect(() => {
+    setIsBanned(eventData?.blacklist?.find(i => i === user.id));
+  }, [user, eventData])
+
+  useEffect(() => {
+    setCanSubscribe(!isMember && user?.id !== eventData.author && eventData.is_active && eventData.members.length - 1 < eventData.members_limit);
+  }, [isMember, user, eventData])
+
   const openShareModal = (eventId, title, eventImageId, avatarUrl) => {
     const repost = () => props.makeRepost(eventId, title, eventImageId);
     const share = () => props.makeShare(eventId);
@@ -83,6 +94,7 @@ const Event = props => {
     setActiveModal(null);
     const userIdx = members.findIndex(m => m.id === user.id);
     members.splice(userIdx, 1);
+    setMembers([...members]);
     setIsMember(false);
     if (!eventData.is_active) {
       props.go();
@@ -333,8 +345,8 @@ const Event = props => {
               }
 
               {
-                (!isMember && user?.id !== eventData.author && eventData.is_active && eventData.members.length - 1 < eventData.members_limit) &&
-                <Button size="m" onClick={() => subscribe(eventId)}> Я пойду </Button>
+                canSubscribe &&
+                <Button size="m" disabled={isBanned} onClick={() => subscribe(eventId)}> {isBanned ? 'Вы были исключены' : 'Я пойду'} </Button>
               }
 
               {
@@ -350,7 +362,7 @@ const Event = props => {
               {
                 eventData.is_active &&
                 <IconButton onClick={() => openShareModal(eventData.id, eventData?.title, eventData?.avatar.avatar_vk_id, eventData?.avatar.avatar_url)}>
-                  <Icon24Share />
+                  <Icon24ShareOutline />
                 </IconButton>
               }
 
@@ -360,10 +372,22 @@ const Event = props => {
               }
 
               {
+                eventData.can_be_reported &&
+                <IconButton onClick={() => setActiveModal('REPORT-MODAL')}>
+                  <Icon24ReportOutline style={{color: 'var(--vkui--color_text_negative)'}} />
+                </IconButton>
+              }
+
+              {
                 (!eventData.is_active && isMember) &&
                 <Button size="m" onClick={() => addPhotos()}> Добавить фотографии с мероприятия </Button>
               }
+
             </ButtonGroup>
+            {
+              (!eventData.is_active && isMember) &&
+              <Button size="m" onClick={() => unsubscribe(eventData.id)}> Удалить из подписок </Button>
+            }
           </ButtonGroup>
       }
 
