@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-import { Panel, PanelHeader, Input, FormItem, Textarea, Div, Button, CustomSelectOption, File, HorizontalCell, HorizontalScroll, Avatar, Calendar, Group, Header, Checkbox, FormLayoutGroup, Select, CardScroll, Card, IconButton, Spacing } from '@vkontakte/vkui';
+import { Panel, PanelHeader, Input, FormItem, Textarea, Div, Button, CustomSelectOption, File, Spinner, HorizontalScroll, Avatar, Calendar, Group, Header, Checkbox, FormLayoutGroup, Select, CardScroll, Card, IconButton, Spacing } from '@vkontakte/vkui';
 import { Icon20Cancel, Icon28AddSquareOutline, Icon24Camera } from '@vkontakte/icons';
 
 import ApiSevice from '../modules/ApiSevice';
@@ -38,6 +38,7 @@ const NewEvent = props => {
   const [address, setAddress] = useState('');
 
   const [activeModal, setActiveModal] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // для редактирования
   const [latitude, setLatitude] = useState(null);
@@ -153,6 +154,7 @@ const NewEvent = props => {
     if (props.isEditing) {
       body.id = eventId;
     }
+    setIsLoading(true);
     const { code, response } = props.isEditing ? await ApiSevice.put('event', '', 'change', body) : await ApiSevice.post('event/create', body);
     console.log(code, response, 'aaa', eventImages.length)
 
@@ -184,6 +186,7 @@ const NewEvent = props => {
       });
       console.log(imageRes);
     }
+    setIsLoading(false);
     if (response.id) {
       if (groupId) {
         console.log(groupId, adminFromGroup)
@@ -234,21 +237,20 @@ const NewEvent = props => {
         imagesSrc.length ?
           <CardScroll
             size={user.platform === 'web' ? 'm' : 'l'}
-            style={{paddingTop: '20px'}}
-
+            style={{ paddingTop: '20px' }}
           >
             {imagesSrc.map((i, idx) =>
               <Card key={i}>
                 <div>
-                  <Icon20Cancel style={{position: 'absolute', right: '0px', cursor: 'pointer'}} onClick={() => removePhoto(idx)}/>
+                  <Icon20Cancel style={{ position: 'absolute', right: '0px', cursor: 'pointer' }} onClick={() => removePhoto(idx)} />
                   <img style={{ maxHeight: user.platform === 'web' ? '300px' : '500px' }} src={i} className='event__avatar' />
                 </div>
               </Card>)
             }
           </CardScroll> :
-          <Div style={{width: 'auto'}}>
+          <Div>
             <div style={{ maxHeight: user.platform === 'web' ? '300px' : '500px', background: 'grey', textAlign: 'center' }} className='event__file-background' >
-              <File before={<Icon28AddSquareOutline />} size='m' accept='image/png, image/gif, image/jpeg' className='event__file-input' multiple onInput={changeImage}>
+              <File before={<Icon28AddSquareOutline />} size='m' accept='image/png, image/gif, image/jpeg' className={'event__file-input' + (user.platform === 'web' ? ' event__file-input-web' : ' event__file-input-mobile') } multiple onInput={changeImage}>
                 Добавить фото
               </File>
             </div>
@@ -351,7 +353,14 @@ const NewEvent = props => {
         </FormItem>
       }
       <Div>
-        <Button stretched sizeY='regular' onClick={sendEvent}> {props.isEditing ? 'Редактировать' : (!groupId || (groupId && adminFromGroup)) ? 'Опубликовать' : 'Предложить событие'} </Button>
+        <Button stretched sizeY='regular' onClick={sendEvent} disabled={isLoading}> {
+          isLoading ?
+            <Spinner size="small" style={{ margin: "5px 0" }} /> :
+            props.isEditing ?
+              'Редактировать' :
+              (!groupId || (groupId && adminFromGroup)) ?
+                'Опубликовать' : 'Предложить событие'}
+        </Button>
         <Spacing size={16} />
       </Div>
     </Panel>
