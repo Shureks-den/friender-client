@@ -195,7 +195,7 @@ const GroupView = props => {
       {
         isAdmin ?
           <Checkbox defaultChecked={allowUserEvents} onChange={handleChangeAllowUserEvents} style={{ marginBottom: '10px' }}>
-            Пользователи могут предлагать свои события
+          Разрешить пользователям предлагать события
           </Checkbox> :
           allowUserEvents &&
           <Div style={{ textAlign: 'center' }}>
@@ -245,10 +245,6 @@ const GroupView = props => {
           <div style={{ display: "flex" }}>{companyEvents}</div>
         </HorizontalScroll>
       </Group>
-
-
-
-
 
       <Group header={
         <Header>

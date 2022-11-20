@@ -6,13 +6,22 @@ import { Icon56ArrowUturnLeftOutline, Icon24PhotosStackOutline, Icon24Camera, Ic
 
 import { ModalCard, Button, ModalRoot, SplitLayout, ButtonGroup, Input, FormItem, File, Div, Text, ModalPage, SimpleCell, Avatar, Group, Header, IconButton, ModalPageHeader, PanelHeaderButton, PanelHeaderClose, ANDROID, IOS, VKCOM, usePlatform } from '@vkontakte/vkui';
 import ApiSevice from '../../modules/ApiSevice';
+import VkApiService from '../../modules/VkApiService';
 
-export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsubscribe, event = {}, members = [], removeMember = () => ({}) }) => {
+export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsubscribe, event = {}, members = [], removeMember = () => ({}), groupSuggestAction = () => ({}) }) => {
   const platform = usePlatform();
   const user = useSelector(state => state.user.value);
+  const userToken = useSelector(state => state.user.token);
 
   const [albumUrl, setAlbumUrl] = useState('');
   const [albumState, setAlbumState] = useState('default');
+
+  const [usersImages, setUsersImages] = useState([]);
+
+  const changeImage = (e) => {
+    const files = Array.from(e.target.files);
+    setUsersImages(files);
+  }
 
   const sendImages = async () => {
     if (albumUrl) {
@@ -20,7 +29,6 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
         setAlbumState('error');
         return;
       }
-      console.log(albumUrl);
       const albumId = albumUrl.split('_')[1];
       const response = await ApiSevice.put('event', '', 'album', {
         uid_album: albumId,
@@ -31,6 +39,12 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
       if (code === 200) {
         setActiveModal('SUCCESS-MODAL');
       }
+    } else {
+      const imagesData = await VkApiService.sendImages(event.title, userToken);
+      const response = await ApiSevice.postImageToAlbum('event/album/upload', imagesData.uploadUrl, usersImages);
+       console.log(response, '\n');
+      const saveResponse = await VkApiService.saveImages(userToken, imagesData.albumId, response.server, response.photos_list, response.hash);
+     
     }
   }
 
@@ -143,7 +157,7 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
               <Text>или...</Text>
             </Div>
             <FormItem style={{ paddingTop: '0px', paddingBottom: '0px' }}>
-              <File before={<Icon24Camera role='presentation' />} size='m' accept='image/png, image/gif, image/jpeg' multiple disabled>
+              <File before={<Icon24Camera role='presentation' />} size='m' accept='image/png, image/gif, image/jpeg' multiple onChange={changeImage}>
                 Загрузите фото
               </File>
             </FormItem>
@@ -227,6 +241,29 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
           })}
         </Group>
       </ModalPage>
+
+      <ModalCard
+        id='SUGGEST-MODAL'
+        onClose={() => setActiveModal(null)}
+        icon={<Icon24PhotosStackOutline width={56} height={56} />}
+        style={{ alignItems: 'center' }}
+        header="Событие предложено"
+        subheader='Событие будет опубликовано после рассмотрения администратором'
+        actions={
+          <ButtonGroup mode='vertical' stretched={true}>
+            <Button
+              size="m"
+              mode="primary"
+              stretched={true}
+              onClick={() => groupSuggestAction()}
+            >
+              Закрыть
+            </Button>
+          </ButtonGroup>
+        }
+      >
+      </ModalCard>
+
     </ModalRoot>
   )
 

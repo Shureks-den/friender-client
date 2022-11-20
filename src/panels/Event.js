@@ -46,13 +46,6 @@ const Event = props => {
   const [share, setShare] = useState(null);
   const [isNeedApprove, setIsNeedApprove] = useState(false);
 
-  const [usersImages, setUsersImages] = useState([]);
-
-  const changeImage = (e) => {
-    const files = Array.from(e.target.files);
-    setUsersImages(files);
-  }
-
   const openShareModal = (eventId, title, eventImageId, avatarUrl) => {
     const repost = () => props.makeRepost(eventId, title, eventImageId);
     const share = () => props.makeShare(eventId);
@@ -340,7 +333,7 @@ const Event = props => {
               }
 
               {
-                (!isMember && user?.id !== eventData.author && eventData.is_active) &&
+                (!isMember && user?.id !== eventData.author && eventData.is_active && eventData.members.length - 1 < eventData.members_limit) &&
                 <Button size="m" onClick={() => subscribe(eventId)}> Я пойду </Button>
               }
 

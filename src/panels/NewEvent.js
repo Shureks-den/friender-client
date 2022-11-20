@@ -10,6 +10,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { remove, set } from '../store/categories/categoriesSlice.js';
 import { setIsAdmin, setGroupId } from '../store/group/groupSlice.js';
 
+import { ShareModal } from '../components/ShareModal/ShareModal';
+
 import Map from '../components/Map/Map.js';
 import VkApiService from '../modules/VkApiService';
 import '../assets/styles/NewEvent.scss';
@@ -34,6 +36,8 @@ const NewEvent = props => {
 
   const [members, setMembers] = useState(1);
   const [address, setAddress] = useState('');
+
+  const [activeModal, setActiveModal] = useState(null);
 
   // для редактирования
   const [latitude, setLatitude] = useState(null);
@@ -114,6 +118,12 @@ const NewEvent = props => {
     setCoords([geo?.latitude, geo?.longitude]);
   }, [props.isEditing]);
 
+  const suggestAction = () => {
+    dispatch(setGroupId({ groupId: null }));
+    dispatch(setIsAdmin({ isAdmin: false }));
+    props.onSuccessGroup(groupId);
+  }
+
   const sendEvent = async () => {
     const isAdmin = (groupId && adminFromGroup) || Boolean(adminedGroups.find(g => g.id === Number(groupId)));
 
@@ -176,9 +186,14 @@ const NewEvent = props => {
     }
     if (response.id) {
       if (groupId) {
-        dispatch(setGroupId({ groupId: null }));
-        dispatch(setIsAdmin({ isAdmin: false }));
-        props.onSuccessGroup(groupId);
+        console.log(groupId, adminFromGroup)
+        if (!adminFromGroup) {
+          setActiveModal('SUGGEST-MODAL');
+        } else {
+          dispatch(setGroupId({ groupId: null }));
+          dispatch(setIsAdmin({ isAdmin: false }));
+          props.onSuccessGroup(groupId);
+        }
       } else {
         props.onSuccess(response.id);
       }
@@ -209,6 +224,11 @@ const NewEvent = props => {
       >
         Новое событие
       </PanelHeader>
+      <ShareModal
+        activeModal={activeModal}
+        setActiveModal={setActiveModal}
+        groupSuggestAction={() => suggestAction()}
+      />
 
       {
         imagesSrc.length ?
@@ -226,7 +246,7 @@ const NewEvent = props => {
               </Card>)
             }
           </CardScroll> :
-          <Div>
+          <Div style={{width: 'auto'}}>
             <div style={{ maxHeight: user.platform === 'web' ? '300px' : '500px', background: 'grey', textAlign: 'center' }} className='event__file-background' >
               <File before={<Icon28AddSquareOutline />} size='m' accept='image/png, image/gif, image/jpeg' className='event__file-input' multiple onInput={changeImage}>
                 Добавить фото
@@ -331,7 +351,7 @@ const NewEvent = props => {
         </FormItem>
       }
       <Div>
-        <Button stretched sizeY='regular' onClick={sendEvent}> {props.isEditing ? 'Редактировать' : 'Опубликовать'} </Button>
+        <Button stretched sizeY='regular' onClick={sendEvent}> {props.isEditing ? 'Редактировать' : (!groupId || (groupId && adminFromGroup)) ? 'Опубликовать' : 'Предложить событие'} </Button>
         <Spacing size={16} />
       </Div>
     </Panel>

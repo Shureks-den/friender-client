@@ -105,8 +105,8 @@ class VkApiService {
     return response;
   }
 
-  async sendImages(images, title, token) {
-    const {response} = await bridge.send('VKWebAppCallAPIMethod', {
+  async sendImages(title, token) {
+    const { response } = await bridge.send('VKWebAppCallAPIMethod', {
       method: 'photos.createAlbum',
       params: {
         title: title,
@@ -116,18 +116,11 @@ class VkApiService {
     });
     console.log(response);
     const url = await this.getPhotoUploadServer(response.id, token);
-    const formData = new FormData();
-    images.forEach((img, idx) => {
-      formData.append(`photo${idx + 1}`, img);
-    });
-    console.log(url);
-    const uploadResponse = await ApiSevice.postImageVK(url, formData);
-    console.log(uploadResponse);
-    return url;
+    return { albumId: response.id, uploadUrl: url};
   }
 
   async getPhotoUploadServer(albumId, token) {
-    const {response} = await bridge.send('VKWebAppCallAPIMethod', {
+    const { response } = await bridge.send('VKWebAppCallAPIMethod', {
       method: 'photos.getUploadServer',
       params: {
         album_id: Number(albumId),
@@ -135,8 +128,23 @@ class VkApiService {
         access_token: token
       }
     });
-    const {upload_url} = response
+    const { upload_url } = response
     return upload_url;
+  }
+
+  async saveImages(token, album, server, photos_list, hash) {
+    const { response } = await bridge.send('VKWebAppCallAPIMethod', {
+      method: 'photos.save',
+      params: {
+        server: server,
+        album_id: album,
+        photos_list: photos_list,
+        hash: hash,
+        v: '5.131',
+        access_token: token
+      }
+    });
+    return response;
   }
 
   async checkPermissions() {

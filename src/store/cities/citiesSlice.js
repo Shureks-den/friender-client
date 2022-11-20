@@ -7,7 +7,7 @@ export const citiesSlice = createSlice({
   },
   reducers: {
     setCities: (state, action) => {
-      state.value = action.payload.sort((a, b) => a < b ? -1 : 1);
+      state.value = action.payload;
     },
     removeCities: (state) => {
       state.value = [];

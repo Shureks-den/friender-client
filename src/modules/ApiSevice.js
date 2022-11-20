@@ -86,12 +86,19 @@ class ApiService {
     return await response.json();
   }
 
-  async postImageVK(url, formData) {
-    const response = await fetch(url, {
+  async postImageToAlbum(url, uploadUrl, images) {
+    if (!Boolean(this.#userId)) return;
+    const formData = new FormData();
+    formData.append('upload_server', uploadUrl);
+    formData.append('photos', ...images);
+    const options = {
       method: 'POST',
-      body: formData
-    });
-    console.log(response);
+      headers: {
+        'X-User-ID': this.#userId,
+      },
+      body: formData,
+    };
+    const response = await fetch(`${this.#hostUrl}/${url}`, options);
     return await response.json();
   }
 
