@@ -6,6 +6,7 @@ import VkApiService from '../modules/VkApiService';
 import ApiSevice from '../modules/ApiSevice';
 
 import { setIsAdmin, setGroupId } from '../store/group/groupSlice.js';
+import placeholder from '../img/placeholder.webp';
 
 const GroupView = props => {
   const dispatch = useDispatch();
@@ -82,7 +83,7 @@ const GroupView = props => {
         <HorizontalCell key={idx} header={e.title} size="l" subtitle={new Date(e.time_start * 1000).toLocaleString()} onClick={() => props.goTo(e.id)}>
           <img
             className={'profile-active-card__avatar'}
-            src={e.avatar.avatar_url}
+            src={e.avatar.avatar_url !== '' ? e.avatar.avatar_url : placeholder}
           />
         </HorizontalCell>
       );
@@ -104,7 +105,7 @@ const GroupView = props => {
           <HorizontalCell key={idx} header={e.title} size="l" subtitle={new Date(e.time_start * 1000).toLocaleString()} onClick={() => props.goTo(e.id)}>
             <img
               className={'profile-active-card__avatar'}
-              src={e.avatar.avatar_url}
+              src={e.avatar.avatar_url !== '' ? e.avatar.avatar_url : placeholder}
             />
           </HorizontalCell>
         );
@@ -123,7 +124,7 @@ const GroupView = props => {
         <HorizontalCell key={idx} header={e.title} size="l" subtitle={new Date(e.time_start * 1000).toLocaleString()} onClick={() => props.goTo(e.id)}>
           <img
             className={'profile-active-card__avatar'}
-            src={e.avatar.avatar_url}
+            src={e.avatar.avatar_url !== '' ? e.avatar.avatar_url : placeholder}
           />
         </HorizontalCell>
       );

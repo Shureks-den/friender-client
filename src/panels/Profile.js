@@ -6,6 +6,7 @@ import VkApiService from '../modules/VkApiService';
 import ApiSevice from '../modules/ApiSevice';
 
 import '../assets/styles/Profile.scss';
+import placeholder from '../img/placeholder.webp';
 
 const Profile = props => {
   const [pageUser, setPageUser] = useState({});
@@ -55,7 +56,7 @@ const Profile = props => {
           onClick={() => props.goTo(e.id)}>
           <img
             className={isFinished ? 'profile-finished-card__avatar' : 'profile-active-card__avatar'}
-            src={e.avatar.avatar_url}
+            src={e.avatar.avatar_url !== '' ? e.avatar.avatar_url : placeholder}
           />
         </HorizontalCell>
       );

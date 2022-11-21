@@ -19,6 +19,7 @@ import ics from '../modules/ics.js';
 
 import { ShareModal } from '../components/ShareModal/ShareModal';
 import VkApiService from '../modules/VkApiService';
+import placeholder from '../img/placeholder.webp';
 
 const Event = props => {
   const dispatch = useDispatch();
@@ -48,6 +49,8 @@ const Event = props => {
 
   const [canSubscribe, setCanSubscribe] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
+
+  const [canReport, setCanReport] = useState(true);
 
   useEffect(() => {
     setIsBanned(eventData?.blacklist?.find(i => i === user.id));
@@ -202,7 +205,7 @@ const Event = props => {
       const imageSrc = res.avatar.avatar_url;
       setSliderData([imageSrc, ...res.images].map(i =>
         <Card key={i}>
-          <img style={{ maxHeight: user.platform === 'web' ? '300px' : '500px' }} src={i} className='event__avatar' />
+          <img style={{ maxHeight: user.platform === 'web' ? '300px' : '500px' }} src={i !== '' ? i : placeholder} className='event__avatar' />
         </Card>
       ));
 
@@ -216,6 +219,8 @@ const Event = props => {
         const author = await props.getUserInfo(res.author);
         setEventAuthor(author);
       }
+
+      setCanReport(res.can_be_reported);
 
       if (res.group_info.group_id) {
         const [group] = await props.getGroupInfo(res.group_info.group_id, userToken);
@@ -251,6 +256,7 @@ const Event = props => {
         removeMember={removeMember}
         goToChat={() => props.goToChat(eventData.id)}
         unsubscribe={() => unsubscribe(eventData.id)}
+        setCanReport={setCanReport}
       />
 
       <Group>
@@ -262,7 +268,6 @@ const Event = props => {
               {sliderData}
             </CardScroll> :
             <Div>{sliderData}</Div>
-
         }
       </Group>
 
@@ -372,21 +377,21 @@ const Event = props => {
               }
 
               {
-                eventData.can_be_reported &&
+                canReport &&
                 <IconButton onClick={() => setActiveModal('REPORT-MODAL')}>
-                  <Icon24ReportOutline style={{color: 'var(--vkui--color_text_negative)'}} />
+                  <Icon24ReportOutline style={{ color: 'var(--vkui--color_text_negative)' }} />
                 </IconButton>
               }
 
-              {
-                (!eventData.is_active && isMember) &&
-                <Button size="m" onClick={() => addPhotos()}> Добавить фотографии с мероприятия </Button>
-              }
 
             </ButtonGroup>
             {
               (!eventData.is_active && isMember) &&
+              <ButtonGroup mode="vertical" style={{alignItems: 'center'}}>
+              <Button size="m" onClick={() => addPhotos()}> Добавить фотографии с мероприятия </Button>
               <Button size="m" onClick={() => unsubscribe(eventData.id)}> Удалить из подписок </Button>
+              </ButtonGroup>
+              
             }
           </ButtonGroup>
       }

@@ -21,8 +21,8 @@ import {
 } from 'react-async-hook';
 import useConstant from 'use-constant';
 
-import sadPersik from '../img/sad-persik.png';
-import {NotFoundContent} from '../components/NotFoundContent/NotFoundContent';
+import placeholder from '../img/placeholder.webp';
+import { NotFoundContent } from '../components/NotFoundContent/NotFoundContent';
 import { ShareModal } from '../components/ShareModal/ShareModal';
 import VkApiService from '../modules/VkApiService';
 
@@ -151,7 +151,8 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
         return (
           <ContentCard
             key={elem.id}
-            src={elem.avatar.avatar_url}
+            src={elem.avatar.avatar_url !== '' ? elem.avatar.avatar_url : placeholder}
+            alt={placeholder}
             subtitle={elem.title}
             className='vk-event'
             caption={
@@ -164,7 +165,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
                     {city}
                   </div>
                 </div>
-                <ButtonGroup mode="horizontal" gap="m">
+                <ButtonGroup mode="horizontal" gap="m" style={{ marginTop: '15px' }}>
                   <Button onClick={() => createLink(elem.id)} size="s" stretched>
                     Подробнее
                   </Button>
@@ -183,7 +184,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
         return (
           <ContentCard
             key={elem.id}
-            src={elem.avatar.avatar_url}
+            src={elem.avatar.avatar_url !== '' ? elem.avatar.avatar_url : placeholder}
             subtitle={
               <div className='event-subtitle-wrapper'>
                 <SimpleCell
@@ -245,7 +246,12 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
 
   const getTypedEvents = async (type, pagination) => {
     const sort = {};
-    sort[sortValue === 'Количество участников' ? 'sort_members' : ''] = sortOrder;
+    const sortField = sortValue === 'Количеству участников' ?
+      'sort_members' :
+      sortValue === 'Цене' ?
+        'sort_price' :
+        '';
+    sort[sortField] = sortOrder;
     const source = type === 'newEvents' ? 'not_vk' : type === 'vkEvents' ? 'vk_event' : 'subscribe';
     const sources = type === 'newEvents' ? ['user', 'group'] : ['vk_event'];
     const res = await ApiSevice.post('events', {
@@ -328,7 +334,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
                     label: i,
                     value: i
                   })
-                )
+                  )
               ]
             }
             placeholder='Выберите категорию'
@@ -349,7 +355,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
                     label: i,
                     value: i
                   })
-                )
+                  )
               ]
             }
             placeholder='Выберите город'
@@ -360,11 +366,16 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
         <FormItem bottom="Сортировать по">
           <Select
             options={[
+              {
+                label: 'Нет',
+                value: '',
+              },
               ...sortOptions
-            ].map((i) => ({
-              label: i,
-              value: i
-            }))}
+                .map((i) => ({
+                  label: i,
+                  value: i
+                }))]
+            }
             placeholder='Выберите параметр сортировки'
             value={sortValue}
             onChange={(e) => setSort(e.target.value)}
@@ -375,10 +386,10 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
 
       <Group>
         <CardGrid size='l'>
-            {
-              isLoading ? <Spinner size="large" style={{ margin: "20px 0" }} /> :
+          {
+            isLoading ? <Spinner size="large" style={{ margin: "20px 0" }} /> :
               eventsData.length ? eventsData : <NotFoundContent text='Ничего не найдено' />
-            }
+          }
         </CardGrid>
       </Group>
     </Panel>

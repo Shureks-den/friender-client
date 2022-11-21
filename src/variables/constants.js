@@ -12,5 +12,5 @@ export const cities = [
 ];
 
 export const sortOptions = [
-  '', 'Количество участников', 'Цене',
+  'Количеству участников', 'Цене',
 ];

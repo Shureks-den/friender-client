@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useRef, Fragment } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Icon56ShareOutline, Icon56MessagesOutline, Icon24Dismiss, Icon24Cancel, Icon24Done, Icon24ReportOutline } from '@vkontakte/icons';
 import { Icon56ArrowUturnLeftOutline, Icon24PhotosStackOutline, Icon24Camera, Icon28RemoveCircleOutline, Icon28UserStarBadgeOutline } from '@vkontakte/icons';
@@ -8,7 +8,7 @@ import { ModalCard, Button, ModalRoot, SplitLayout, ButtonGroup, Input, FormItem
 import ApiSevice from '../../modules/ApiSevice';
 import VkApiService from '../../modules/VkApiService';
 
-export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsubscribe, event = {}, members = [], removeMember = () => ({}), groupSuggestAction = () => ({}), reportUserId = null}) => {
+export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsubscribe, event = {}, members = [], removeMember = () => ({}), groupSuggestAction = () => ({}), reportUserId = null, setCanReport = () => ({}) }) => {
   const platform = usePlatform();
   const user = useSelector(state => state.user.value);
   const userToken = useSelector(state => state.user.token);
@@ -27,6 +27,7 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
       event: event.id
     })
     console.log(response);
+    setCanReport(false);
     setActiveModal('REPORT-SUCCESS-MODAL');
   }
 
@@ -214,20 +215,20 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
         header={
           <ModalPageHeader
             before={
-              <Fragment>
+              <>
                 {(platform === ANDROID || platform === VKCOM) && (
                   <PanelHeaderButton onClick={() => setActiveModal(null)}>
                     <Icon24Cancel />
                   </PanelHeaderButton>
                 )}
-              </Fragment>
+              </>
             }
             after={
-              <Fragment>
+              <>
                 {platform === IOS && (
                   <PanelHeaderButton onClick={() => setActiveModal(null)}><Icon24Cancel /></PanelHeaderButton>
                 )}
-              </Fragment>
+              </>
             }
           >
             Участники {members?.length}
@@ -278,26 +279,25 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
 
       <ModalPage
         id='REPORT-MODAL'
-        settlingHeight={20}
-        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: 'auto' }}
         onClose={() => setActiveModal(null)}
         header={
           <ModalPageHeader
             before={
-              <Fragment>
+              <>
                 {(platform === ANDROID || platform === VKCOM) && (
                   <PanelHeaderButton onClick={() => setActiveModal(null)}>
                     <Icon24Cancel />
                   </PanelHeaderButton>
                 )}
-              </Fragment>
+              </>
             }
             after={
-              <Fragment>
+              <>
                 {platform === IOS && (
                   <PanelHeaderButton onClick={() => setActiveModal(null)}><Icon24Cancel /></PanelHeaderButton>
                 )}
-              </Fragment>
+              </>
             }
           >
             Жалоба на {reportUserId} {reportUserId ? 'пользователя' : 'событие'}
@@ -308,7 +308,7 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
           <FormItem top='Причина жалобы'>
             <Textarea value={reportReason} onChange={(e) => setReportReason(e.target.value)} />
           </FormItem>
-          <ButtonGroup mode='vertical' stretched={true} style={{ alignItems: 'center' }}>
+          <ButtonGroup mode='vertical' stretched={true} style={{ alignItems: 'center', marginTop: '20px', marginBottom: '70px' }}>
             <Button onClick={(e) => sendReport()}>Отправить жалобу</Button>
           </ButtonGroup>
         </Group>
@@ -321,12 +321,12 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
         style={{ alignItems: 'center' }}
         header="Ваша жалоба была отправлена"
         actions={
-          <ButtonGroup mode='vertical' stretched={true}>
+          <ButtonGroup mode='vertical' stretched={true} style={{ alignItems: 'center' }}>
             <Button
               size="m"
               mode="primary"
               stretched={true}
-              onClick={() => groupSuggestAction()}
+              onClick={() => setActiveModal(null)}
             >
               Закрыть
             </Button>
