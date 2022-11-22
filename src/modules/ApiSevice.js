@@ -94,7 +94,9 @@ class ApiService {
     if (!Boolean(this.#userId)) return;
     const formData = new FormData();
     formData.append('upload_server', uploadUrl);
-    formData.append('photos', ...images);
+    images.forEach(i => {
+      formData.append('photos', i);
+    })
     const options = {
       method: 'POST',
       headers: {

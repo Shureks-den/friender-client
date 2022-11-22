@@ -74,6 +74,10 @@ const Profile = props => {
     if (!user.id) return;
     try {
       const userId = props.profileId ?? window.location.hash?.slice(1).split('=').slice(1, 2).join('');
+      if (userId !== user.id) {
+        const { can_be_reported } = await ApiSevice.get('profile', userId);
+        setCanReport(can_be_reported);
+      }
       const u = await VkApiService.fetchUserData(Number(userId));
       const events = await ApiSevice.post('events', {
         id: u.id,
@@ -148,11 +152,12 @@ const Profile = props => {
                       <Button onClick={subscribe}>Подписаться</Button> :
                       <Button onClick={unsubscribe}>Отписаться</Button>}
 
-                    <IconButton onClick={() => setActiveModal('REPORT-MODAL')}>
-                      <Icon24ReportOutline style={{ color: 'var(--vkui--color_text_negative)' }} />
-                    </IconButton>
+                    {
+                      canReport && <IconButton onClick={() => setActiveModal('REPORT-MODAL')}>
+                        <Icon24ReportOutline style={{ color: 'var(--vkui--color_text_negative)' }} />
+                      </IconButton>
+                    }
                   </ButtonGroup>
-
               }
             >
               <div>

@@ -105,7 +105,11 @@ class VkApiService {
     return response;
   }
 
-  async sendImages(title, token) {
+  async sendImages(title, token, albumId = '') {
+    if (albumId) {
+      const url = await this.getPhotoUploadServer(albumId, token);
+      return { albumId: albumId, uploadUrl: url };
+    }
     const { response } = await bridge.send('VKWebAppCallAPIMethod', {
       method: 'photos.createAlbum',
       params: {
@@ -114,9 +118,8 @@ class VkApiService {
         access_token: token
       }
     });
-    console.log(response);
     const url = await this.getPhotoUploadServer(response.id, token);
-    return { albumId: response.id, uploadUrl: url};
+    return { albumId: response.id, uploadUrl: url };
   }
 
   async getPhotoUploadServer(albumId, token) {
@@ -150,6 +153,27 @@ class VkApiService {
   async checkPermissions() {
     const response = await bridge.send('VKWebAppGetGrantedPermissions');
     return response;
+  }
+
+  async getAlbums(albumsData, userToken) {
+    const res = [];
+    for (let i = 0; i < albumsData.length; i++) {
+      const [user, album] = albumsData[i].split('_');
+      const { response } = await bridge.send('VKWebAppCallAPIMethod', {
+        method: 'photos.getAlbums',
+        params: {
+          owner_id: user,
+          album_ids: album,
+          need_covers: 1,
+          photo_sizes: 1,
+          access_token: userToken,
+          v: '5.131',
+        }
+      })
+      if (response.count)
+      res.push(response.items[0]);
+    }
+    return res;
   }
 
 

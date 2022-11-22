@@ -51,6 +51,9 @@ const Event = props => {
   const [isBanned, setIsBanned] = useState(false);
 
   const [canReport, setCanReport] = useState(false);
+  const [albums, setAlbums] = useState([]);
+  const [albumsDOM, setAlbumsDOM] = useState([]);
+  const [userAlbum, setUserAlbum] = useState(null);
 
   useEffect(() => {
     setIsBanned(eventData?.blacklist?.find(i => i === user.id));
@@ -58,7 +61,49 @@ const Event = props => {
 
   useEffect(() => {
     setCanSubscribe(!isMember && user?.id !== eventData.author && eventData.is_active && eventData.members.length - 1 < eventData.members_limit);
-  }, [isMember, user, eventData])
+  }, [isMember, user, eventData]);
+
+  const goToAlbum = (albumId, userId) => {
+    const link = document.createElement('a');
+    link.href = `https://vk.com/album${userId}_${albumId}`;
+    link.target = '_blank';
+    link.click();
+  }
+
+  const addAlbum = (albumId) => {
+    setAlbums([...albums, `${user.id}_${albumId}`]);
+  }
+
+  useEffect(async () => {
+    const data = await VkApiService.getAlbums(albums, userToken);
+    const dataTransformed = data.map((d, idx) => {
+      const mem = [...members, eventAuthor];
+      const author = mem.find(m => m.id === d.owner_id);
+      if (d.owner_id === user.id) {
+        setUserAlbum(d.id);
+      }
+      const ownerImage = author?.photo_100 ?? '';
+      return (
+        <HorizontalCell
+          key={idx}
+          size="l"
+          style={{ height: '100%', width: '100%', }}
+          onClick={() => goToAlbum(d.id, d.owner_id)}>
+          <img
+            className={'profile-finished-card__avatar'}
+            src={d.sizes.at(-1).url}
+          />
+          {
+            ownerImage && <img
+              className='event-album__profile-avatar'
+              src={ownerImage}
+            />
+          }
+        </HorizontalCell>
+      )
+    });
+    setAlbumsDOM(dataTransformed);
+  }, [albums])
 
   const openShareModal = (eventId, title, eventImageId, avatarUrl) => {
     const repost = () => props.makeRepost(eventId, title, eventImageId);
@@ -227,6 +272,8 @@ const Event = props => {
         setEventGroup(group);
       }
 
+      setAlbums(res.albums);
+
       if (res.group_info?.is_need_approve) {
         setIsNeedApprove(true);
       }
@@ -250,6 +297,8 @@ const Event = props => {
       <Modal
         activeModal={activeModal}
         setActiveModal={setActiveModal}
+        albumId={userAlbum}
+        addAlbum={addAlbum}
         event={eventData}
         share={share}
         members={membersData}
@@ -387,11 +436,11 @@ const Event = props => {
             </ButtonGroup>
             {
               (!eventData.is_active && isMember) &&
-              <ButtonGroup mode="vertical" style={{alignItems: 'center'}}>
-              <Button size="m" onClick={() => addPhotos()}> Добавить фотографии с мероприятия </Button>
-              <Button size="m" onClick={() => unsubscribe(eventData.id)}> Удалить из подписок </Button>
+              <ButtonGroup mode="vertical" style={{ alignItems: 'center' }}>
+                <Button size="m" onClick={() => addPhotos()}> Добавить фотографии с мероприятия </Button>
+                <Button size="m" onClick={() => unsubscribe(eventData.id)}> Удалить из подписок </Button>
               </ButtonGroup>
-              
+
             }
           </ButtonGroup>
       }
@@ -449,6 +498,22 @@ const Event = props => {
           }
         </Group>
       }
+
+
+      {
+        Boolean(!eventData.is_active && albumsDOM.length) &&
+        <Group header={
+          <Header>
+            Фотоальбомы с мероприятия {albumsDOM.length}
+          </Header>
+        }
+        >
+          <div className='events-finished__grid'>
+            {albumsDOM}
+          </div>
+        </Group>
+      }
+
     </Panel>
   );
 };

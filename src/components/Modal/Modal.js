@@ -8,7 +8,21 @@ import { ModalCard, Button, ModalRoot, SplitLayout, ButtonGroup, Input, FormItem
 import ApiSevice from '../../modules/ApiSevice';
 import VkApiService from '../../modules/VkApiService';
 
-export const Modal = ({ activeModal, setActiveModal, share, goToChat, unsubscribe, event = {}, members = [], removeMember = () => ({}), groupSuggestAction = () => ({}), reportUserId = null, setCanReport = () => ({}) }) => {
+export const Modal = ({
+  activeModal,
+  setActiveModal,
+  share,
+  goToChat,
+  unsubscribe,
+  event = {},
+  members = [],
+  removeMember = () => ({}),
+  groupSuggestAction = () => ({}),
+  reportUserId = null,
+  setCanReport = () => ({}),
+  albumId = null,
+  addAlbum = () => ({}),
+}) => {
   const platform = usePlatform();
   const user = useSelector(state => state.user.value);
   const userToken = useSelector(state => state.user.token);
@@ -19,6 +33,11 @@ export const Modal = ({ activeModal, setActiveModal, share, goToChat, unsubscrib
   const [usersImages, setUsersImages] = useState([]);
 
   const [reportReason, setReportReason] = useState([]);
+  const [canUploadPhotos, setCanUploadPhotos] = useState(false);
+
+  useEffect(() => {
+    setCanUploadPhotos(albumUrl.length || usersImages.length);
+  }, [albumUrl, usersImages])
 
   const shareHandler = async (func) => {
     const response = await func();
@@ -47,7 +66,9 @@ export const Modal = ({ activeModal, setActiveModal, share, goToChat, unsubscrib
         setAlbumState('error');
         return;
       }
-      const albumId = albumUrl.split('_')[1];
+      const albumPart = albumUrl.split('album')[1];
+      const userAlbumId = albumPart.split('%2F')[0];
+      const albumId = userAlbumId.split('_')[1];
       const response = await ApiSevice.put('event', '', 'album', {
         uid_album: albumId,
         uid_event: event.id,
@@ -55,14 +76,25 @@ export const Modal = ({ activeModal, setActiveModal, share, goToChat, unsubscrib
       });
       const { code } = response;
       if (code === 200) {
+        addAlbum(albumId);
         setActiveModal('SUCCESS-MODAL');
       }
     } else {
-      const imagesData = await VkApiService.sendImages(event.title, userToken);
+      const imagesData = await VkApiService.sendImages(event.title, userToken, albumId);
       const response = await ApiSevice.postImageToAlbum('event/album/upload', imagesData.uploadUrl, usersImages);
-      console.log(response, '\n');
-      const saveResponse = await VkApiService.saveImages(userToken, imagesData.albumId, response.server, response.photos_list, response.hash);
-
+      response.forEach(async (r) => {
+        const saveResponse = await VkApiService.saveImages(userToken, imagesData.albumId, r.server, r.photos_list, r.hash);
+        console.log(saveResponse);
+      });
+      if (!albumId) {
+        const apiSaveResponse = await ApiSevice.put('event', '', 'album', {
+          uid_album: String(imagesData.albumId),
+          uid_event: event.id,
+          type: 'add'
+        });
+        addAlbum(imagesData.albumId);
+      }
+      setActiveModal('SUCCESS-MODAL');
     }
   }
 
@@ -183,6 +215,7 @@ export const Modal = ({ activeModal, setActiveModal, share, goToChat, unsubscrib
               size="m"
               mode="primary"
               stretched={true}
+              disabled={!canUploadPhotos}
               onClick={() => sendImages()}
             >
               Добавить фото
@@ -282,9 +315,8 @@ export const Modal = ({ activeModal, setActiveModal, share, goToChat, unsubscrib
       >
       </ModalCard>
 
-      <ModalPage
+      <ModalCard
         id='REPORT-MODAL'
-        settlingHeight={100}
         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: 'auto' }}
         onClose={() => setActiveModal(null)}
         header={
@@ -312,13 +344,13 @@ export const Modal = ({ activeModal, setActiveModal, share, goToChat, unsubscrib
       >
         <Group>
           <FormItem top='Причина жалобы'>
-            <Textarea maxLength={300} value={reportReason} onChange={(e) => setReportReason(e.target.value)}/>
+            <Textarea maxLength={300} value={reportReason} onChange={(e) => setReportReason(e.target.value)} />
           </FormItem>
-          <ButtonGroup mode='vertical' stretched={true} style={{ alignItems: 'center', marginTop: '20px', marginBottom: '80px' }}>
+          <ButtonGroup mode='vertical' stretched={true} style={{ alignItems: 'center', marginTop: '20px' }}>
             <Button onClick={(e) => sendReport()}>Отправить жалобу</Button>
           </ButtonGroup>
         </Group>
-      </ModalPage>
+      </ModalCard>
 
       <ModalCard
         id='REPORT-SUCCESS-MODAL'
