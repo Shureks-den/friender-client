@@ -23,7 +23,7 @@ import useConstant from 'use-constant';
 
 import placeholder from '../img/placeholder.webp';
 import { NotFoundContent } from '../components/NotFoundContent/NotFoundContent';
-import { ShareModal } from '../components/ShareModal/ShareModal';
+import { Modal } from '../components/Modal/Modal';
 import VkApiService from '../modules/VkApiService';
 
 const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile, goToGroup }) => {
@@ -313,7 +313,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
       <PanelHeader style={{ textAlign: 'center' }} separator={false}>Лента событий</PanelHeader>
       <Scrollable selected={selected} setSelected={setSelected} />
       <SearchDebounced setSearchWords={setSearchWords} />
-      <ShareModal
+      <Modal
         activeModal={activeModal}
         setActiveModal={setActiveModal}
         share={share}
@@ -344,6 +344,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
         </FormItem>
         <FormItem bottom="Город">
           <Select
+            searchable
             options={
               [
                 {

@@ -163,7 +163,7 @@ class VkApiService {
         'https://images.unsplash.com/photo-1585314062604-1a357de8b000?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=4142&q=80',
     };
 
-    await bridge.send("VKWebAppShowStoryBox", {
+    const response = await bridge.send("VKWebAppShowStoryBox", {
       ...background,
       "attachment": {
         "text": "open",
@@ -201,6 +201,7 @@ class VkApiService {
         }
       ],
     });
+    return response;
   }
 }
 

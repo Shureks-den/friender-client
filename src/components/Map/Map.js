@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-
+import { useSelector } from 'react-redux';
 import { Input, FormItem, Group, Div, Spacing } from '@vkontakte/vkui';
 
 import './Map.scss';
 
 const Map = ({ address, setAddress, setCoords, latitude, longitude, isClickable, showAddress = true }) => {
+  const user = useSelector(state => state.user.value);
   const [yMap, setYMap] = useState(null);
   const [isClicked, setIsClicked] = useState(false);
 
@@ -124,7 +125,7 @@ const Map = ({ address, setAddress, setCoords, latitude, longitude, isClickable,
           <FormItem top='Место' className='ymaps__input'>
             <Input type='text' title='Адрес' label='Название события' id='address' value={address} onInput={(e) => handleType(e)} onBlur={(e) => handlePlaceMark(e)} disabled={!isClickable} />
           </FormItem>
-          
+
         }
 
         {
@@ -132,9 +133,7 @@ const Map = ({ address, setAddress, setCoords, latitude, longitude, isClickable,
           <Spacing size={16} />
         }
 
-        
-
-        <div id='ymaps' />
+        <div id='ymaps' className={user.platform === 'web' ? 'ymaps-web' : 'ymaps-mobile'} />
       </Div>
     </Group>
   );

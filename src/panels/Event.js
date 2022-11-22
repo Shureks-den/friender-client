@@ -17,7 +17,7 @@ import Map from '../components/Map/Map.js';
 
 import ics from '../modules/ics.js';
 
-import { ShareModal } from '../components/ShareModal/ShareModal';
+import { Modal } from '../components/Modal/Modal';
 import VkApiService from '../modules/VkApiService';
 import placeholder from '../img/placeholder.webp';
 
@@ -50,7 +50,7 @@ const Event = props => {
   const [canSubscribe, setCanSubscribe] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
 
-  const [canReport, setCanReport] = useState(true);
+  const [canReport, setCanReport] = useState(false);
 
   useEffect(() => {
     setIsBanned(eventData?.blacklist?.find(i => i === user.id));
@@ -95,9 +95,9 @@ const Event = props => {
   const unsubscribe = async (id) => {
     const response = await ApiSevice.put('event', id, 'unsubscribe');
     setActiveModal(null);
-    const userIdx = members.findIndex(m => m.id === user.id);
-    members.splice(userIdx, 1);
-    setMembers([...members]);
+    const userIdx = membersData.findIndex(m => m.id === user.id);
+    membersData.splice(userIdx, 1);
+    setMembersData([...membersData]);
     setIsMember(false);
     if (!eventData.is_active) {
       props.go();
@@ -247,7 +247,7 @@ const Event = props => {
       >
         Событие
       </PanelHeader>
-      <ShareModal
+      <Modal
         activeModal={activeModal}
         setActiveModal={setActiveModal}
         event={eventData}

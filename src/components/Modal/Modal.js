@@ -8,7 +8,7 @@ import { ModalCard, Button, ModalRoot, SplitLayout, ButtonGroup, Input, FormItem
 import ApiSevice from '../../modules/ApiSevice';
 import VkApiService from '../../modules/VkApiService';
 
-export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsubscribe, event = {}, members = [], removeMember = () => ({}), groupSuggestAction = () => ({}), reportUserId = null, setCanReport = () => ({}) }) => {
+export const Modal = ({ activeModal, setActiveModal, share, goToChat, unsubscribe, event = {}, members = [], removeMember = () => ({}), groupSuggestAction = () => ({}), reportUserId = null, setCanReport = () => ({}) }) => {
   const platform = usePlatform();
   const user = useSelector(state => state.user.value);
   const userToken = useSelector(state => state.user.token);
@@ -20,13 +20,18 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
 
   const [reportReason, setReportReason] = useState([]);
 
+  const shareHandler = async (func) => {
+    const response = await func();
+    if (response) setActiveModal(null);
+  }
+
   const sendReport = async () => {
     const response = await ApiSevice.put('complaint', '', '', {
       reason: reportReason,
       user: reportUserId,
       event: event.id
     })
-    console.log(response);
+    setReportReason('');
     setCanReport(false);
     setActiveModal('REPORT-SUCCESS-MODAL');
   }
@@ -79,7 +84,7 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
               size="m"
               mode="primary"
               stretched={true}
-              onClick={() => share.repost()}
+              onClick={() => shareHandler(share.repost)}
             >
               Репост
             </Button>
@@ -89,7 +94,7 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
                 size="m"
                 mode="primary"
                 stretched={true}
-                onClick={() => share.share()}
+                onClick={() => shareHandler(share.share)}
               >
                 Отправить в личном сообщении
               </Button>
@@ -99,7 +104,7 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
               size="m"
               mode="primary"
               stretched={true}
-              onClick={() => share.story()}
+              onClick={() => shareHandler(share.story)}
             >
               Опубликовать историю
             </Button>
@@ -279,6 +284,7 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
 
       <ModalPage
         id='REPORT-MODAL'
+        settlingHeight={100}
         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: 'auto' }}
         onClose={() => setActiveModal(null)}
         header={
@@ -300,15 +306,15 @@ export const ShareModal = ({ activeModal, setActiveModal, share, goToChat, unsub
               </>
             }
           >
-            Жалоба на {reportUserId} {reportUserId ? 'пользователя' : 'событие'}
+            Жалоба на {reportUserId ? 'пользователя' : 'событие'}
           </ModalPageHeader>
         }
       >
         <Group>
           <FormItem top='Причина жалобы'>
-            <Textarea value={reportReason} onChange={(e) => setReportReason(e.target.value)} />
+            <Textarea maxLength={300} value={reportReason} onChange={(e) => setReportReason(e.target.value)}/>
           </FormItem>
-          <ButtonGroup mode='vertical' stretched={true} style={{ alignItems: 'center', marginTop: '20px', marginBottom: '70px' }}>
+          <ButtonGroup mode='vertical' stretched={true} style={{ alignItems: 'center', marginTop: '20px', marginBottom: '80px' }}>
             <Button onClick={(e) => sendReport()}>Отправить жалобу</Button>
           </ButtonGroup>
         </Group>

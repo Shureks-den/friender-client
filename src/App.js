@@ -129,18 +129,18 @@ const App = ({ router }) => {
   };
 
   const makeRepost = async (eventId, eventName, eventAvatar) => {
-    const response = VkApiService.repost(eventId, eventName, eventAvatar);
-    console.log(response);
+    const response = await VkApiService.repost(eventId, eventName, eventAvatar);
+    return response;
   };
 
   const makeShare = async (eventId) => {
-    const response = VkApiService.share(eventId);
-    console.log(response);
+    const response = await VkApiService.share(eventId);
+    return response;
   };
 
   const makeStory = async (id, title, avatarUrl) => {
     const response = await VkApiService.postStory(id, title, avatarUrl);
-    console.log(response);
+    return response;
   };
 
   const toView = (view) => {

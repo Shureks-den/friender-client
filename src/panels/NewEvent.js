@@ -10,10 +10,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import { remove, set } from '../store/categories/categoriesSlice.js';
 import { setIsAdmin, setGroupId } from '../store/group/groupSlice.js';
 
-import { ShareModal } from '../components/ShareModal/ShareModal';
+import { Modal } from '../components/Modal/Modal';
 
 import Map from '../components/Map/Map.js';
-import VkApiService from '../modules/VkApiService';
 import '../assets/styles/NewEvent.scss';
 
 const NewEvent = props => {
@@ -312,7 +311,7 @@ const NewEvent = props => {
       >
         Новое событие
       </PanelHeader>
-      <ShareModal
+      <Modal
         activeModal={activeModal}
         setActiveModal={setActiveModal}
         groupSuggestAction={() => suggestAction()}
@@ -327,7 +326,7 @@ const NewEvent = props => {
             {imagesSrc.map((i, idx) =>
               <Card key={i}>
                 <div>
-                  <Icon20Cancel style={{ position: 'absolute', right: '0px', cursor: 'pointer' }} onClick={() => removePhoto(idx)} />
+                  <Icon20Cancel className='new-event__image-cancel' onClick={() => removePhoto(idx)} />
                   <img style={{ maxHeight: user.platform === 'web' ? '300px' : '500px' }} src={i} className='event__avatar' />
                 </div>
               </Card>)
@@ -383,7 +382,7 @@ const NewEvent = props => {
 
 
       {/* <Checkbox value={isPrivate} onChange={((e) => setIsPrivate(!isPrivate))}>Приватное событие</Checkbox> */}
-      <Checkbox checked={hasPrice} value={hasPrice} onChange={((e) => setHasPrice(!hasPrice))}>Добавить ссылку на билеты</Checkbox>
+      <Checkbox checked={hasPrice} value={hasPrice} onChange={((e) => setHasPrice(!hasPrice))}>Добавить ссылку для покупки билета</Checkbox>
       {hasPrice &&
         <FormLayoutGroup mode='horizontal' style={{ alignItems: 'center' }}>
           <FormItem top='Ссылка для покупки билета'>
@@ -443,7 +442,7 @@ const NewEvent = props => {
           isLoading ?
             <Spinner size="small" style={{ margin: "5px 0" }} /> :
             props.isEditing ?
-              'Редактировать' :
+              'Сохранить' :
               (!groupId || (groupId && adminFromGroup)) ?
                 'Опубликовать' : 'Предложить событие'}
         </Button>

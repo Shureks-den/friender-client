@@ -1,12 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Panel, PanelHeader, PanelHeaderBack, Avatar, Cell, Group, Header, HorizontalCell, HorizontalScroll, Button, Spinner, Link, Text } from '@vkontakte/vkui';
+import { Panel, PanelHeader, PanelHeaderBack, Avatar, Cell, Group, Header, HorizontalCell, HorizontalScroll, Button, Spinner, Link, Text, ButtonGroup, IconButton } from '@vkontakte/vkui';
+import { Icon24ReportOutline } from '@vkontakte/icons';
 import VkApiService from '../modules/VkApiService';
 import ApiSevice from '../modules/ApiSevice';
 
 import '../assets/styles/Profile.scss';
 import placeholder from '../img/placeholder.webp';
+
+import { Modal } from '../components/Modal/Modal';
 
 const Profile = props => {
   const [pageUser, setPageUser] = useState({});
@@ -16,6 +19,8 @@ const Profile = props => {
   const [adminedGroups, setAdminedGroups] = useState([]);
 
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [activeModal, setActiveModal] = useState(null);
+  const [canReport, setCanReport] = useState(false);
 
   const user = useSelector(state => state.user.value);
 
@@ -121,6 +126,12 @@ const Profile = props => {
       >
         Пользователь
       </PanelHeader>
+      <Modal
+        activeModal={activeModal}
+        setActiveModal={setActiveModal}
+        setCanReport={setCanReport}
+        reportUserId={pageUser.id}
+      />
       {
         pageUser.id ?
           <Group header={<Header mode="secondary"></Header>}>
@@ -131,9 +142,15 @@ const Profile = props => {
                 (pageUser?.id === user?.id) ?
                   <Button onClick={() => connectGroup()}>Добавить группу</Button> :
 
-                  !isSubscribed ?
-                    <Button onClick={subscribe}>Подписаться</Button> :
-                    <Button onClick={unsubscribe}>Отписаться</Button>
+                  <ButtonGroup mode='horizontal' style={{alignItems: 'center'}}>
+                    {!isSubscribed ?
+                      <Button onClick={subscribe}>Подписаться</Button> :
+                      <Button onClick={unsubscribe}>Отписаться</Button>}
+
+                    <IconButton onClick={() => setActiveModal('REPORT-MODAL')}>
+                      <Icon24ReportOutline style={{ color: 'var(--vkui--color_text_negative)' }} />
+                    </IconButton>
+                  </ButtonGroup>
 
               }
             >
