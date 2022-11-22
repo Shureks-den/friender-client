@@ -9,6 +9,7 @@ import ApiSevice from '../modules/ApiSevice';
 import '../assets/styles/Feed.scss';
 
 import { set } from '../store/categories/categoriesSlice';
+import { setSelected, setSearchWords, setSearchCategory, setSearchCity, setSortValue, setSortOrder} from '../store/search/searchSlice';
 
 import { monthNames, shortMonthNames, sortOptions } from '../variables/constants';
 
@@ -54,26 +55,22 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
   const user = useSelector(state => state.user.value);
   const userToken = useSelector(state => state.user.token);
 
-  const [selected, setSelected] = useState('newEvents');
+  // для поиска
 
-  const [searchWords, setSearchWords] = useState([]);
-  const [searchCategory, setSearchCategory] = useState('');
-  const [searchCity, setSearchCity] = useState('');
-  const [sortValue, setSortValue] = useState('');
-
-  const [sortOrder, setSortOrder] = useState('asc');
+  const searchParams = useSelector(state => state.search.value);
+  const [prevSelected, setPrevSelected] = useState(searchParams.selected);
 
   const setOrder = () => {
-    if (sortOrder === 'desc') {
-      setSortOrder('asc');
-    } else if (sortOrder === 'asc') {
-      setSortOrder('desc');
+    if (searchParams.sortOrder === 'desc') {
+      dispatch(setSortOrder('asc'));
+    } else if (searchParams.sortOrder === 'asc') {
+      dispatch(setSortOrder('desc'));
     }
   }
 
   const setSort = (value) => {
-    setSortOrder('asc');
-    setSortValue(value);
+    dispatch(setSortOrder('asc'));
+    dispatch(setSortValue(value));
   }
 
   useEffect(async () => {
@@ -246,12 +243,12 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
 
   const getTypedEvents = async (type, pagination) => {
     const sort = {};
-    const sortField = sortValue === 'Количеству участников' ?
+    const sortField = searchParams.sortValue === 'Количеству участников' ?
       'sort_members' :
-      sortValue === 'Цене' ?
+      searchParams.sortValue === 'Цене' ?
         'sort_price' :
         '';
-    sort[sortField] = sortOrder;
+    sort[sortField] = searchParams.sortOrder;
     const source = type === 'newEvents' ? 'not_vk' : type === 'vkEvents' ? 'vk_event' : 'subscribe';
     const sources = type === 'newEvents' ? ['user', 'group'] : ['vk_event'];
     const res = await ApiSevice.post('events', {
@@ -260,13 +257,13 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
         defined: true,
       },
       source: source,
-      city: searchCity,
-      category: searchCategory,
+      city: searchParams.searchCity,
+      category: searchParams.searchCategory,
 
       search: {
-        enabled: Boolean(searchWords.length),
+        enabled: Boolean(searchParams.searchWords.length),
         data: {
-          words: searchWords,
+          words: searchParams.searchWords,
           sources: sources
         }
       },
@@ -283,23 +280,25 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
     setIsLoading(true);
     setPage(0);
     setEventsData([]);
-    await getTypedEvents(selected);
+    await getTypedEvents(searchParams.selected);
   }
 
   useEffect(async () => {
     if (!user.id) return;
     await getEvents();
-  }, [selected, searchCategory, searchCity, sortOrder, sortValue, user, searchWords.join('')]);
+  }, [searchParams.selected, searchParams.searchCategory, searchParams.sortOrder, searchParams.sortValue, searchParams.searchCity, searchParams.searchWords.join(''), user]);
 
   useEffect(async () => {
-    await getTypedEvents(selected, true);
+    await getTypedEvents(searchParams.selected, true);
   }, [page])
 
   useEffect(() => {
-    setSearchCategory('');
-    setSearchCity('');
-    setSort('');
-  }, [selected])
+    if (prevSelected === searchParams.selected) return;
+    dispatch(setSearchCategory(''));
+    dispatch(setSearchCity(''));
+    dispatch(setSortValue(''));
+    setPrevSelected(searchParams.selected);
+  }, [searchParams.selected])
 
   useEffect(() => {
     document.addEventListener('scroll', scrollEvent);
@@ -311,8 +310,8 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
   return (
     <Panel id={id} style={{ overflowX: user.platform === 'web' ? '' : 'hidden' }}>
       <PanelHeader style={{ textAlign: 'center' }} separator={false}>Лента событий</PanelHeader>
-      <Scrollable selected={selected} setSelected={setSelected} />
-      <SearchDebounced setSearchWords={setSearchWords} />
+      <Scrollable selected={searchParams.selected} setSelected={(e) => dispatch(setSelected(e))} />
+      <SearchDebounced setSearchWords={(e) => dispatch(setSearchWords(e))} />
       <Modal
         activeModal={activeModal}
         setActiveModal={setActiveModal}
@@ -338,8 +337,8 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
               ]
             }
             placeholder='Выберите категорию'
-            value={searchCategory}
-            onChange={(e) => setSearchCategory(e.target.value)}
+            value={searchParams.searchCategory}
+            onChange={(e) => dispatch(setSearchCategory(e.target.value))}
           />
         </FormItem>
         <FormItem bottom="Город">
@@ -360,8 +359,8 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
               ]
             }
             placeholder='Выберите город'
-            value={searchCity}
-            onChange={(e) => setSearchCity(e.target.value)}
+            value={searchParams.searchCity}
+            onChange={(e) => dispatch(setSearchCity(e.target.value))}
           />
         </FormItem>
         <FormItem bottom="Сортировать по">
@@ -378,11 +377,11 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
                 }))]
             }
             placeholder='Выберите параметр сортировки'
-            value={sortValue}
+            value={searchParams.sortValue}
             onChange={(e) => setSort(e.target.value)}
           />
         </FormItem>
-        {sortValue !== '' && <IconButton onClick={setOrder}> {sortOrder === 'asc' ? <Icon24ArrowDownOutline /> : <Icon24ArrowUpOutline />} </IconButton>}
+        {searchParams.sortValue !== '' && <IconButton onClick={setOrder}> {searchParams.sortOrder === 'asc' ? <Icon24ArrowDownOutline /> : <Icon24ArrowUpOutline />} </IconButton>}
       </FormLayoutGroup>
 
       <Group>
