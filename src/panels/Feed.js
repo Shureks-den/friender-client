@@ -311,7 +311,7 @@ const Feed = ({ id, go, makeRepost, makeShare, makeStory, onSuccess, goToProfile
     <Panel id={id} style={{ overflowX: user.platform === 'web' ? '' : 'hidden' }}>
       <PanelHeader style={{ textAlign: 'center' }} separator={false}>Лента событий</PanelHeader>
       <Scrollable selected={searchParams.selected} setSelected={(e) => dispatch(setSelected(e))} />
-      <SearchDebounced setSearchWords={(e) => dispatch(setSearchWords(e))} />
+      <SearchDebounced inputText={searchParams.searchWords} setSearchWords={(e) => dispatch(setSearchWords(e))} />
       <Modal
         activeModal={activeModal}
         setActiveModal={setActiveModal}
@@ -434,7 +434,7 @@ const SearchDebounced = props => {
   }
 
   const useSearch = () => {
-    const [inputText, setInputText] = useState('');
+    const [inputText, setInputText] = useState(props.inputText.join(' '));
 
     // Debounce the original search async function
     const debounceQuery = useConstant(() =>
@@ -444,8 +444,6 @@ const SearchDebounced = props => {
     const search = useAsyncAbortable(
       async (abortSignal, text) => {
         if (text.length === 0) {
-          // props.setSearchWords([]);
-
           return [];
         } else {
           return debounceQuery(text, abortSignal);

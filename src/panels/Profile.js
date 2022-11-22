@@ -10,6 +10,7 @@ import '../assets/styles/Profile.scss';
 import placeholder from '../img/placeholder.webp';
 
 import { Modal } from '../components/Modal/Modal';
+import EventPlaceholder from '../components/EventPlaceholder/EventPlaceholder';
 
 const Profile = props => {
   const [pageUser, setPageUser] = useState({});
@@ -142,7 +143,7 @@ const Profile = props => {
                 (pageUser?.id === user?.id) ?
                   <Button onClick={() => connectGroup()}>Добавить группу</Button> :
 
-                  <ButtonGroup mode='horizontal' style={{alignItems: 'center'}}>
+                  <ButtonGroup mode='horizontal' style={{ alignItems: 'center' }}>
                     {!isSubscribed ?
                       <Button onClick={subscribe}>Подписаться</Button> :
                       <Button onClick={unsubscribe}>Отписаться</Button>}
@@ -191,23 +192,36 @@ const Profile = props => {
       }
 
       <Group header={<Header>{user.id === pageUser.id ? 'Мои события' : 'Организатор'} {adminedEvents.length}</Header>}>
-        <HorizontalScroll
-          showArrows
-          getScrollToLeft={(i) => i - 120}
-          getScrollToRight={(i) => i + 120}
-        >
-          <div style={{ display: "flex" }}>{adminedEvents}</div>
-        </HorizontalScroll>
+        {
+          adminedEvents.length ?
+            <HorizontalScroll
+              showArrows
+              getScrollToLeft={(i) => i - 120}
+              getScrollToRight={(i) => i + 120}
+            >
+              <div style={{ display: "flex" }}>{adminedEvents}</div>
+            </HorizontalScroll> : pageUser.id === user.id &&
+
+            <EventPlaceholder text={'Тут будут события, где вы выступаете в роли администратора'} />
+        }
+
       </Group>
 
       <Group header={<Header>{user.id === pageUser.id ? 'Собираюсь посетить' : 'Собирается посетить'}  {activeEvents.length}</Header>}>
-        <HorizontalScroll
-          showArrows
-          getScrollToLeft={(i) => i - 120}
-          getScrollToRight={(i) => i + 120}
-        >
-          <div style={{ display: "flex" }}>{activeEvents}</div>
-        </HorizontalScroll>
+        {
+          activeEvents.length ?
+            <HorizontalScroll
+              showArrows
+              getScrollToLeft={(i) => i - 120}
+              getScrollToRight={(i) => i + 120}
+            >
+              <div style={{ display: "flex" }}>{activeEvents}</div>
+            </HorizontalScroll> :
+            pageUser.id === user.id &&
+
+            <EventPlaceholder text={'Тут будут события, на которые вы записались'} />
+        }
+
       </Group>
 
       <Group header={

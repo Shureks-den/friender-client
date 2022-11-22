@@ -8,6 +8,8 @@ import ApiSevice from '../modules/ApiSevice';
 import { setIsAdmin, setGroupId } from '../store/group/groupSlice.js';
 import placeholder from '../img/placeholder.webp';
 
+import EventPlaceholder from '../components/EventPlaceholder/EventPlaceholder';
+
 const GroupView = props => {
   const dispatch = useDispatch();
 
@@ -196,7 +198,7 @@ const GroupView = props => {
       {
         isAdmin ?
           <Checkbox defaultChecked={allowUserEvents} onChange={handleChangeAllowUserEvents} style={{ marginBottom: '10px' }}>
-          Разрешить пользователям предлагать события
+            Разрешить пользователям предлагать события
           </Checkbox> :
           allowUserEvents &&
           <Div style={{ textAlign: 'center' }}>
@@ -212,65 +214,79 @@ const GroupView = props => {
           <Button onClick={() => handleAddEvent(true)}>
             Добавить событие
           </Button>
-        }>События сообщества</Header>
-        <HorizontalScroll
-          showArrows
-          getScrollToLeft={(i) => i - 120}
-          getScrollToRight={(i) => i + 120}
-        >
-          <div style={{ display: "flex" }}>{adminEvents}</div>
-        </HorizontalScroll>
+        }>События сообщества  {adminEvents.length} </Header>
+        {
+          adminEvents.length ?
+            <HorizontalScroll
+              showArrows
+              getScrollToLeft={(i) => i - 120}
+              getScrollToRight={(i) => i + 120}
+            >
+              <div style={{ display: "flex" }}>{adminEvents}</div>
+            </HorizontalScroll> :
+            isAdmin && <EventPlaceholder text={'Тут будут события, опубликованные от имени группы'} />
+        }
+
       </Group>
 
       {(allowUserEvents && isAdmin) &&
         <Group>
-          <Header>Предложенные события</Header>
-          <HorizontalScroll
-            showArrows
-            getScrollToLeft={(i) => i - 120}
-            getScrollToRight={(i) => i + 120}
-          >
-            <div style={{ display: "flex" }}>{usersEvents}</div>
-          </HorizontalScroll>
+          <Header>Предложенные события {usersEvents.length}</Header>
+          {usersEvents.length ?
+            <HorizontalScroll
+              showArrows
+              getScrollToLeft={(i) => i - 120}
+              getScrollToRight={(i) => i + 120}
+            >
+              <div style={{ display: "flex" }}>{usersEvents}</div>
+            </HorizontalScroll> :
+            <EventPlaceholder text={'Тут будут события пользователей, которые еще не прошли модерацию'} />
+          }
+
         </Group>
       }
 
 
       <Group>
-        <Header>Поиск компании</Header>
-        <HorizontalScroll
-          showArrows
-          getScrollToLeft={(i) => i - 120}
-          getScrollToRight={(i) => i + 120}
-        >
-          <div style={{ display: "flex" }}>{companyEvents}</div>
-        </HorizontalScroll>
+        <Header>Поиск компании {companyEvents.length}</Header>
+        {companyEvents.length ?
+          <HorizontalScroll
+            showArrows
+            getScrollToLeft={(i) => i - 120}
+            getScrollToRight={(i) => i + 120}
+          >
+            <div style={{ display: "flex" }}>{companyEvents}</div>
+          </HorizontalScroll> : isAdmin && <EventPlaceholder text={'Тут пользователи смогут найти компанию на ваши мероприятия'} />
+        }
+
       </Group>
 
       <Group header={
         <Header>
-          История
+          Прошедшие события {finishedEvents.length}
         </Header>
       }
       >
-        <HorizontalScroll
-          top='Изображения'
-          showArrows
-          getScrollToLeft={(i) => i - 120}
-          getScrollToRight={(i) => i + 120}
-        >
-          <div style={{ display: 'flex', userSelect: 'none' }}>
-            {finishedEvents.map((ev, idx) =>
-              <HorizontalCell size='m' key={idx} onClick={() => props.goTo(ev.id)}>
-                <Avatar
-                  size={88}
-                  mode='app'
-                  src={ev.avatar.avatar_url}
-                />
-              </HorizontalCell>
-            )}
-          </div>
-        </HorizontalScroll>
+        <div className='events-finished__grid'>
+          {finishedEvents.map((e, idx) =>
+            <HorizontalCell
+              key={idx}
+              header={
+                <Text style={{ wordBreak: 'break-word' }}>
+                  {e.title}
+                </Text>
+              }
+              size="l"
+              style={{ height: '100%', width: '100%' }}
+              subtitle={new Date(e.time_start * 1000).toLocaleString()}
+              onClick={() => props.goTo(e.id)}>
+              <img
+                className={'profile-finished-card__avatar'}
+                src={e.avatar.avatar_url !== '' ? e.avatar.avatar_url : placeholder}
+              />
+            </HorizontalCell>
+          )}
+        </div>
       </Group>
 
 
