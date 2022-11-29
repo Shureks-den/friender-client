@@ -8,6 +8,11 @@
     border-radius: 8px;
   }
 
+  &-upload__send .vkuiButton__content {
+    display: flex;
+    align-items: center;
+  }
+
   &-album__profile-avatar {
     border-radius: 50%;
     position: absolute;

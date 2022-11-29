@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Icon56ShareOutline, Icon56MessagesOutline, Icon24Dismiss, Icon24Cancel, Icon24Done, Icon24ReportOutline } from '@vkontakte/icons';
 import { Icon56ArrowUturnLeftOutline, Icon24PhotosStackOutline, Icon24Camera, Icon28RemoveCircleOutline, Icon28UserStarBadgeOutline } from '@vkontakte/icons';
 
-import { ModalCard, Button, ModalRoot, SplitLayout, ButtonGroup, Input, FormItem, File, Div, Text, ModalPage, SimpleCell, Avatar, Group, Header, IconButton, ModalPageHeader, PanelHeaderButton, PanelHeaderClose, ANDROID, IOS, VKCOM, usePlatform, Textarea } from '@vkontakte/vkui';
+import { ModalCard, Button, ModalRoot, SplitLayout, ButtonGroup, Input, FormItem, File, Div, Text, ModalPage, SimpleCell, Avatar, Group, Counter, IconButton, ModalPageHeader, PanelHeaderButton, PanelHeaderClose, ANDROID, IOS, VKCOM, usePlatform, Textarea } from '@vkontakte/vkui';
 import ApiSevice from '../../modules/ApiSevice';
 import VkApiService from '../../modules/VkApiService';
 
@@ -200,6 +200,7 @@ export const Modal = ({
                 type="text"
                 value={albumUrl}
                 onInput={(e) => setAlbumUrl(e.target.value)}
+                maxLength={50}
                 placeholder='ссылка'
               />
             </FormItem>
@@ -217,8 +218,15 @@ export const Modal = ({
               stretched={true}
               disabled={!canUploadPhotos}
               onClick={() => sendImages()}
+              className='event-upload__send'
             >
               Добавить фото
+              {Boolean(usersImages.length) &&
+                <Counter style={{marginLeft: '5px'}} size="s" mode="prominent">
+                  {usersImages.length}
+                </Counter>
+              }
+
             </Button>
           </ButtonGroup>
         }

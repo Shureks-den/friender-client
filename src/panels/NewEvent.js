@@ -12,6 +12,7 @@ import { setIsAdmin, setGroupId } from '../store/group/groupSlice.js';
 
 import { Modal } from '../components/Modal/Modal';
 
+import { linkRegex } from '../variables/constants';
 import Map from '../components/Map/Map.js';
 import '../assets/styles/NewEvent.scss';
 
@@ -59,9 +60,12 @@ const NewEvent = props => {
   const [formTextError, setFormTextError] = useState('');
   const [priceStatus, setPriceStatus] = useState('default');
   const [priceError, setPriceError] = useState('');
+  const [linkStatus, setLinkStatus] = useState('default');
+  const [linkError, setLinkError] = useState('');
   const [membersLimitStatus, setMembersLimitStatus] = useState('default');
   const [membersLimitError, setMembersLimitError] = useState('');
   const [timeError, setTimeError] = useState('');
+  const [canPublish, setCanPublush] = useState(false);
 
   // логика для групп, предложка, пост оттуда
   const suggestGroupId = useSelector(state => state.groupInfo.groupId);
@@ -69,7 +73,7 @@ const NewEvent = props => {
   const adminedGroups = useSelector(state => state.groupInfo.adminedGroups);
 
   const scrollTo = (item) => {
-    item.current?.scrollIntoView({behavior: 'smooth'});
+    item.current?.scrollIntoView({ behavior: 'smooth' });
   }
 
   const setDate = (value) => {
@@ -99,11 +103,21 @@ const NewEvent = props => {
         setTicketPrice(value);
         setPriceStatus('default');
         break;
-    
+      case 'link':
+        setPaymentLink(value);
+        setLinkStatus('default');
+
+
+        break;
+
       default:
         break;
     }
   };
+
+  useEffect(() => {
+    setCanPublush([formTitleItemStatus, formTextAreaItemStatus, membersLimitStatus, priceStatus, linkStatus].every(status => status === 'default'));
+  }, [formTitleItemStatus, formTextAreaItemStatus, membersLimitStatus, priceStatus, linkStatus])
 
   useEffect(() => {
     startPage.current?.scrollIntoView();
@@ -182,6 +196,12 @@ const NewEvent = props => {
     if (eventDescription.length > 1000) {
       setFormTextError('Слишком длинное описание');
       setFormAreaItemStatus('error');
+      hasError = true;
+    }
+
+    if (hasPrice && !linkRegex.test(paymentLink)) {
+      setLinkError('Ссылка содержит ошибку');
+      setLinkStatus('error');
       hasError = true;
     }
 
@@ -334,7 +354,7 @@ const NewEvent = props => {
           </CardScroll> :
           <Div>
             <div style={{ maxHeight: user.platform === 'web' ? '300px' : '500px', background: 'grey', textAlign: 'center' }} className='event__file-background' >
-              <File before={<Icon28AddSquareOutline />} size='m' accept='image/png, image/gif, image/jpeg' className={'event__file-input' + (user.platform === 'web' ? ' event__file-input-web' : ' event__file-input-mobile') } multiple onInput={changeImage}>
+              <File before={<Icon28AddSquareOutline />} size='m' accept='image/png, image/gif, image/jpeg' className={'event__file-input' + (user.platform === 'web' ? ' event__file-input-web' : ' event__file-input-mobile')} multiple onInput={changeImage}>
                 Добавить фото
               </File>
             </div>
@@ -351,11 +371,11 @@ const NewEvent = props => {
       }
 
       <FormItem top='Название события' status={formTitleItemStatus} bottom={formTitleItemStatus === 'error' && titleErrorText} getRootRef={titleRef}>
-        <Input type='text' title='Название События' label='Название события' value={eventTitle} onChange={(e) => onChangeInput(e.target.value, 'title')} />
+        <Input type='text' title='Название События' label='Название события' maxLength={256} value={eventTitle} onChange={(e) => onChangeInput(e.target.value, 'title')} />
       </FormItem>
 
       <FormItem top='Описание события' status={formTextAreaItemStatus} bottom={formTextAreaItemStatus === 'error' && formTextError} getRootRef={descRef}>
-        <Textarea value={eventDescription} onChange={(e) => onChangeInput(e.target.value, 'description')} />
+        <Textarea value={eventDescription} maxLength={1000} onChange={(e) => onChangeInput(e.target.value, 'description')} />
       </FormItem>
 
       <FormItem top="Категория">
@@ -373,11 +393,11 @@ const NewEvent = props => {
       </FormItem>
 
       <FormItem top='Количество участников' status={membersLimitStatus} bottom={membersLimitStatus === 'error' && membersLimitError}>
-        <Input type='number' min={1} value={members} onChange={(e) => onChangeInput(e.target.value, 'members')} />
+        <Input type='number' min={1} max={10000000} value={members} onChange={(e) => onChangeInput(e.target.value, 'members')} />
       </FormItem>
 
       <FormItem top='Цена' status={priceStatus} bottom={priceStatus === 'error' && priceError}>
-        <Input type='number' min={0} value={ticketPrice} onChange={(e) => onChangeInput(e.target.value, 'price')} />
+        <Input type='number' min={0} max={1000000} value={ticketPrice} onChange={(e) => onChangeInput(e.target.value, 'price')} />
       </FormItem>
 
 
@@ -385,8 +405,8 @@ const NewEvent = props => {
       <Checkbox checked={hasPrice} value={hasPrice} onChange={((e) => setHasPrice(!hasPrice))}>Добавить ссылку для покупки билета</Checkbox>
       {hasPrice &&
         <FormLayoutGroup mode='horizontal' style={{ alignItems: 'center' }}>
-          <FormItem top='Ссылка для покупки билета'>
-            <Input value={paymentLink} onChange={(e) => setPaymentLink(e.target.value)} />
+          <FormItem top='Ссылка для покупки билета' status={linkStatus} bottom={linkStatus === 'error' && linkError}>
+            <Input value={paymentLink} maxLength={256} onChange={(e) => onChangeInput(e.target.value, 'link')} />
           </FormItem>
         </FormLayoutGroup>
       }
@@ -398,7 +418,7 @@ const NewEvent = props => {
       }
       >
         <Div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '30px', justifyContent: 'space-around' }}>
-        {Boolean(timeError.length) && <Text style={{color: 'var(--vkui--color_text_negative)', marginBottom: '10px'}}>{timeError}</Text>}
+          {Boolean(timeError.length) && <Text style={{ color: 'var(--vkui--color_text_negative)', marginBottom: '10px' }}>{timeError}</Text>}
           <Calendar
             value={eventDate}
             onChange={setDate}
@@ -438,7 +458,7 @@ const NewEvent = props => {
         </FormItem>
       }
       <Div>
-        <Button stretched sizeY='regular' onClick={sendEvent} disabled={isLoading}> {
+        <Button stretched sizeY='regular' onClick={sendEvent} disabled={isLoading || !canPublish}> {
           isLoading ?
             <Spinner size="small" style={{ margin: "5px 0" }} /> :
             props.isEditing ?

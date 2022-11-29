@@ -162,7 +162,7 @@ const Profile = props => {
             >
               <div>
                 <div>{`${pageUser.first_name} ${pageUser.last_name}`}</div>
-                <Link className='profile__link' target="_blank" href={`https://vk.com/id${pageUser.id}`}>Ссылка на страницу</Link>
+                <Link className='profile__link' target="_blank" href={`https://vk.com/id${pageUser.id}`}>Профиль VK</Link>
               </div>
             </Cell>
           </Group>

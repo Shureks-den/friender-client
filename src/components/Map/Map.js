@@ -123,7 +123,7 @@ const Map = ({ address, setAddress, setCoords, latitude, longitude, isClickable,
         {
           showAddress &&
           <FormItem top='Место' className='ymaps__input'>
-            <Input type='text' title='Адрес' label='Название события' id='address' value={address} onInput={(e) => handleType(e)} onBlur={(e) => handlePlaceMark(e)} disabled={!isClickable} />
+            <Input type='text' title='Адрес' maxLength={512} label='Название события' id='address' value={address} onInput={(e) => handleType(e)} onBlur={(e) => handlePlaceMark(e)} disabled={!isClickable} />
           </FormItem>
 
         }
